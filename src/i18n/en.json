@@ -1,0 +1,90 @@
+{
+  "common": {
+    "appName": "BrainRot Healer",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "done": "Done",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "retry": "Retry",
+    "offline": "Offline Mode"
+  },
+  "tabs": {
+    "home": "Home",
+    "tasks": "Tasks",
+    "focus": "Focus",
+    "religion": "Religion",
+    "profile": "Profile"
+  },
+  "auth": {
+    "welcome": "Welcome to BrainRot Healer",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?"
+  },
+  "dashboard": {
+    "greeting": "Assalamu Alaikum",
+    "brainScore": "Brain Score",
+    "screenTime": "Screen Time",
+    "tasksCompleted": "Tasks Done",
+    "focusMinutes": "Focus Min",
+    "prayers": "Prayers",
+    "streak": "Streak",
+    "eatTheFrog": "Eat the Frog",
+    "completeToUnlock": "Complete to unlock apps"
+  },
+  "tasks": {
+    "today": "Today",
+    "upcoming": "Upcoming",
+    "completed": "Completed",
+    "abandoned": "Abandoned",
+    "addTask": "Add Task",
+    "title": "Title",
+    "description": "Description",
+    "priority": "Priority",
+    "dueDate": "Due Date",
+    "aiPlanner": "AI Day Planner"
+  },
+  "focus": {
+    "pomodoro": "Pomodoro",
+    "deepWork": "Deep Work",
+    "flow": "Flow",
+    "quickSprint": "Quick Sprint",
+    "startSession": "Start Session",
+    "endSession": "End Session",
+    "distracted": "I got distracted"
+  },
+  "roast": {
+    "title": "You Deserved This",
+    "deservedIt": "I deserved this",
+    "shareShame": "Share my shame",
+    "proveWrong": "Prove them wrong →"
+  },
+  "religion": {
+    "prayerTimes": "Prayer Times",
+    "prayerTracker": "Prayer Tracker",
+    "quranProgress": "Quran Progress",
+    "dhikr": "Dhikr",
+    "fasting": "Fasting",
+    "fajr": "Fajr",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha"
+  },
+  "subscription": {
+    "free": "Free",
+    "healed": "Healed",
+    "ascended": "Ascended",
+    "family": "Family",
+    "lifetime": "Lifetime",
+    "upgrade": "Upgrade Now",
+    "trial": "Start 7-Day Free Trial"
+  }
+}
