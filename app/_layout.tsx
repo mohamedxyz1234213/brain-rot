@@ -57,11 +57,17 @@ function RootLayoutNav() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen name="screens" />
         <Stack.Screen name="(modals)/roast" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="(modals)/app-blocked" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="(modals)/driving-alert" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="(modals)/intervention" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="(modals)/slot-machine" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(modals)/ghost" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="(modals)/life-trailer" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="(modals)/breakup-letter" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="(modals)/villain-arc" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="(modals)/brain-scan" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
   );

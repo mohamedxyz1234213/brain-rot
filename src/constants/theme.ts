@@ -58,3 +58,27 @@ export type ColorKey = keyof typeof Colors;
 export type SpacingKey = keyof typeof Spacing;
 export type RadiusKey = keyof typeof Radius;
 export type TypographySizeKey = keyof typeof Typography.sizes;
+
+/**
+ * Unified theme object for convenience
+ */
+export const theme = {
+  colors: {
+    primary: Colors.PRIMARY,
+    primaryLight: Colors.PRIMARY_LIGHT,
+    primaryDark: Colors.PRIMARY_DARK,
+    secondary: Colors.SECONDARY,
+    secondaryLight: Colors.SECONDARY_LIGHT,
+    background: Colors.BACKGROUND,
+    surface: Colors.SURFACE,
+    surfaceRaised: Colors.SURFACE_RAISED,
+    success: Colors.SUCCESS,
+    warning: Colors.WARNING,
+    danger: Colors.DANGER,
+    textPrimary: Colors.TEXT_PRIMARY,
+    textSecondary: Colors.TEXT_SECONDARY,
+  },
+  typography: Typography.sizes,
+  spacing: Spacing,
+  radius: Radius,
+} as const;
