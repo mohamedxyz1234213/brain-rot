@@ -1,0 +1,90 @@
+{
+  "common": {
+    "appName": "معالج تعفن الدماغ",
+    "loading": "جاري التحميل...",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "done": "تم",
+    "back": "رجوع",
+    "next": "التالي",
+    "skip": "تخطي",
+    "retry": "إعادة المحاولة",
+    "offline": "وضع عدم الاتصال"
+  },
+  "tabs": {
+    "home": "الرئيسية",
+    "tasks": "المهام",
+    "focus": "التركيز",
+    "religion": "الدين",
+    "profile": "الملف الشخصي"
+  },
+  "auth": {
+    "welcome": "مرحباً بك في معالج تعفن الدماغ",
+    "signIn": "تسجيل الدخول",
+    "signUp": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "forgotPassword": "نسيت كلمة المرور؟"
+  },
+  "dashboard": {
+    "greeting": "السلام عليكم",
+    "brainScore": "نتيجة الدماغ",
+    "screenTime": "وقت الشاشة",
+    "tasksCompleted": "المهام المنجزة",
+    "focusMinutes": "دقائق التركيز",
+    "prayers": "الصلوات",
+    "streak": "السلسلة",
+    "eatTheFrog": "أكل الضفدع",
+    "completeToUnlock": "أكمل لفتح التطبيقات"
+  },
+  "tasks": {
+    "today": "اليوم",
+    "upcoming": "القادمة",
+    "completed": "المكتملة",
+    "abandoned": "المهجورة",
+    "addTask": "إضافة مهمة",
+    "title": "العنوان",
+    "description": "الوصف",
+    "priority": "الأولوية",
+    "dueDate": "تاريخ الاستحقاق",
+    "aiPlanner": "مخطط الذكاء الاصطناعي"
+  },
+  "focus": {
+    "pomodoro": "بومودورو",
+    "deepWork": "عمل عميق",
+    "flow": "تدفق",
+    "quickSprint": "سباق سريع",
+    "startSession": "بدء الجلسة",
+    "endSession": "إنهاء الجلسة",
+    "distracted": "تشتت انتباهي"
+  },
+  "roast": {
+    "title": "أنت تستحق هذا",
+    "deservedIt": "أنا أستحق هذا",
+    "shareShame": "شارك عاري",
+    "proveWrong": "أثبت خطأهم ←"
+  },
+  "religion": {
+    "prayerTimes": "مواقيت الصلاة",
+    "prayerTracker": "متتبع الصلاة",
+    "quranProgress": "تقدم القرآن",
+    "dhikr": "الذكر",
+    "fasting": "الصيام",
+    "fajr": "الفجر",
+    "dhuhr": "الظهر",
+    "asr": "العصر",
+    "maghrib": "المغرب",
+    "isha": "العشاء"
+  },
+  "subscription": {
+    "free": "مجاني",
+    "healed": "معالَج",
+    "ascended": "متسامي",
+    "family": "عائلي",
+    "lifetime": "مدى الحياة",
+    "upgrade": "ترقية الآن",
+    "trial": "ابدأ تجربة مجانية لمدة 7 أيام"
+  }
+}
