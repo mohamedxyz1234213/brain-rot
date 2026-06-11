@@ -32,20 +32,28 @@ export const useFocusStore = create<FocusState>((set, get) => ({
   },
 
   startSession: async (session) => {
-    const newSession = await backendService.createFocusSession(session);
-    set({ activeSession: newSession, isActive: true });
+    try {
+      const newSession = await backendService.createFocusSession(session);
+      set({ activeSession: newSession, isActive: true });
+    } catch (error) {
+      console.error('Failed to start focus session:', error);
+    }
   },
 
   endSession: async (sessionId, completed) => {
-    const updated = await backendService.updateFocusSession(sessionId, {
-      endedAt: new Date().toISOString(),
-      completed,
-    });
-    set({
-      activeSession: null,
-      isActive: false,
-      sessions: [...get().sessions, updated],
-    });
+    try {
+      const updated = await backendService.updateFocusSession(sessionId, {
+        endedAt: new Date().toISOString(),
+        completed,
+      });
+      set({
+        activeSession: null,
+        isActive: false,
+        sessions: [...get().sessions, updated],
+      });
+    } catch (error) {
+      console.error('Failed to end focus session:', error);
+    }
   },
 
   logDistraction: () => {

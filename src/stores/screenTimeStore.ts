@@ -41,17 +41,29 @@ export const useScreenTimeStore = create<ScreenTimeState>((set, get) => ({
   },
 
   setAppLimit: async (limit) => {
-    const newLimit = await backendService.setAppLimit(limit);
-    set({ limits: [...get().limits, newLimit] });
+    try {
+      const newLimit = await backendService.setAppLimit(limit);
+      set({ limits: [...get().limits, newLimit] });
+    } catch (error) {
+      console.error('Failed to set app limit:', error);
+    }
   },
 
   updateAppLimit: async (limitId, data) => {
-    const updated = await backendService.updateAppLimit(limitId, data);
-    set({ limits: get().limits.map((l) => (l.id === limitId ? updated : l)) });
+    try {
+      const updated = await backendService.updateAppLimit(limitId, data);
+      set({ limits: get().limits.map((l) => (l.id === limitId ? updated : l)) });
+    } catch (error) {
+      console.error('Failed to update app limit:', error);
+    }
   },
 
   deleteAppLimit: async (limitId) => {
-    await backendService.deleteAppLimit(limitId);
-    set({ limits: get().limits.filter((l) => l.id !== limitId) });
+    try {
+      await backendService.deleteAppLimit(limitId);
+      set({ limits: get().limits.filter((l) => l.id !== limitId) });
+    } catch (error) {
+      console.error('Failed to delete app limit:', error);
+    }
   },
 }));

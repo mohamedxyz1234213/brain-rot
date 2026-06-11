@@ -30,8 +30,12 @@ export const useReligionStore = create<ReligionState>((set, get) => ({
   },
 
   logPrayer: async (log) => {
-    const saved = await backendService.logPrayer(log);
-    set({ prayerLogs: [...get().prayerLogs, saved] });
+    try {
+      const saved = await backendService.logPrayer(log);
+      set({ prayerLogs: [...get().prayerLogs, saved] });
+    } catch (error) {
+      console.error('Failed to log prayer:', error);
+    }
   },
 
   fetchQuranProgress: async (userId) => {
@@ -44,7 +48,11 @@ export const useReligionStore = create<ReligionState>((set, get) => ({
   },
 
   updateQuranProgress: async (userId, data) => {
-    const updated = await backendService.updateQuranProgress(userId, data);
-    set({ quranProgress: updated });
+    try {
+      const updated = await backendService.updateQuranProgress(userId, data);
+      set({ quranProgress: updated });
+    } catch (error) {
+      console.error('Failed to update Quran progress:', error);
+    }
   },
 }));
