@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 import { AppLimit } from '../../services/backend/interface';
-import { theme } from '../../constants/theme';
+import { Colors, Typography, Spacing, Radius, ANIMATION } from '../../constants/theme';
 
 interface AppLimitCardProps {
   limit: AppLimit;
@@ -9,16 +10,16 @@ interface AppLimitCardProps {
 }
 
 export function AppLimitCard({ limit, minutesUsed }: AppLimitCardProps) {
-  const percentage = Math.min((minutesUsed / limit.dailyLimitMinutes) * 100, 100);
+  const percentage = Math.min((minutesUsed / limit.dailyLimitMinutes) * 100, 150);
   const isOverLimit = minutesUsed >= limit.dailyLimitMinutes;
   const barColor = isOverLimit
-    ? theme.colors.danger
+    ? Colors.DANGER
     : percentage > 75
-    ? theme.colors.warning
-    : theme.colors.primary;
+      ? Colors.WARNING
+      : Colors.PRIMARY;
 
   return (
-    <View style={styles.container}>
+    <Animated.View entering={FadeInRight.duration(ANIMATION.timing.normal)} style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.appName}>{limit.appName}</Text>
         <Text style={[styles.time, isOverLimit && styles.timeOver]}>
@@ -27,77 +28,70 @@ export function AppLimitCard({ limit, minutesUsed }: AppLimitCardProps) {
       </View>
 
       <View style={styles.progressBg}>
-        <View
-          style={[
-            styles.progressFill,
-            { width: `${percentage}%`, backgroundColor: barColor },
-          ]}
-        />
+        <View style={[styles.progressFill, { width: `${Math.min(percentage, 100)}%`, backgroundColor: barColor }]} />
       </View>
 
       <View style={styles.footer}>
-        {limit.isHardBlock && (
-          <Text style={styles.badge}>🔒 Hard Block</Text>
-        )}
+        {limit.isHardBlock && <Text style={styles.badge}>🔒 Hard Block</Text>}
         {isOverLimit && (
           <Text style={styles.overText}>
             +{minutesUsed - limit.dailyLimitMinutes}m over
           </Text>
         )}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     width: 180,
-    padding: 12,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
-    marginRight: 12,
+    padding: Spacing.md,
+    backgroundColor: Colors.SURFACE,
+    borderRadius: Radius.md,
+    marginRight: Spacing.md,
     borderWidth: 0.5,
-    borderColor: `${theme.colors.secondary}33`,
+    borderColor: `${Colors.SECONDARY}33`,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   appName: {
-    fontSize: theme.typography.md,
-    color: theme.colors.textPrimary,
+    fontSize: Typography.sizes.md,
+    color: Colors.TEXT_PRIMARY,
     fontWeight: '600',
   },
   time: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textSecondary,
+    fontSize: Typography.sizes.sm,
+    color: Colors.TEXT_SECONDARY,
   },
   timeOver: {
-    color: theme.colors.danger,
+    color: Colors.DANGER,
   },
   progressBg: {
     height: 6,
-    backgroundColor: `${theme.colors.secondary}33`,
-    borderRadius: 3,
+    backgroundColor: `${Colors.SECONDARY}33`,
+    borderRadius: Radius.full,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: Radius.full,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 6,
+    marginTop: Spacing.xs,
   },
   badge: {
-    fontSize: 11,
-    color: theme.colors.danger,
+    fontSize: Typography.sizes.xs,
+    color: Colors.DANGER,
   },
   overText: {
-    fontSize: 11,
-    color: theme.colors.danger,
+    fontSize: Typography.sizes.xs,
+    color: Colors.DANGER,
   },
 });

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Animated, { FadeIn, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
-import { theme } from '../../constants/theme';
+import { Colors, Typography, Spacing, ANIMATION } from '../../constants/theme';
 
 interface BrainScoreRingProps {
   score: number;
@@ -31,10 +32,10 @@ function getScoreLevel(score: number): string {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 80) return theme.colors.success;
-  if (score >= 50) return theme.colors.primary;
-  if (score >= 30) return theme.colors.warning;
-  return theme.colors.danger;
+  if (score >= 80) return Colors.SUCCESS;
+  if (score >= 50) return Colors.PRIMARY;
+  if (score >= 30) return Colors.WARNING;
+  return Colors.DANGER;
 }
 
 export function BrainScoreRing({
@@ -45,23 +46,21 @@ export function BrainScoreRing({
 }: BrainScoreRingProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const progress = (score / 100) * circumference;
   const color = getScoreColor(score);
   const level = getScoreLevel(score);
+  const progress = (score / 100) * circumference;
 
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
+    <Animated.View entering={FadeIn.duration(600)} style={[styles.container, { width: size, height: size }]}>
       <Svg width={size} height={size} style={styles.svg}>
-        {/* Background circle */}
         <Circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={`${theme.colors.secondary}33`}
+          stroke={`${Colors.SECONDARY}33`}
           strokeWidth={strokeWidth}
           fill="none"
         />
-        {/* Progress circle */}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -77,11 +76,9 @@ export function BrainScoreRing({
       </Svg>
       <View style={styles.center}>
         <Text style={[styles.score, { color }]}>{score}</Text>
-        {showLabel && (
-          <Text style={styles.label}>{LEVEL_LABELS[level]}</Text>
-        )}
+        {showLabel && <Text style={styles.label}>{LEVEL_LABELS[level]}</Text>}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -97,12 +94,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   score: {
-    fontSize: 42,
-    fontWeight: '700',
+    fontSize: Typography.sizes['4xl'],
+    fontWeight: '800',
   },
   label: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textSecondary,
-    marginTop: 4,
+    fontSize: Typography.sizes.sm,
+    color: Colors.TEXT_SECONDARY,
+    marginTop: Spacing.xs,
   },
 });

@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { theme } from '../../constants/theme';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+import { Colors, Typography, Spacing, Radius } from '../../constants/theme';
 
 type PrayerName = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 type PrayerStatus = 'on_time' | 'late' | 'missed' | 'pending';
@@ -29,59 +31,61 @@ const PRAYER_EMOJIS: Record<PrayerName, string> = {
 };
 
 const STATUS_COLORS: Record<PrayerStatus, string> = {
-  on_time: theme.colors.success,
-  late: theme.colors.warning,
-  missed: theme.colors.danger,
-  pending: theme.colors.secondary,
+  on_time: Colors.SUCCESS,
+  late: Colors.WARNING,
+  missed: Colors.DANGER,
+  pending: Colors.SECONDARY,
 };
 
 export function PrayerRow({ name, time, status, onLog }: PrayerRowProps) {
   return (
-    <View style={styles.container}>
-      <View style={styles.left}>
-        <Text style={styles.emoji}>{PRAYER_EMOJIS[name]}</Text>
-        <View>
-          <Text style={styles.name}>{PRAYER_LABELS[name]}</Text>
-          <Text style={styles.time}>{time}</Text>
+    <Animated.View entering={FadeIn.duration(300)}>
+      <View style={styles.container}>
+        <View style={styles.left}>
+          <Text style={styles.emoji}>{PRAYER_EMOJIS[name]}</Text>
+          <View>
+            <Text style={styles.name}>{PRAYER_LABELS[name]}</Text>
+            <Text style={styles.time}>{time}</Text>
+          </View>
+        </View>
+
+        <View style={styles.right}>
+          {status === 'pending' ? (
+            <View style={styles.actions}>
+              <Pressable
+                style={[styles.statusBtn, { backgroundColor: Colors.SUCCESS }]}
+                onPress={() => {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  onLog(name, 'on_time');
+                }}
+              >
+                <Text style={styles.statusBtnText}>✓</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.statusBtn, { backgroundColor: Colors.WARNING }]}
+                onPress={() => onLog(name, 'late')}
+              >
+                <Text style={styles.statusBtnText}>⏰</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.statusBtn, { backgroundColor: Colors.DANGER }]}
+                onPress={() => onLog(name, 'missed')}
+              >
+                <Text style={styles.statusBtnText}>✗</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View
+              style={[styles.statusIndicator, { backgroundColor: STATUS_COLORS[status] }]}
+            >
+              <Text style={styles.statusText}>
+                {status === 'on_time' ? '✓' : status === 'late' ? '⏰' : '✗'}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
-
-      <View style={styles.right}>
-        {status === 'pending' ? (
-          <View style={styles.actions}>
-            <Pressable
-              style={[styles.statusBtn, { backgroundColor: theme.colors.success }]}
-              onPress={() => onLog(name, 'on_time')}
-            >
-              <Text style={styles.statusBtnText}>✓</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.statusBtn, { backgroundColor: theme.colors.warning }]}
-              onPress={() => onLog(name, 'late')}
-            >
-              <Text style={styles.statusBtnText}>⏰</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.statusBtn, { backgroundColor: theme.colors.danger }]}
-              onPress={() => onLog(name, 'missed')}
-            >
-              <Text style={styles.statusBtnText}>✗</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <View
-            style={[
-              styles.statusIndicator,
-              { backgroundColor: STATUS_COLORS[status] },
-            ]}
-          >
-            <Text style={styles.statusText}>
-              {status === 'on_time' ? '✓' : status === 'late' ? '⏰' : '✗'}
-            </Text>
-          </View>
-        )}
-      </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -90,13 +94,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
-    marginBottom: 8,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: Colors.SURFACE,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.sm,
     borderWidth: 0.5,
-    borderColor: `${theme.colors.secondary}33`,
+    borderColor: `${Colors.SECONDARY}33`,
   },
   left: {
     flexDirection: 'row',
@@ -104,24 +108,22 @@ const styles = StyleSheet.create({
   },
   emoji: {
     fontSize: 24,
-    marginRight: 12,
+    marginRight: Spacing.md,
   },
   name: {
-    fontSize: theme.typography.md,
-    color: theme.colors.textPrimary,
+    fontSize: Typography.sizes.md,
+    color: Colors.TEXT_PRIMARY,
     fontWeight: '600',
   },
   time: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textSecondary,
+    fontSize: Typography.sizes.sm,
+    color: Colors.TEXT_SECONDARY,
     marginTop: 2,
   },
-  right: {
-    flexDirection: 'row',
-  },
+  right: { flexDirection: 'row' },
   actions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: Spacing.sm,
   },
   statusBtn: {
     width: 32,

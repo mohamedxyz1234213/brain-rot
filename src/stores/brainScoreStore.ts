@@ -1,67 +1,138 @@
 import { create } from 'zustand';
-import { BrainScore, Streak } from '../services/backend/interface';
-import { backendService } from '../services/backend';
+import { persist } from '../lib/persistence';
 
-type Level = 'Zombie' | 'Waking Up' | 'Struggling' | 'Recovering' | 'Healing' | 'Thriving' | 'Ascended';
+interface BrainScoreBreakdown {
+  screenTimeScore: number;
+  taskScore: number;
+  focusScore: number;
+  prayerScore: number;
+  sleepScore: number;
+}
 
-function getLevel(xp: number): Level {
-  if (xp >= 25000) return 'Ascended';
-  if (xp >= 13000) return 'Thriving';
-  if (xp >= 7000) return 'Healing';
-  if (xp >= 3500) return 'Recovering';
-  if (xp >= 1500) return 'Struggling';
-  if (xp >= 500) return 'Waking Up';
-  return 'Zombie';
+interface BrainScoreEntry {
+  id: string;
+  date: string;
+  score: number;
+  breakdown: BrainScoreBreakdown;
 }
 
 interface BrainScoreState {
   currentScore: number;
-  scores: BrainScore[];
-  streaks: Streak[];
-  xp: number;
-  level: Level;
+  scores: BrainScoreEntry[];
+  breakdown: BrainScoreBreakdown;
   isLoading: boolean;
-  fetchScores: (userId: string) => Promise<void>;
-  fetchStreaks: (userId: string) => Promise<void>;
-  addXP: (amount: number) => void;
-  deductXP: (amount: number) => void;
+  calculateScore: (data: {
+    screenTimeMinutes: number;
+    screenTimeLimit: number;
+    tasksCompleted: number;
+    tasksTotal: number;
+    focusSessions: number;
+    prayersCompleted: number;
+    prayersTotal: number;
+    sleepHour: number;
+    religionEnabled: boolean;
+  }) => number;
+  setScore: (score: number, breakdown: BrainScoreBreakdown) => void;
+  getLevelName: () => string;
 }
 
-export const useBrainScoreStore = create<BrainScoreState>((set, get) => ({
-  currentScore: 0,
-  scores: [],
-  streaks: [],
-  xp: 0,
-  level: 'Zombie',
-  isLoading: false,
+const SCORE_LABELS = [
+  { min: 0, max: 20, label: 'Zombie' },
+  { min: 20, max: 40, label: 'Waking Up' },
+  { min: 40, max: 60, label: 'Struggling' },
+  { min: 60, max: 75, label: 'Recovering' },
+  { min: 75, max: 85, label: 'Healing' },
+  { min: 85, max: 95, label: 'Thriving' },
+  { min: 95, max: 100, label: 'Ascended' },
+];
 
-  fetchScores: async (userId) => {
-    set({ isLoading: true });
-    try {
-      const scores = await backendService.getBrainScores(userId);
-      const currentScore = scores[0]?.score ?? 0;
-      set({ scores, currentScore, isLoading: false });
-    } catch {
-      set({ isLoading: false });
-    }
-  },
+function calculateSubScore(value: number, thresholds: number[]): number {
+  for (let i = 0; i < thresholds.length; i++) {
+    if (value <= thresholds[i]) return 100 - i * 30;
+  }
+  return 0;
+}
 
-  fetchStreaks: async (userId) => {
-    try {
-      const streaks = await backendService.getStreaks(userId);
-      set({ streaks });
-    } catch {
-      // silent fail
-    }
-  },
+export const useBrainScoreStore = create<BrainScoreState>()(
+  persist(
+    {
+      name: 'brain_score',
+      partialize: (state) => ({
+        currentScore: state.currentScore,
+        breakdown: state.breakdown,
+        scores: state.scores.slice(0, 30),
+      }),
+    },
+    (set, get) => ({
+      currentScore: 0,
+      scores: [],
+      breakdown: {
+        screenTimeScore: 0,
+        taskScore: 0,
+        focusScore: 0,
+        prayerScore: 0,
+        sleepScore: 0,
+      },
+      isLoading: false,
 
-  addXP: (amount) => {
-    const newXP = get().xp + amount;
-    set({ xp: newXP, level: getLevel(newXP) });
-  },
+      calculateScore: (data) => {
+        const screenTimeRatio = data.screenTimeMinutes / data.screenTimeLimit;
+        const screenTimeScore = calculateSubScore(screenTimeRatio, [1, 1.2, 1.5, 2]);
 
-  deductXP: (amount) => {
-    const newXP = Math.max(0, get().xp - amount);
-    set({ xp: newXP, level: getLevel(newXP) });
-  },
-}));
+        const taskRatio = data.tasksCompleted / data.tasksTotal;
+        const taskScore = calculateSubScore(taskRatio, [0.9, 0.75, 0.5, 0.25]);
+
+        let focusScore: number;
+        if (data.focusSessions >= 2) focusScore = 100;
+        else if (data.focusSessions === 1) focusScore = 70;
+        else focusScore = 20;
+
+        const prayerRatio = data.religionEnabled
+          ? data.prayersCompleted / data.prayersTotal
+          : 1;
+        const prayerScore = data.religionEnabled
+          ? calculateSubScore(prayerRatio, [1, 0.8, 0.6, 0.4])
+          : 100;
+
+        let sleepScore: number;
+        if (data.sleepHour <= 23) sleepScore = 100;
+        else if (data.sleepHour <= 0) sleepScore = 70;
+        else if (data.sleepHour <= 2) sleepScore = 30;
+        else sleepScore = 0;
+
+        const breakdown: BrainScoreBreakdown = {
+          screenTimeScore,
+          taskScore,
+          focusScore,
+          prayerScore,
+          sleepScore,
+        };
+
+        const totalScore = Math.round(
+          screenTimeScore * 0.3 +
+          taskScore * 0.25 +
+          focusScore * 0.2 +
+          prayerScore * 0.15 +
+          sleepScore * 0.1
+        );
+
+        set({ currentScore: totalScore, breakdown });
+        return totalScore;
+      },
+
+      setScore: (score, breakdown) => {
+        set({ currentScore: score, breakdown });
+      },
+
+      getLevelName: () => {
+        const score = get().currentScore;
+        for (const label of SCORE_LABELS) {
+          if (score >= label.min && score < label.max) return label.label;
+        }
+        return 'Ascended';
+      },
+    })
+  )
+);
+
+export type { BrainScoreBreakdown, BrainScoreEntry };

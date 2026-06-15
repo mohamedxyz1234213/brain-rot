@@ -1,7 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { SafeScreen, ScreenHeader } from '../../src/components/ui';
+
+const EXTREME_COLOR = '#ff4500';
+const LEGENDARY_COLOR = '#9b59b6';
 
 const CHALLENGES = [
   {
@@ -54,21 +58,14 @@ const CHALLENGES = [
 const DIFFICULTY_COLORS: Record<string, string> = {
   Medium: Colors.WARNING,
   Hard: Colors.DANGER,
-  Extreme: '#ff4500',
-  Legendary: '#9b59b6',
+  Extreme: EXTREME_COLOR,
+  Legendary: LEGENDARY_COLOR,
 };
 
 export default function ChallengesScreen() {
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← Back</Text>
-        </Pressable>
-        <Text style={styles.title}>🏆 Challenges</Text>
-        <Text style={styles.subtitle}>Push yourself. Compete with others.</Text>
-      </View>
-
+    <SafeScreen>
+      <ScreenHeader title="🏆 Challenges" subtitle="Push yourself. Compete with others." onBack={() => router.back()} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         {CHALLENGES.map((challenge) => (
           <View key={challenge.id} style={styles.challengeCard}>
@@ -102,52 +99,28 @@ export default function ChallengesScreen() {
               </View>
             </View>
 
-            <Pressable style={styles.joinBtn}>
+            <Pressable style={styles.joinBtn} accessibilityRole="button" accessibilityLabel="Join challenge">
               <Text style={styles.joinBtnText}>Join Challenge</Text>
             </Pressable>
           </View>
         ))}
       </ScrollView>
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  backBtn: {
-    fontSize: Typography.sizes.md,
-    color: Colors.PRIMARY,
-    marginBottom: Spacing.sm,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-  },
-  subtitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
-  },
   list: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: 40,
+    paddingBottom: Spacing['3xl'],
   },
   challengeCard: {
     backgroundColor: Colors.SURFACE,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
     borderWidth: 0.5,
-    borderColor: `${Colors.SECONDARY}33`,
+    borderColor: `${Colors.BORDER}33`,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -163,44 +136,44 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: Typography.sizes.lg,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   cardDesc: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
-    lineHeight: 18,
+    marginTop: Spacing.xs,
+    lineHeight: Typography.lineHeight.tight,
   },
   cardMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: Spacing.md,
     borderTopWidth: 0.5,
-    borderTopColor: `${Colors.SECONDARY}22`,
+    borderTopColor: `${Colors.BORDER}22`,
     marginBottom: Spacing.md,
   },
   metaItem: {
     alignItems: 'center',
   },
   metaLabel: {
-    fontSize: 11,
+    fontSize: Typography.sizes.xs,
     color: Colors.TEXT_SECONDARY,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   metaValue: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   joinBtn: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     backgroundColor: Colors.PRIMARY,
     borderRadius: 12,
     alignItems: 'center',
   },
   joinBtnText: {
-    color: '#fff',
+    color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.md,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
 });

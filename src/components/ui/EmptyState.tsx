@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Colors, Typography, Spacing } from '../../constants/theme';
 
 interface EmptyStateProps {
@@ -11,12 +12,12 @@ interface EmptyStateProps {
 
 export function EmptyState({ emoji, title, subtitle, action }: EmptyStateProps) {
   return (
-    <View style={styles.container}>
+    <Animated.View entering={FadeInDown.duration(500)} style={styles.container}>
       <Text style={styles.emoji}>{emoji}</Text>
       <Text style={styles.title}>{title}</Text>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       {action && <View style={styles.action}>{action}</View>}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Typography.sizes.xl,
-    fontWeight: '600',
+    fontWeight: 600,
     color: Colors.TEXT_PRIMARY,
     textAlign: 'center',
     marginBottom: Spacing.sm,
@@ -42,6 +43,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_SECONDARY,
     textAlign: 'center',
+    lineHeight: Typography.lineHeight.normal,
     marginBottom: Spacing.xl,
   },
   action: {

@@ -1,18 +1,25 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, Pressable } from 'react-native';
 import { Colors, Radius, Spacing } from '../../constants/theme';
 
 interface CardProps {
   children: React.ReactNode;
-  variant?: 'surface' | 'raised';
+  variant?: 'surface' | 'raised' | 'outline';
+  onPress?: () => void;
   style?: ViewStyle;
 }
 
-export function Card({ children, variant = 'surface', style }: CardProps) {
+export function Card({ children, variant = 'surface', onPress, style }: CardProps) {
+  const Wrapper = onPress ? Pressable : View;
+
   return (
-    <View style={[styles.base, variant === 'raised' && styles.raised, style]}>
+    <Wrapper
+      style={[styles.base, styles[variant], style]}
+      onPress={onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+    >
       {children}
-    </View>
+    </Wrapper>
   );
 }
 
@@ -21,10 +28,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.SURFACE,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
-    borderWidth: 0.5,
-    borderColor: `${Colors.SECONDARY}33`,
+  },
+  surface: {
+    borderWidth: 1,
+    borderColor: Colors.BORDER,
   },
   raised: {
     backgroundColor: Colors.SURFACE_RAISED,
+    borderColor: Colors.BORDER_LIGHT,
+  },
+  outline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.BORDER,
   },
 });

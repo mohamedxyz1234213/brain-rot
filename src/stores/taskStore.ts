@@ -1,73 +1,139 @@
 import { create } from 'zustand';
 import { Task } from '../services/backend/interface';
-import { backendService } from '../services/backend';
+import { persist } from '../lib/persistence';
+
+type TaskTab = 'today' | 'upcoming' | 'completed' | 'abandoned';
 
 interface TaskState {
   tasks: Task[];
+  activeTab: TaskTab;
   isLoading: boolean;
   error: string | null;
-  fetchTasks: (userId: string, status?: Task['status']) => Promise<void>;
-  createTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateTask: (taskId: string, data: Partial<Task>) => Promise<void>;
-  deleteTask: (taskId: string) => Promise<void>;
-  completeTask: (taskId: string) => Promise<void>;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'postponeCount' | 'status'>) => void;
+  updateTask: (id: string, data: Partial<Task>) => void;
+  deleteTask: (id: string) => void;
+  completeTask: (id: string) => void;
+  abandonTask: (id: string) => void;
+  postponeTask: (id: string) => void;
+  setActiveTab: (tab: TaskTab) => void;
+  getFilteredTasks: () => Task[];
+  getEatTheFrogTask: () => Task | undefined;
+  getTaskUnlockerTasks: () => Task[];
+  clearError: () => void;
 }
 
-export const useTaskStore = create<TaskState>((set, get) => ({
-  tasks: [],
-  isLoading: false,
-  error: null,
+const generateId = () => `task_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
-  fetchTasks: async (userId, status) => {
-    set({ isLoading: true, error: null });
-    try {
-      const tasks = await backendService.getTasks(userId, status);
-      set({ tasks, isLoading: false });
-    } catch (error) {
-      set({ error: (error as Error).message, isLoading: false });
-    }
-  },
+export const useTaskStore = create<TaskState>()(
+  persist(
+    {
+      name: 'tasks',
+      partialize: (state: any) => ({
+        tasks: state.tasks,
+        activeTab: state.activeTab,
+      }),
+    },
+    (set, get) => ({
+      tasks: [],
+      activeTab: 'today',
+      isLoading: false,
+      error: null,
 
-  createTask: async (task) => {
-    try {
-      const newTask = await backendService.createTask(task);
-      set({ tasks: [...get().tasks, newTask] });
-    } catch (error) {
-      set({ error: (error as Error).message });
-    }
-  },
+      addTask: (taskData) => {
+        const task: Task = {
+          ...taskData,
+          id: generateId(),
+          postponeCount: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          status: 'pending',
+          isEatTheFrog: taskData.isEatTheFrog ?? false,
+          isAppUnlocker: taskData.isAppUnlocker ?? false,
+          isRecurring: taskData.isRecurring ?? false,
+          priority: taskData.priority ?? 'medium',
+        };
+        set({ tasks: [...get().tasks, task] });
+      },
 
-  updateTask: async (taskId, data) => {
-    try {
-      const updated = await backendService.updateTask(taskId, data);
-      set({
-        tasks: get().tasks.map((t) => (t.id === taskId ? updated : t)),
-      });
-    } catch (error) {
-      set({ error: (error as Error).message });
-    }
-  },
+      updateTask: (id, data) => {
+        set({
+          tasks: get().tasks.map((t: Task) =>
+            t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t
+          ),
+        });
+      },
 
-  deleteTask: async (taskId) => {
-    try {
-      await backendService.deleteTask(taskId);
-      set({ tasks: get().tasks.filter((t) => t.id !== taskId) });
-    } catch (error) {
-      set({ error: (error as Error).message });
-    }
-  },
+      deleteTask: (id) => {
+        set({ tasks: get().tasks.filter((t: Task) => t.id !== id) });
+      },
 
-  completeTask: async (taskId) => {
-    try {
-      const updated = await backendService.updateTask(taskId, {
-        status: 'completed',
-        completedAt: new Date().toISOString(),
-      });
-      set({
-        tasks: get().tasks.map((t) => (t.id === taskId ? updated : t)),
-      });
-    } catch (error) {
-      set({ error: (error as Error).message });
-    }
-  },
-}));
+      completeTask: (id) => {
+        set({
+          tasks: get().tasks.map((t: Task) =>
+            t.id === id
+              ? { ...t, status: 'completed', completedAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+              : t
+          ),
+        });
+      },
+
+      abandonTask: (id) => {
+        set({
+          tasks: get().tasks.map((t: Task) =>
+            t.id === id ? { ...t, status: 'abandoned', updatedAt: new Date().toISOString() } : t
+          ),
+        });
+      },
+
+      postponeTask: (id) => {
+        set({
+          tasks: get().tasks.map((t: Task) =>
+            t.id === id
+              ? {
+                  ...t,
+                  postponeCount: t.postponeCount + 1,
+                  isEatTheFrog: t.postponeCount + 1 >= 3 ? true : t.isEatTheFrog,
+                  updatedAt: new Date().toISOString(),
+                }
+              : t
+          ),
+        });
+      },
+
+      setActiveTab: (tab) => {
+        set({ activeTab: tab });
+      },
+
+      getFilteredTasks: () => {
+        const { tasks, activeTab } = get();
+        const today = new Date().toISOString().split('T')[0];
+        switch (activeTab) {
+          case 'today':
+            return tasks.filter((t: Task) =>
+              t.status === 'pending' && (!t.dueDate || t.dueDate.startsWith(today))
+            );
+          case 'upcoming':
+            return tasks.filter((t: Task) => t.status === 'pending' && t.dueDate && !t.dueDate.startsWith(today));
+          case 'completed':
+            return tasks.filter((t: Task) => t.status === 'completed');
+          case 'abandoned':
+            return tasks.filter((t: Task) => t.status === 'abandoned');
+          default:
+            return tasks;
+        }
+      },
+
+      getEatTheFrogTask: () => {
+        return get().tasks.find((t: Task) => t.isEatTheFrog && t.status === 'pending');
+      },
+
+      getTaskUnlockerTasks: () => {
+        return get().tasks.filter((t: Task) => t.isAppUnlocker && t.status === 'pending');
+      },
+
+      clearError: () => {
+        set({ error: null });
+      },
+    })
+  )
+);

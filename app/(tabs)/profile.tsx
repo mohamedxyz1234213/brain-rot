@@ -1,129 +1,129 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
+import { ProgressBar } from '../../src/components/ui/ProgressBar';
+import { SafeScreen } from '../../src/components/ui/SafeScreen';
+import { useAuthStore } from '../../src/stores/authStore';
+import { useXPStore } from '../../src/stores/xpStore';
+import { useBrainScoreStore } from '../../src/stores/brainScoreStore';
+import { useStreakStore } from '../../src/stores/streakStore';
+import { useFocusStore } from '../../src/stores/focusStore';
+import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
+import { useSubscriptionStore } from '../../src/stores/subscriptionStore';
+import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const xp = useXPStore((s) => s.xp);
+  const level = useXPStore((s) => s.level);
+  const levelInfo = useXPStore((s) => s.levelInfo);
+  const brainScore = useBrainScoreStore((s) => s.currentScore);
+  const streak = useStreakStore((s) => s.getStreak('screen_time'));
+  const totalFocusMinutes = useFocusStore((s) => s.totalFocusMinutesToday);
+  const totalScreenMinutes = useScreenTimeStore((s) => s.totalMinutesToday);
+  const tier = useSubscriptionStore((s) => s.tier);
+
+  const handleSignOut = () => {
+    logout();
+    router.replace('/(auth)/welcome');
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {/* Avatar + Name */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>🧟</Text>
+    <SafeScreen>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Animated.View entering={FadeInDown.duration(400)} style={styles.avatarSection}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarEmoji}>🧟</Text>
           </View>
-          <Text style={styles.name}>User</Text>
-          <Text style={styles.level}>Level: Zombie</Text>
-          <Text style={styles.xp}>0 XP</Text>
-        </View>
+          <Text style={styles.userName}>{user?.name ?? 'Zombie Brain'}</Text>
+          <Text style={styles.userLevel}>Level {level} · {xp} XP</Text>
+        </Animated.View>
 
-        {/* Stats */}
-        <Card style={styles.statsCard}>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Brain Score</Text>
-            <Text style={styles.statValue}>--</Text>
-          </View>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Longest Streak</Text>
-            <Text style={styles.statValue}>0 days</Text>
-          </View>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Tasks Completed</Text>
-            <Text style={styles.statValue}>0</Text>
-          </View>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Focus Hours</Text>
-            <Text style={styles.statValue}>0h</Text>
-          </View>
-        </Card>
+        <Animated.View entering={FadeInDown.duration(500).delay(100)}>
+          <Card style={styles.statsCard}>
+            <Text style={styles.cardTitle}>Stats Overview</Text>
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Brain Score</Text>
+                <Text style={[styles.statValue, { color: Colors.PRIMARY_LIGHT }]}>{brainScore}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Streak</Text>
+                <Text style={[styles.statValue, { color: Colors.SUCCESS }]}>{streak?.currentDays ?? 0}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Focus Time</Text>
+                <Text style={styles.statValue}>{totalFocusMinutes} min</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Screen Time</Text>
+                <Text style={styles.statValue}>{totalScreenMinutes} min</Text>
+              </View>
+            </View>
+            <ProgressBar progress={levelInfo.progress * 100} height={4} />
+            <Text style={styles.xpProgress}>{Math.round(levelInfo.progress * 100)}% to {levelInfo.maxXP} XP</Text>
+          </Card>
+        </Animated.View>
 
-        {/* Subscription */}
-        <Card style={styles.subCard}>
-          <Text style={styles.subTitle}>Free Plan</Text>
-          <Text style={styles.subDesc}>Unlock full blocking, AI planner, and more</Text>
-          <Button title="Upgrade to Healed" onPress={() => {}} style={{ marginTop: Spacing.md }} />
-        </Card>
+        <Animated.View entering={FadeInDown.duration(500).delay(200)}>
+          <Card style={styles.subCard}>
+            <View style={styles.subRow}>
+              <Text style={styles.cardTitle}>Subscription</Text>
+              <Text style={[styles.tierBadge, tier !== 'free' && styles.tierBadgeActive]}>{tier.toUpperCase()}</Text>
+            </View>
+            {tier === 'free' && (
+              <Button title="Upgrade to Healed — $4.99/mo" onPress={() => router.push('/screens/subscription')} size="md" />
+            )}
+          </Card>
+        </Animated.View>
 
-        {/* Settings */}
-        <Button title="Settings" onPress={() => {}} variant="secondary" style={{ marginTop: Spacing.lg }} />
-        <Button title="Sign Out" onPress={() => {}} variant="ghost" style={{ marginTop: Spacing.sm }} />
+        <Animated.View entering={FadeInDown.duration(500).delay(300)}>
+          {[
+            { label: 'Settings', icon: '⚙️', route: '/screens/settings' as const },
+            { label: 'Analytics', icon: '📊', route: '/screens/analytics' as const },
+            { label: 'Roast History', icon: '🔥', route: '/screens/roast-history' as const },
+            { label: 'Accountability', icon: '👥', route: '/screens/accountability' as const },
+            { label: 'Leaderboard', icon: '🏆', route: '/screens/leaderboard' as const },
+            { label: 'Challenges', icon: '🎯', route: '/screens/challenges' as const },
+          ].map((nav) => (
+            <Pressable key={nav.route} style={styles.navItem} onPress={() => router.push(nav.route)} accessibilityRole="button" accessibilityLabel={nav.label}>
+              <Text style={styles.navItemText}>{nav.icon}  {nav.label}</Text>
+            </Pressable>
+          ))}
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.duration(500).delay(400)}>
+          <Button title="Sign Out" onPress={handleSignOut} variant="danger" size="lg" style={styles.signOutBtn} />
+        </Animated.View>
       </ScrollView>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
-  content: {
-    padding: Spacing.lg,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.SURFACE,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-  avatarText: {
-    fontSize: 36,
-  },
-  name: {
-    fontSize: Typography.sizes.xl,
-    fontWeight: '700',
-    color: Colors.TEXT_PRIMARY,
-  },
-  level: {
-    fontSize: Typography.sizes.md,
-    color: Colors.PRIMARY,
-    marginTop: Spacing.xs,
-  },
-  xp: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.TEXT_SECONDARY,
-    marginTop: Spacing.xs,
-  },
-  statsCard: {
-    marginBottom: Spacing.lg,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 0.5,
-    borderBottomColor: `${Colors.SECONDARY}33`,
-  },
-  statLabel: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-  },
-  statValue: {
-    fontSize: Typography.sizes.md,
-    fontWeight: '600',
-    color: Colors.TEXT_PRIMARY,
-  },
-  subCard: {
-    borderColor: Colors.PRIMARY,
-    borderWidth: 1,
-  },
-  subTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: '600',
-    color: Colors.TEXT_PRIMARY,
-  },
-  subDesc: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.TEXT_SECONDARY,
-    marginTop: Spacing.xs,
-  },
+  content: { padding: Spacing.lg, paddingBottom: Spacing['3xl'] },
+  avatarSection: { alignItems: 'center', marginBottom: Spacing.xl },
+  avatarCircle: { width: Sizing.avatarLg, height: Sizing.avatarLg, borderRadius: Radius.full, backgroundColor: Colors.SURFACE, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT },
+  avatarEmoji: { fontSize: Typography.sizes['3xl'] },
+  userName: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, marginTop: Spacing.md },
+  userLevel: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
+  statsCard: { marginBottom: Spacing.lg },
+  cardTitle: { fontSize: Typography.sizes.lg, fontWeight: 600, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.md },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
+  statItem: { width: '45%', marginBottom: Spacing.md },
+  statLabel: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
+  statValue: { fontSize: Typography.sizes.lg, fontWeight: 700, color: Colors.TEXT_PRIMARY },
+  xpProgress: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginTop: Spacing.sm },
+  subCard: { marginBottom: Spacing.lg },
+  subRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
+  tierBadge: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, fontWeight: 600 },
+  tierBadgeActive: { color: Colors.SUCCESS },
+  navItem: { backgroundColor: Colors.SURFACE, borderRadius: Radius.md, padding: Spacing.lg, marginBottom: Spacing.sm, borderWidth: 1, borderColor: Colors.BORDER, minHeight: Sizing.touchTarget },
+  navItemText: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, fontWeight: 500 },
+  signOutBtn: { marginTop: Spacing.md },
 });

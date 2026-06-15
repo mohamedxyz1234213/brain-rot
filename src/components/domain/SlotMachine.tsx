@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
-import { theme } from '../../constants/theme';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+import { Colors, Typography, Spacing, Radius, ANIMATION } from '../../constants/theme';
 
 type SlotResult = 'unlock_15' | 'blocked_extra' | 'greyscale' | 'quran_first' | 'wait_respin';
 
@@ -31,66 +33,57 @@ function weightedRandom(): SlotOutcome {
     cumulative += outcome.probability;
     if (rand <= cumulative) return outcome;
   }
-  return OUTCOMES[1]; // fallback to blocked
+  return OUTCOMES[1];
 }
 
 export function SlotMachine({ islamicMode = true, onResult }: SlotMachineProps) {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<SlotOutcome | null>(null);
-  const spinAnim = useRef(new Animated.Value(0)).current;
+  const shakeAnim = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeAnim.value }],
+  }));
 
   const spin = () => {
     if (spinning) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setSpinning(true);
     setResult(null);
 
-    Animated.sequence([
-      Animated.timing(spinAnim, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(spinAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
+    shakeAnim.value = withSequence(
+      withTiming(-10, { duration: 100 }),
+      withTiming(10, { duration: 100 }),
+      withTiming(-5, { duration: 100 }),
+      withTiming(0, { duration: 100 }),
+    );
+
+    setTimeout(() => {
       let outcome = weightedRandom();
-      // Remove Quran option if not Islamic mode
       if (!islamicMode && outcome.result === 'quran_first') {
-        outcome = OUTCOMES[4]; // wait_respin instead
+        outcome = OUTCOMES[4];
       }
       setResult(outcome);
       setSpinning(false);
+
+      if (outcome.result === 'blocked_extra') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } else if (outcome.result === 'unlock_15') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+
       onResult(outcome.result);
-    });
+    }, 1500);
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View entering={FadeIn.duration(400)} style={[styles.container, animatedStyle]}>
       <Text style={styles.title}>🎰 Doom Scroll Slot Machine</Text>
       <Text style={styles.subtitle}>Feeling lucky? Spin for a chance to unlock...</Text>
 
       <View style={styles.slotFrame}>
         {spinning ? (
-          <Animated.Text
-            style={[
-              styles.symbols,
-              {
-                transform: [
-                  {
-                    translateY: spinAnim.interpolate({
-                      inputRange: [0, 0.5, 1],
-                      outputRange: [0, -20, 0],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            🎰 🎰 🎰
-          </Animated.Text>
+          <Text style={styles.spinningSymbols}>🎰 🎰 🎰</Text>
         ) : result ? (
           <Text style={styles.symbols}>{result.symbols}</Text>
         ) : (
@@ -120,83 +113,37 @@ export function SlotMachine({ islamicMode = true, onResult }: SlotMachineProps) 
         </Text>
       </Pressable>
 
-      <Text style={styles.odds}>
-        Win chance: 8% • Lose: 40% • Meh: 52%
-      </Text>
-    </View>
+      <Text style={styles.odds}>Win: 8% • Lose: 40% • Meh: 52%</Text>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    padding: 24,
-  },
-  title: {
-    fontSize: theme.typography['2xl'],
-    color: theme.colors.textPrimary,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: theme.typography.md,
-    color: theme.colors.textSecondary,
-    marginBottom: 32,
-  },
+  container: { alignItems: 'center', padding: Spacing.xl },
+  title: { fontSize: Typography.sizes['2xl'], color: Colors.TEXT_PRIMARY, fontWeight: '700', marginBottom: Spacing.sm },
+  subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing['2xl'] },
   slotFrame: {
-    width: 240,
-    height: 100,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
-    marginBottom: 24,
+    width: 240, height: 100,
+    backgroundColor: Colors.SURFACE, borderRadius: Radius.lg,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: Colors.PRIMARY, marginBottom: Spacing.xl,
   },
-  symbols: {
-    fontSize: 36,
-    letterSpacing: 8,
-  },
+  spinningSymbols: { fontSize: 36, letterSpacing: 8 },
+  symbols: { fontSize: 36, letterSpacing: 8 },
   resultBox: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface,
-    marginBottom: 24,
+    paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
+    borderRadius: Radius.md, backgroundColor: Colors.SURFACE, marginBottom: Spacing.xl,
   },
-  resultWin: {
-    backgroundColor: `${theme.colors.success}22`,
-    borderWidth: 1,
-    borderColor: theme.colors.success,
-  },
-  resultLose: {
-    backgroundColor: `${theme.colors.danger}22`,
-    borderWidth: 1,
-    borderColor: theme.colors.danger,
-  },
-  resultText: {
-    fontSize: theme.typography.lg,
-    color: theme.colors.textPrimary,
-    fontWeight: '600',
-  },
+  resultWin: { backgroundColor: `${Colors.SUCCESS}22`, borderWidth: 1, borderColor: Colors.SUCCESS },
+  resultLose: { backgroundColor: `${Colors.DANGER}22`, borderWidth: 1, borderColor: Colors.DANGER },
+  resultText: { fontSize: Typography.sizes.lg, color: Colors.TEXT_PRIMARY, fontWeight: '600' },
   spinBtn: {
-    paddingHorizontal: 48,
-    paddingVertical: 16,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.lg,
-    marginBottom: 16,
+    paddingHorizontal: 48, paddingVertical: Spacing.lg,
+    backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, marginBottom: Spacing.md,
   },
-  spinBtnDisabled: {
-    opacity: 0.5,
-  },
-  spinBtnText: {
-    color: '#fff',
-    fontSize: theme.typography.xl,
-    fontWeight: '700',
-  },
-  odds: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textSecondary,
-  },
+  spinBtnDisabled: { opacity: 0.5 },
+  spinBtnText: { color: '#fff', fontSize: Typography.sizes.xl, fontWeight: '700' },
+  odds: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
 });
+
+export type { SlotResult };

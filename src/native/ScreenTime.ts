@@ -1,8 +1,3 @@
-/**
- * ScreenTime Native Bridge
- * Interfaces with iOS (Screen Time API) and Android (UsageStatsManager + AccessibilityService)
- */
-
 import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
 
 const { ScreenTimeModule } = NativeModules;
@@ -32,7 +27,6 @@ export interface ScreenTimeNativeModule {
   stopMonitoring(): Promise<void>;
 }
 
-// Event listeners
 export const ScreenTimeEvents = {
   onUsageLimitReached: (callback: (data: { bundleId: string; appName: string }) => void) => {
     return eventEmitter?.addListener('onUsageLimitReached', callback);
@@ -42,21 +36,11 @@ export const ScreenTimeEvents = {
   },
 };
 
-// Mock for development/simulator
 const MockScreenTimeModule: ScreenTimeNativeModule = {
-  async requestPermission() {
-    console.log('[Mock] ScreenTime permission requested');
-    return true;
-  },
-  async setAppLimit(bundleId, dailyMinutes) {
-    console.log(`[Mock] Set limit: ${bundleId} = ${dailyMinutes}min`);
-  },
-  async blockApp(bundleId) {
-    console.log(`[Mock] Blocked: ${bundleId}`);
-  },
-  async unblockApp(bundleId) {
-    console.log(`[Mock] Unblocked: ${bundleId}`);
-  },
+  async requestPermission() { return true; },
+  async setAppLimit(bundleId, dailyMinutes) { console.log(`[Mock] Set limit: ${bundleId} = ${dailyMinutes}min`); },
+  async blockApp(bundleId) { console.log(`[Mock] Blocked: ${bundleId}`); },
+  async unblockApp(bundleId) { console.log(`[Mock] Unblocked: ${bundleId}`); },
   async getUsageStats() {
     return [
       { bundleId: 'com.zhiliaoapp.musically', appName: 'TikTok', minutesUsed: 45 },
@@ -77,14 +61,9 @@ const MockScreenTimeModule: ScreenTimeNativeModule = {
       { bundleId: 'com.netflix.mediaclient', name: 'Netflix', category: 'entertainment' },
     ];
   },
-  async startMonitoring() {
-    console.log('[Mock] Monitoring started');
-  },
-  async stopMonitoring() {
-    console.log('[Mock] Monitoring stopped');
-  },
+  async startMonitoring() { console.log('[Mock] Monitoring started'); },
+  async stopMonitoring() { console.log('[Mock] Monitoring stopped'); },
 };
 
-// Export either real module or mock
 export const screenTimeModule: ScreenTimeNativeModule =
   ScreenTimeModule || MockScreenTimeModule;

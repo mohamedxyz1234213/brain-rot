@@ -1,64 +1,87 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
-import { Button } from '../../src/components/ui/Button';
+import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { SafeScreen } from '../../src/components/ui/SafeScreen';
+import { useAuthStore } from '../../src/stores/authStore';
 
 export default function WelcomeScreen() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated]);
+
+  const handleGetStarted = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/(auth)/quiz');
+  };
+
+  const handleSignIn = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/(auth)/sign-in');
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
+    <SafeScreen>
+      <Animated.View entering={FadeInDown.duration(600)} style={styles.content}>
         <Text style={styles.emoji}>🧠</Text>
         <Text style={styles.title}>BrainRot Healer</Text>
-        <Text style={styles.subtitle}>
-          Recover from social media addiction.{'\n'}
-          Get roasted when you fail.{'\n'}
-          Gamify your recovery.
-        </Text>
-      </View>
+        <Text style={styles.subtitle}>Recover from social media addiction. Get roasted. Get healed.</Text>
 
-      <View style={styles.actions}>
-        <Button title="Get Started" onPress={() => router.push('/(auth)/sign-up')} size="lg" />
-        <Button
-          title="I already have an account"
-          onPress={() => router.push('/(auth)/sign-in')}
-          variant="ghost"
-        />
-      </View>
+        <View style={styles.features}>
+          <Animated.View entering={FadeInDown.duration(400).delay(200)}>
+            <FeatureRow emoji="🔒" text="Block apps that steal your time" />
+          </Animated.View>
+          <Animated.View entering={FadeInDown.duration(400).delay(300)}>
+            <FeatureRow emoji="🔥" text="Get roasted when you fail" />
+          </Animated.View>
+          <Animated.View entering={FadeInDown.duration(400).delay(400)}>
+            <FeatureRow emoji="📊" text="Track your brain score daily" />
+          </Animated.View>
+          <Animated.View entering={FadeInDown.duration(400).delay(500)}>
+            <FeatureRow emoji="🕌" text="Islamic prayer tracking" />
+          </Animated.View>
+        </View>
+
+        <View style={styles.actions}>
+          <Pressable style={styles.primaryBtn} onPress={handleGetStarted} accessibilityRole="button" accessibilityLabel="Get started">
+            <Text style={styles.primaryBtnText}>Get Started</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryBtn} onPress={handleSignIn} accessibilityRole="button" accessibilityLabel="Sign in">
+            <Text style={styles.secondaryBtnText}>Sign In</Text>
+          </Pressable>
+        </View>
+      </Animated.View>
+    </SafeScreen>
+  );
+}
+
+function FeatureRow({ emoji, text }: { emoji: string; text: string }) {
+  return (
+    <View style={styles.featureRow}>
+      <Text style={styles.featureEmoji}>{emoji}</Text>
+      <Text style={styles.featureText}>{text}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-    justifyContent: 'space-between',
-    padding: Spacing.xl,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emoji: {
-    fontSize: 80,
-    marginBottom: Spacing.xl,
-  },
-  title: {
-    fontSize: Typography.sizes['3xl'],
-    fontWeight: '800',
-    color: Colors.TEXT_PRIMARY,
-    marginBottom: Spacing.md,
-  },
-  subtitle: {
-    fontSize: Typography.sizes.lg,
-    color: Colors.TEXT_SECONDARY,
-    textAlign: 'center',
-    lineHeight: 26,
-  },
-  actions: {
-    gap: Spacing.md,
-    paddingBottom: Spacing['2xl'],
-  },
+  content: { flex: 1, justifyContent: 'center', padding: Spacing.xl },
+  emoji: { fontSize: Typography.sizes['4xl'], textAlign: 'center', marginBottom: Spacing.lg },
+  title: { fontSize: Typography.sizes['3xl'], fontWeight: 800, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm },
+  subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center', lineHeight: Typography.lineHeight.normal, marginBottom: Spacing['2xl'] },
+  features: { marginBottom: Spacing['2xl'] },
+  featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.lg },
+  featureEmoji: { fontSize: Typography.sizes.xl, marginRight: Spacing.md },
+  featureText: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.normal },
+  actions: { gap: Spacing.md },
+  primaryBtn: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, paddingVertical: Spacing.lg, alignItems: 'center' },
+  primaryBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.lg, fontWeight: 600 },
+  secondaryBtn: { borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center' },
+  secondaryBtnText: { color: Colors.TEXT_SECONDARY, fontSize: Typography.sizes.md },
 });

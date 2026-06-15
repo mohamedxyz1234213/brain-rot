@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { theme } from '../../constants/theme';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { Colors, Typography, Spacing, Radius } from '../../constants/theme';
 
 interface RoastCardProps {
   persona: string;
@@ -25,7 +26,7 @@ export function RoastCard({
   const timeAgo = getTimeAgo(date);
 
   return (
-    <View style={styles.container}>
+    <Animated.View entering={FadeInUp.duration(300)} style={styles.container}>
       <View style={styles.header}>
         <View style={styles.personaRow}>
           <Text style={styles.personaEmoji}>{personaEmoji}</Text>
@@ -47,7 +48,7 @@ export function RoastCard({
           </Pressable>
         )}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -66,54 +67,48 @@ function getTimeAgo(date: Date): string {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    marginBottom: 12,
+    padding: Spacing.lg,
+    backgroundColor: Colors.SURFACE,
+    borderRadius: Radius.lg,
+    marginBottom: Spacing.md,
     borderWidth: 0.5,
-    borderColor: `${theme.colors.danger}44`,
+    borderColor: `${Colors.DANGER}44`,
   },
-  header: {
-    marginBottom: 12,
-  },
+  header: { marginBottom: Spacing.md },
   personaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
-  personaEmoji: {
-    fontSize: 20,
-    marginRight: 8,
-  },
+  personaEmoji: { fontSize: 20, marginRight: Spacing.sm },
   personaName: {
-    fontSize: theme.typography.md,
-    color: theme.colors.textPrimary,
+    fontSize: Typography.sizes.md,
+    color: Colors.TEXT_PRIMARY,
     fontWeight: '700',
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   trigger: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textSecondary,
+    fontSize: Typography.sizes.sm,
+    color: Colors.TEXT_SECONDARY,
     textTransform: 'capitalize',
   },
   offlineBadge: {
     fontSize: 10,
-    color: theme.colors.warning,
-    backgroundColor: `${theme.colors.warning}22`,
-    paddingHorizontal: 6,
+    color: Colors.WARNING,
+    backgroundColor: `${Colors.WARNING}22`,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: 4,
-    overflow: 'hidden',
   },
   text: {
-    fontSize: theme.typography.lg,
-    color: theme.colors.textPrimary,
+    fontSize: Typography.sizes.lg,
+    color: Colors.TEXT_PRIMARY,
     lineHeight: 24,
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   footer: {
     flexDirection: 'row',
@@ -121,18 +116,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   time: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textSecondary,
+    fontSize: Typography.sizes.sm,
+    color: Colors.TEXT_SECONDARY,
   },
   shareBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: `${theme.colors.danger}22`,
-    borderRadius: theme.radius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: `${Colors.DANGER}22`,
+    borderRadius: Radius.sm,
   },
   shareBtnText: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.danger,
+    fontSize: Typography.sizes.sm,
+    color: Colors.DANGER,
     fontWeight: '600',
   },
 });

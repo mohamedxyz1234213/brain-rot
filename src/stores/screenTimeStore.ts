@@ -1,69 +1,72 @@
 import { create } from 'zustand';
 import { AppLimit, ScreenTimeLog } from '../services/backend/interface';
-import { backendService } from '../services/backend';
+import { persist } from '../lib/persistence';
 
 interface ScreenTimeState {
   logs: ScreenTimeLog[];
   limits: AppLimit[];
   isLoading: boolean;
   totalMinutesToday: number;
-  fetchLogs: (userId: string, date: string) => Promise<void>;
-  fetchLimits: (userId: string) => Promise<void>;
-  setAppLimit: (limit: Omit<AppLimit, 'id'>) => Promise<void>;
-  updateAppLimit: (limitId: string, data: Partial<AppLimit>) => Promise<void>;
-  deleteAppLimit: (limitId: string) => Promise<void>;
+  addLog: (log: Omit<ScreenTimeLog, 'id'>) => void;
+  addLimit: (limit: Omit<AppLimit, 'id'>) => void;
+  updateLimit: (id: string, data: Partial<AppLimit>) => void;
+  deleteLimit: (id: string) => void;
+  calculateTotalMinutes: () => number;
+  getOverageApps: () => AppLimit[];
+  setLimits: (limits: AppLimit[]) => void;
 }
 
-export const useScreenTimeStore = create<ScreenTimeState>((set, get) => ({
-  logs: [],
-  limits: [],
-  isLoading: false,
-  totalMinutesToday: 0,
+const generateId = () => `st_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
-  fetchLogs: async (userId, date) => {
-    set({ isLoading: true });
-    try {
-      const logs = await backendService.getScreenTimeLogs(userId, date);
-      const totalMinutesToday = logs.reduce((sum, l) => sum + l.minutesUsed, 0);
-      set({ logs, totalMinutesToday, isLoading: false });
-    } catch {
-      set({ isLoading: false });
-    }
-  },
+export const useScreenTimeStore = create<ScreenTimeState>()(
+  persist(
+    {
+      name: 'screen_time',
+      partialize: (state: any) => ({ limits: state.limits }),
+    },
+    (set, get) => ({
+      logs: [],
+      limits: [],
+      isLoading: false,
+      totalMinutesToday: 0,
 
-  fetchLimits: async (userId) => {
-    try {
-      const limits = await backendService.getAppLimits(userId);
-      set({ limits });
-    } catch {
-      // silent
-    }
-  },
+      addLog: (logData) => {
+        const log: ScreenTimeLog = { ...logData, id: generateId() };
+        const totalMinutesToday = get().totalMinutesToday + log.minutesUsed;
+        set({ logs: [...get().logs, log], totalMinutesToday });
+      },
 
-  setAppLimit: async (limit) => {
-    try {
-      const newLimit = await backendService.setAppLimit(limit);
-      set({ limits: [...get().limits, newLimit] });
-    } catch (error) {
-      console.error('Failed to set app limit:', error);
-    }
-  },
+      addLimit: (limitData) => {
+        const limit: AppLimit = { ...limitData, id: generateId(), isEnabled: true, isHardBlock: false };
+        set({ limits: [...get().limits, limit] });
+      },
 
-  updateAppLimit: async (limitId, data) => {
-    try {
-      const updated = await backendService.updateAppLimit(limitId, data);
-      set({ limits: get().limits.map((l) => (l.id === limitId ? updated : l)) });
-    } catch (error) {
-      console.error('Failed to update app limit:', error);
-    }
-  },
+      updateLimit: (id, data) => {
+        set({
+          limits: get().limits.map((l: AppLimit) => l.id === id ? { ...l, ...data } : l),
+        });
+      },
 
-  deleteAppLimit: async (limitId) => {
-    try {
-      await backendService.deleteAppLimit(limitId);
-      set({ limits: get().limits.filter((l) => l.id !== limitId) });
-    } catch (error) {
-      console.error('Failed to delete app limit:', error);
-    }
-  },
-}));
+      deleteLimit: (id) => {
+        set({ limits: get().limits.filter((l: AppLimit) => l.id !== id) });
+      },
+
+      calculateTotalMinutes: () => {
+        const total = get().logs.reduce((sum: number, l: ScreenTimeLog) => sum + l.minutesUsed, 0);
+        set({ totalMinutesToday: total });
+        return total;
+      },
+
+      getOverageApps: () => {
+        return get().limits.filter((l: AppLimit) => {
+          const log = get().logs.find((lg: ScreenTimeLog) => lg.appBundleId === l.appBundleId);
+          return log && log.minutesUsed > l.dailyLimitMinutes;
+        });
+      },
+
+      setLimits: (limits) => {
+        set({ limits });
+      },
+    })
+  )
+);

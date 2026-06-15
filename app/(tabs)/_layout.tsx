@@ -1,17 +1,24 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Colors } from '../../src/constants/theme';
+import { Colors, Typography } from '../../src/constants/theme';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.PRIMARY,
-        tabBarInactiveTintColor: Colors.SECONDARY,
+        tabBarActiveTintColor: Colors.TEXT_ON_PRIMARY,
+        tabBarInactiveTintColor: Colors.TEXT_SECONDARY,
         tabBarStyle: {
           backgroundColor: Colors.SURFACE,
-          borderTopColor: `${Colors.SECONDARY}33`,
-          borderTopWidth: 0.5,
+          borderTopColor: Colors.BORDER,
+          borderTopWidth: 1,
+          height: 60,
+          paddingBottom: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: Typography.sizes.sm,
+          fontWeight: 500,
         },
       }}
     >
@@ -19,38 +26,37 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="tasks"
         options={{
           title: 'Tasks',
-          tabBarLabel: 'Tasks',
+          tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-done" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="focus"
         options={{
           title: 'Focus',
-          tabBarLabel: 'Focus',
+          tabBarIcon: ({ color, size }) => <Ionicons name="timer" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="religion"
         options={{
-          title: 'Religion',
-          tabBarLabel: 'Religion',
+          title: 'Prayers',
+          tabBarIcon: ({ color, size }) => <Ionicons name="moon" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarLabel: 'Profile',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
         }}
       />
     </Tabs>
   );
 }
-

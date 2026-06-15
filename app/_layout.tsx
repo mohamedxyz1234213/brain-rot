@@ -1,30 +1,16 @@
 import { useFonts } from 'expo-font';
-import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { Colors } from '../src/constants/theme';
+
 import '../src/i18n';
 
-export {
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
-};
-
-// Custom dark theme matching our design system
-const BrainRotDarkTheme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    primary: '#43686F',
-    background: '#0D1117',
-    card: '#161B22',
-    text: '#E6EDF3',
-    border: '#B0B1B033',
-    notification: '#F85149',
-  },
 };
 
 SplashScreen.preventAutoHideAsync();
@@ -48,27 +34,26 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
   return (
-    <ThemeProvider value={BrainRotDarkTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="screens" />
-        <Stack.Screen name="(modals)/roast" options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="(modals)/app-blocked" options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="(modals)/driving-alert" options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="(modals)/intervention" options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="(modals)/slot-machine" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="(modals)/ghost" options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="(modals)/life-trailer" options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="(modals)/breakup-letter" options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="(modals)/villain-arc" options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="(modals)/brain-scan" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: Colors.BACKGROUND },
+      }}
+    >
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="screens" />
+      <Stack.Screen name="(modals)/roast" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="(modals)/app-blocked" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="(modals)/driving-alert" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="(modals)/intervention" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="(modals)/slot-machine" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="(modals)/ghost" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="(modals)/life-trailer" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="(modals)/breakup-letter" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="(modals)/villain-arc" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="(modals)/brain-scan" options={{ presentation: 'modal' }} />
+    </Stack>
   );
 }

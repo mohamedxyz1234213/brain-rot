@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import { Colors, Radius, Spacing } from '../../constants/theme';
 
 interface SkeletonLoaderProps {
@@ -15,42 +16,25 @@ export function SkeletonLoader({
   borderRadius = Radius.sm,
   style,
 }: SkeletonLoaderProps) {
-  const animatedValue = React.useRef(new Animated.Value(0)).current;
+  const opacity = useSharedValue(0.2);
 
-  React.useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(animatedValue, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(animatedValue, {
-          toValue: 0,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withTiming(0.5, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
     );
-    animation.start();
-    return () => animation.stop();
-  }, [animatedValue]);
+  }, []);
 
-  const opacity = animatedValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.7],
-  });
+  const animatedOpacity = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
 
   return (
     <Animated.View
       style={[
-        {
-          width: width as number,
-          height,
-          borderRadius,
-          backgroundColor: Colors.SURFACE_RAISED,
-          opacity,
-        },
+        { width: width as number, height, borderRadius, backgroundColor: Colors.SURFACE_RAISED },
+        animatedOpacity,
         style,
       ]}
     />
@@ -82,7 +66,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.SURFACE,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
-    borderWidth: 0.5,
-    borderColor: `${Colors.SECONDARY}33`,
+    borderWidth: 1,
+    borderColor: Colors.BORDER,
   },
 });

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 type SettingsSection = {
   title: string;
@@ -96,15 +97,9 @@ export default function SettingsScreen() {
   ];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← Back</Text>
-        </Pressable>
-        <Text style={styles.title}>Settings</Text>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <SafeScreen>
+      <ScreenHeader title="Settings" onBack={() => router.back()} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         {sections.map((section) => (
           <View key={section.title} style={styles.section}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
@@ -114,8 +109,8 @@ export default function SettingsScreen() {
                 {item.type === 'toggle' && (
                   <Switch
                     value={item.value}
-                    trackColor={{ true: Colors.PRIMARY, false: Colors.SECONDARY }}
-                    thumbColor="#fff"
+                    trackColor={{ true: Colors.PRIMARY, false: Colors.TEXT_SECONDARY }}
+                    thumbColor={Colors.TEXT_ON_PRIMARY}
                   />
                 )}
                 {item.type === 'nav' && (
@@ -128,32 +123,12 @@ export default function SettingsScreen() {
             ))}
           </View>
         ))}
-        <View style={{ height: 40 }} />
       </ScrollView>
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  backBtn: {
-    fontSize: Typography.sizes.md,
-    color: Colors.PRIMARY,
-    marginBottom: Spacing.sm,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-  },
   section: {
     paddingHorizontal: Spacing.xl,
     marginBottom: Spacing.xl,
@@ -161,7 +136,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_SECONDARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: Spacing.md,
@@ -172,7 +147,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 0.5,
-    borderBottomColor: `${Colors.SECONDARY}33`,
+    borderBottomColor: `${Colors.BORDER}33`,
   },
   itemLabel: {
     fontSize: Typography.sizes.md,

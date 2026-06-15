@@ -1,211 +1,76 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius } from '../../../src/constants/theme';
+import { Card } from '../../../src/components/ui/Card';
+import { Button } from '../../../src/components/ui/Button';
+import { useSettingsStore } from '../../../src/stores/settingsStore';
+import { useXPStore } from '../../../src/stores/xpStore';
 
 const PERSONAS = [
-  {
-    id: 'egyptian_dad',
-    emoji: '🇪🇬',
-    name: 'Egyptian Dad',
-    description: 'Arabic roasts, disappointed tone, compares you to cousins',
-    sample: '"يا ابني... ابن خالتك بقى دكتور وانت بتتفرج على تيك توك"',
-  },
-  {
-    id: 'egyptian_mom',
-    emoji: '🇪🇬',
-    name: 'Egyptian Mom',
-    description: 'Arabic, emotional guilt, love mixed with pain',
-    sample: '"أنا ربيتك عشان تبقى حاجة... مش عشان تقعد على الموبايل"',
-  },
-  {
-    id: 'future_self',
-    emoji: '👻',
-    name: 'Future Self (Age 45)',
-    description: 'English, regretful, specific missed opportunities',
-    sample: '"I\'m you at 45. Those hours on Instagram? They cost us everything."',
-  },
-  {
-    id: 'drill_sergeant',
-    emoji: '🪖',
-    name: 'Drill Sergeant',
-    description: 'English, all caps, military failure framing',
-    sample: '"YOU THINK SCROLLING IS A HOBBY?! DROP AND GIVE ME 20 TASKS!"',
-  },
-  {
-    id: 'sigmund_freud',
-    emoji: '🧠',
-    name: 'Sigmund Freud',
-    description: 'English, psychoanalytical, clinical devastation',
-    sample: '"Your compulsive phone checking reveals an unresolved attachment disorder."',
-  },
-  {
-    id: 'david_goggins',
-    emoji: '💪',
-    name: 'David Goggins',
-    description: 'English, stay-hard energy, calls you soft',
-    sample: '"You\'re soft. Real soft. Put the phone down and callous your mind."',
-  },
+  { id: 'egyptian_dad', name: 'Egyptian Dad', emoji: '🇪🇬', sample: '"أنت مش ابن العيلة، ابن خالتك بقى طبيب وانت بقى... سكران على الموبايل."' },
+  { id: 'egyptian_mom', name: 'Egyptian Mom', emoji: '🇪🇬', sample: '"أنا عيني وجعتني من العياط عليك. ده انا ماما ولا ده حياتي كلها حاجة."' },
+  { id: 'future_self', name: 'Future Self (45)', emoji: '👻', sample: '"I wish I could tell you to put the phone down. The life you\'re building right now is the one I\'m living."' },
+  { id: 'drill_sergeant', name: 'Drill Sergeant', emoji: '🪖', sample: '"DROP THE PHONE AND GIVE ME 20! YOUR DOPAMINE IS COMPROMISED SOLDIER!"' },
+  { id: 'sigmund_freud', name: 'Sigmund Freud', emoji: '🧠', sample: '"Your scrolling is a manifestation of unresolved Oedipal desire for maternal validation."' },
+  { id: 'david_goggins', name: 'David Goggins', emoji: '💪', sample: '"You\'re staying soft. WHILE YOU SCROLL, I DID 1000 PUSHUPS. STAY HARD."' },
 ];
 
-export default function PersonaSetupScreen() {
-  const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
+export default function SetupPersonaScreen() {
+  const [selectedPersona, setSelectedPersona] = useState<string>('');
 
-  const handleComplete = () => {
-    // Save persona selection
+  const handleSelect = (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelectedPersona(id);
+  };
+
+  const handleContinue = () => {
+    if (!selectedPersona) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    useSettingsStore.getState().setRoastPersona(selectedPersona);
+    useXPStore.getState().addXP(50, 'Setup completed');
     router.replace('/(tabs)');
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.step}>Step 3 of 3</Text>
-        <Text style={styles.title}>Choose Your Roaster</Text>
-        <Text style={styles.subtitle}>
-          Pick who will hold you accountable when you slip up.
-        </Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Animated.View entering={FadeInDown.duration(400)}>
+          <Text style={styles.title}>Choose Your Roast Persona</Text>
+          <Text style={styles.subtitle}>Who will roast you when you fail?</Text>
+        </Animated.View>
 
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-        {PERSONAS.map((persona) => (
-          <Pressable
-            key={persona.id}
-            style={[
-              styles.personaCard,
-              selectedPersona === persona.id && styles.personaCardSelected,
-            ]}
-            onPress={() => setSelectedPersona(persona.id)}
-          >
-            <View style={styles.personaHeader}>
+        {PERSONAS.map((persona, i) => (
+          <Animated.View key={persona.id} entering={FadeInDown.duration(300).delay(i * 80)}>
+            <Pressable style={[styles.personaCard, selectedPersona === persona.id && styles.personaCardActive]} onPress={() => handleSelect(persona.id)}>
               <Text style={styles.personaEmoji}>{persona.emoji}</Text>
-              <View style={styles.personaInfo}>
-                <Text style={styles.personaName}>{persona.name}</Text>
-                <Text style={styles.personaDesc}>{persona.description}</Text>
-              </View>
-              {selectedPersona === persona.id && (
-                <View style={styles.selectedBadge}>
-                  <Text style={styles.selectedText}>✓</Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.sample}>{persona.sample}</Text>
-          </Pressable>
+              <Text style={styles.personaName}>{persona.name}</Text>
+              <Text style={styles.personaSample}>{persona.sample}</Text>
+            </Pressable>
+          </Animated.View>
         ))}
-      </ScrollView>
 
-      <View style={styles.footer}>
-        <Pressable
-          style={[styles.completeBtn, !selectedPersona && styles.completeBtnDisabled]}
-          onPress={handleComplete}
-          disabled={!selectedPersona}
-        >
-          <Text style={styles.completeBtnText}>Start My Recovery 🚀</Text>
-        </Pressable>
-      </View>
-    </View>
+        <View style={styles.actions}>
+          <Button title="Start Healing" onPress={handleContinue} size="lg" disabled={!selectedPersona} />
+          <Button title="Skip" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); useSettingsStore.getState().setRoastPersona('drill_sergeant'); router.replace('/(tabs)'); }} variant="ghost" size="md" />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-    paddingTop: 60,
-  },
-  header: {
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.xl,
-  },
-  step: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.PRIMARY,
-    fontWeight: '600',
-    marginBottom: Spacing.sm,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-    marginBottom: Spacing.sm,
-  },
-  subtitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-  },
-  list: {
-    flex: 1,
-    paddingHorizontal: Spacing.lg,
-  },
-  personaCard: {
-    padding: Spacing.lg,
-    backgroundColor: Colors.SURFACE,
-    borderRadius: 12,
-    marginBottom: Spacing.md,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-  },
-  personaCardSelected: {
-    borderColor: Colors.PRIMARY,
-    backgroundColor: `${Colors.PRIMARY}11`,
-  },
-  personaHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  personaEmoji: {
-    fontSize: 32,
-    marginRight: Spacing.md,
-  },
-  personaInfo: {
-    flex: 1,
-  },
-  personaName: {
-    fontSize: Typography.sizes.lg,
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
-  },
-  personaDesc: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.TEXT_SECONDARY,
-    marginTop: 2,
-  },
-  selectedBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.PRIMARY,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selectedText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  sample: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.TEXT_SECONDARY,
-    fontStyle: 'italic',
-    marginTop: Spacing.sm,
-    paddingLeft: 44,
-  },
-  footer: {
-    padding: Spacing.xl,
-  },
-  completeBtn: {
-    width: '100%',
-    paddingVertical: 16,
-    backgroundColor: Colors.PRIMARY,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  completeBtnDisabled: {
-    opacity: 0.5,
-  },
-  completeBtnText: {
-    color: '#fff',
-    fontSize: Typography.sizes.lg,
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: Colors.BACKGROUND },
+  content: { padding: Spacing.xl },
+  title: { fontSize: Typography.sizes['2xl'], fontWeight: '700', color: Colors.TEXT_ON_SURFACE, marginBottom: Spacing.sm },
+  subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.xl },
+  personaCard: { backgroundColor: Colors.SURFACE, borderRadius: Radius.lg, padding: Spacing.lg, marginBottom: Spacing.md, borderWidth: 0.5, borderColor: `${Colors.PRIMARY_DARK}44` },
+  personaCardActive: { borderColor: Colors.PRIMARY_LIGHT, borderWidth: 2 },
+  personaEmoji: { fontSize: 36, marginBottom: Spacing.sm },
+  personaName: { fontSize: Typography.sizes.lg, fontWeight: '600', color: Colors.TEXT_ON_SURFACE, marginBottom: Spacing.sm },
+  personaSample: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, lineHeight: 20 },
+  actions: { marginTop: Spacing.xl, gap: Spacing.md },
 });

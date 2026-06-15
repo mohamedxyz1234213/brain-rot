@@ -1,17 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedProps,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
-import { Colors, Typography } from '../../constants/theme';
+import { Colors, ANIMATION } from '../../constants/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface CircularProgressProps {
-  progress: number; // 0-100
+  progress: number;
   size?: number;
   strokeWidth?: number;
   color?: string;
@@ -21,18 +17,20 @@ interface CircularProgressProps {
 
 export function CircularProgress({
   progress,
-  size = 120,
-  strokeWidth = 10,
-  color = Colors.PRIMARY,
-  backgroundColor = Colors.SURFACE,
+  size = 180,
+  strokeWidth = 12,
+  color = Colors.PRIMARY_LIGHT,
+  backgroundColor = Colors.BORDER,
   children,
 }: CircularProgressProps) {
   const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
+  const circumference = radius * 2 * Math.PI;
   const animatedProgress = useSharedValue(0);
 
-  React.useEffect(() => {
-    animatedProgress.value = withTiming(progress / 100, { duration: 1000 });
+  useEffect(() => {
+    animatedProgress.value = withTiming(progress / 100, {
+      duration: ANIMATION.timing.slow,
+    });
   }, [progress]);
 
   const animatedProps = useAnimatedProps(() => ({
@@ -41,8 +39,7 @@ export function CircularProgress({
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
-      <Svg width={size} height={size}>
-        {/* Background circle */}
+      <Svg width={size} height={size} style={styles.svg}>
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -51,7 +48,6 @@ export function CircularProgress({
           strokeWidth={strokeWidth}
           fill="none"
         />
-        {/* Progress circle */}
         <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
@@ -62,7 +58,8 @@ export function CircularProgress({
           strokeDasharray={circumference}
           animatedProps={animatedProps}
           strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          rotation="-90"
+          origin={`${size / 2}, ${size / 2}`}
         />
       </Svg>
       <View style={styles.content}>{children}</View>
@@ -74,6 +71,9 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  svg: {
+    position: 'absolute',
   },
   content: {
     position: 'absolute',

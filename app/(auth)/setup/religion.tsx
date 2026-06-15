@@ -1,210 +1,111 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius } from '../../../src/constants/theme';
+import { Card } from '../../../src/components/ui/Card';
+import { Button } from '../../../src/components/ui/Button';
+import { useReligionStore } from '../../../src/stores/religionStore';
+import { useSettingsStore } from '../../../src/stores/settingsStore';
 
-const CALCULATION_METHODS = [
-  { id: 'MWL', name: 'Muslim World League' },
-  { id: 'ISNA', name: 'ISNA (North America)' },
-  { id: 'Egypt', name: 'Egyptian General Authority' },
-  { id: 'Makkah', name: 'Umm al-Qura (Makkah)' },
-  { id: 'Tehran', name: 'Institute of Geophysics, Tehran' },
-];
+const METHODS = ['MWL', 'ISNA', 'Egypt', 'Makkah', 'Tehran'] as const;
 
-export default function ReligionSetupScreen() {
-  const [religionEnabled, setReligionEnabled] = useState(true);
-  const [selectedMethod, setSelectedMethod] = useState('MWL');
-  const [features, setFeatures] = useState({
-    prayerTimes: true,
-    prayerTracker: true,
-    quranProgress: true,
-    dhikr: true,
-    fasting: true,
-    islamicRoasts: true,
-  });
+const FEATURES = [
+  { key: 'prayerTracker', label: 'Prayer Tracker', icon: '🕌', description: 'Track 5 daily prayers' },
+  { key: 'quranProgress', label: 'Quran Progress', icon: '📖', description: 'Track your Quran reading' },
+  { key: 'dhikrCounter', label: 'Dhikr Counter', icon: '📿', description: 'Morning & evening adhkar' },
+  { key: 'fastingTracker', label: 'Fasting Tracker', icon: '🌙', description: 'Voluntary fasts + Ramadan' },
+  { key: 'morningAffirmation', label: 'Daily Affirmation', icon: '✨', description: 'Islamic ayah/hadith card' },
+  { key: 'istighfarPrompt', label: 'Istighfar Prompt', icon: '🤲', description: 'Remind when goals failed' },
+] as const;
 
-  const toggleFeature = (key: keyof typeof features) => {
-    setFeatures((prev) => ({ ...prev, [key]: !prev[key] }));
+export default function SetupReligionScreen() {
+  const [method, setMethod] = useState<string>('Makkah');
+  const [enabledFeatures, setEnabledFeatures] = useState<Set<string>>(new Set(FEATURES.map((f) => f.key)));
+
+  const toggleFeature = (key: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const next = new Set(enabledFeatures);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    setEnabledFeatures(next);
   };
 
   const handleContinue = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    useReligionStore.getState().setCalculationMethod(method as any);
+    useSettingsStore.getState().setReligionEnabled(enabledFeatures.size > 0);
     router.push('/(auth)/setup/persona');
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.step}>Step 2 of 3</Text>
-        <Text style={styles.title}>Religion Settings</Text>
-        <Text style={styles.subtitle}>
-          Enable Islamic features for a holistic recovery experience.
-        </Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Animated.View entering={FadeInDown.duration(400)}>
+          <Text style={styles.title}>Religion Settings</Text>
+          <Text style={styles.subtitle}>Configure Islamic features</Text>
+        </Animated.View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.toggleRow}>
-          <View>
-            <Text style={styles.toggleLabel}>Enable Islamic Features</Text>
-            <Text style={styles.toggleDesc}>Prayer times, Quran, Dhikr, Fasting</Text>
-          </View>
-          <Switch
-            value={religionEnabled}
-            onValueChange={setReligionEnabled}
-            trackColor={{ true: Colors.PRIMARY, false: Colors.SECONDARY }}
-            thumbColor="#fff"
-          />
-        </View>
-
-        {religionEnabled && (
-          <>
-            <Text style={styles.sectionTitle}>Calculation Method</Text>
-            {CALCULATION_METHODS.map((method) => (
-              <Pressable
-                key={method.id}
-                style={[
-                  styles.methodRow,
-                  selectedMethod === method.id && styles.methodRowSelected,
-                ]}
-                onPress={() => setSelectedMethod(method.id)}
-              >
-                <Text style={styles.methodName}>{method.name}</Text>
-                {selectedMethod === method.id && (
-                  <Text style={styles.checkmark}>✓</Text>
-                )}
+        <Animated.View entering={FadeInDown.duration(400).delay(100)}>
+          <Text style={styles.sectionTitle}>Prayer Calculation Method</Text>
+          <View style={styles.methodRow}>
+            {METHODS.map((m) => (
+              <Pressable key={m} style={[styles.methodBtn, method === m && styles.methodBtnActive]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setMethod(m); }}>
+                <Text style={[styles.methodText, method === m && styles.methodTextActive]}>{m}</Text>
               </Pressable>
             ))}
+          </View>
+        </Animated.View>
 
-            <Text style={styles.sectionTitle}>Features</Text>
-            {Object.entries(features).map(([key, value]) => (
-              <View key={key} style={styles.featureRow}>
-                <Text style={styles.featureLabel}>
-                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}
-                </Text>
-                <Switch
-                  value={value}
-                  onValueChange={() => toggleFeature(key as keyof typeof features)}
-                  trackColor={{ true: Colors.PRIMARY, false: Colors.SECONDARY }}
-                  thumbColor="#fff"
-                />
-              </View>
-            ))}
-          </>
-        )}
+        <Animated.View entering={FadeInDown.duration(400).delay(200)}>
+          <Text style={styles.sectionTitle}>Features</Text>
+          {FEATURES.map((feature, i) => (
+            <Card key={feature.key} style={styles.featureCard}>
+              <Pressable style={styles.featureRow} onPress={() => toggleFeature(feature.key)}>
+                <View style={[styles.featureCheckbox, enabledFeatures.has(feature.key) && styles.featureCheckboxActive]}>
+                  {enabledFeatures.has(feature.key) && <Text style={styles.checkmark}>✓</Text>}
+                </View>
+                <View style={styles.featureInfo}>
+                  <Text style={styles.featureIcon}>{feature.icon}</Text>
+                  <View>
+                    <Text style={styles.featureLabel}>{feature.label}</Text>
+                    <Text style={styles.featureDesc}>{feature.description}</Text>
+                  </View>
+                </View>
+              </Pressable>
+            </Card>
+          ))}
+        </Animated.View>
+
+        <View style={styles.actions}>
+          <Button title="Continue" onPress={handleContinue} size="lg" />
+          <Button title="Skip" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/(auth)/setup/persona'); }} variant="ghost" size="md" />
+        </View>
       </ScrollView>
-
-      <View style={styles.footer}>
-        <Pressable style={styles.continueBtn} onPress={handleContinue}>
-          <Text style={styles.continueBtnText}>Continue →</Text>
-        </Pressable>
-      </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-    paddingTop: 60,
-  },
-  header: {
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.xl,
-  },
-  step: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.PRIMARY,
-    fontWeight: '600',
-    marginBottom: Spacing.sm,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-    marginBottom: Spacing.sm,
-  },
-  subtitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: Spacing.xl,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    backgroundColor: Colors.SURFACE,
-    borderRadius: 10,
-    marginBottom: Spacing.xl,
-  },
-  toggleLabel: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
-  },
-  toggleDesc: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.TEXT_SECONDARY,
-    marginTop: 2,
-  },
-  sectionTitle: {
-    fontSize: Typography.sizes.lg,
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
-    marginBottom: Spacing.md,
-    marginTop: Spacing.lg,
-  },
-  methodRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.md,
-    backgroundColor: Colors.SURFACE,
-    borderRadius: 10,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  methodRowSelected: {
-    borderColor: Colors.PRIMARY,
-  },
-  methodName: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_PRIMARY,
-  },
-  checkmark: {
-    fontSize: 18,
-    color: Colors.PRIMARY,
-    fontWeight: 'bold',
-  },
-  featureRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 0.5,
-    borderBottomColor: `${Colors.SECONDARY}33`,
-  },
-  featureLabel: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_PRIMARY,
-  },
-  footer: {
-    padding: Spacing.xl,
-  },
-  continueBtn: {
-    width: '100%',
-    paddingVertical: 16,
-    backgroundColor: Colors.PRIMARY,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  continueBtnText: {
-    color: '#fff',
-    fontSize: Typography.sizes.lg,
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: Colors.BACKGROUND },
+  content: { padding: Spacing.xl },
+  title: { fontSize: Typography.sizes['2xl'], fontWeight: '700', color: Colors.TEXT_ON_SURFACE, marginBottom: Spacing.sm },
+  subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.xl },
+  sectionTitle: { fontSize: Typography.sizes.lg, fontWeight: '600', color: Colors.TEXT_ON_SURFACE, marginBottom: Spacing.md },
+  methodRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.xl },
+  methodBtn: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: Radius.md, backgroundColor: Colors.SURFACE, borderWidth: 0.5, borderColor: `${Colors.PRIMARY_DARK}44` },
+  methodBtnActive: { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY },
+  methodText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
+  methodTextActive: { color: Colors.TEXT_ON_PRIMARY, fontWeight: '600' },
+  featureCard: { marginBottom: Spacing.sm },
+  featureRow: { flexDirection: 'row', alignItems: 'center' },
+  featureCheckbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
+  featureCheckboxActive: { backgroundColor: Colors.SUCCESS, borderColor: Colors.SUCCESS },
+  checkmark: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+  featureInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  featureIcon: { fontSize: 24, marginRight: Spacing.md },
+  featureLabel: { fontSize: Typography.sizes.md, color: Colors.TEXT_ON_SURFACE, fontWeight: '500' },
+  featureDesc: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
+  actions: { marginTop: Spacing.xl, gap: Spacing.md },
 });

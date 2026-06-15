@@ -1,17 +1,12 @@
-import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Dimensions,
-  FlatList,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, Dimensions, FlatList } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 const { width } = Dimensions.get('window');
+
+const INSTAGRAM_COLOR = '#E1306C';
 
 interface WrappedCard {
   id: string;
@@ -37,7 +32,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
     title: 'Most Used App',
     value: 'Instagram',
     description: 'You opened it 1,247 times. The app knows you better than you know yourself.',
-    color: '#E1306C',
+    color: INSTAGRAM_COLOR,
   },
   {
     id: '3',
@@ -118,14 +113,8 @@ export default function AppWrappedScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backBtn}>✕ Close</Text>
-        </Pressable>
-        <Text style={styles.title}>🎬 App Wrapped</Text>
-        <Text style={styles.subtitle}>Your month in review</Text>
-      </View>
+    <SafeScreen>
+      <ScreenHeader title="🎬 App Wrapped" subtitle="Your month in review" onClose={() => router.back()} align="center" />
 
       <FlatList
         data={WRAPPED_CARDS}
@@ -154,48 +143,22 @@ export default function AppWrappedScreen() {
             />
           ))}
         </View>
-        <Pressable style={styles.shareBtn}>
+        <Pressable style={styles.shareBtn} accessibilityRole="button" accessibilityLabel="Share summary">
           <Text style={styles.shareBtnText}>Share Summary Card 📤</Text>
         </Pressable>
       </View>
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
-    alignItems: 'center',
-  },
-  backBtn: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-    alignSelf: 'flex-start',
-    marginBottom: Spacing.md,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-  },
-  subtitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
-  },
   cardList: {
     paddingHorizontal: Spacing.xl,
   },
   card: {
     flex: 1,
     backgroundColor: Colors.SURFACE,
-    borderRadius: 24,
+    borderRadius: Radius.xl,
     padding: Spacing['2xl'],
     marginRight: Spacing.md,
     justifyContent: 'center',
@@ -208,12 +171,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: Typography.sizes.lg,
     color: Colors.TEXT_SECONDARY,
-    fontWeight: '500',
+    fontWeight: Typography.weights.medium,
     marginBottom: Spacing.md,
   },
   cardValue: {
     fontSize: Typography.sizes['4xl'],
-    fontWeight: '800',
+    fontWeight: Typography.weights.extrabold,
     marginBottom: Spacing.lg,
     textAlign: 'center',
   },
@@ -221,7 +184,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_SECONDARY,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: Typography.lineHeight.normal,
   },
   footer: {
     padding: Spacing.xl,
@@ -235,7 +198,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.SECONDARY,
+    backgroundColor: Colors.TEXT_SECONDARY,
     marginHorizontal: 3,
   },
   dotActive: {
@@ -243,14 +206,14 @@ const styles = StyleSheet.create({
     width: 18,
   },
   shareBtn: {
-    paddingHorizontal: 32,
+    paddingHorizontal: Spacing['2xl'],
     paddingVertical: 14,
     backgroundColor: Colors.PRIMARY,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
   },
   shareBtnText: {
-    color: '#fff',
+    color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.md,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
 });

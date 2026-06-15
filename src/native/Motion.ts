@@ -1,8 +1,3 @@
-/**
- * Motion/Driving Detection Native Bridge
- * Interfaces with iOS (CoreMotion + CLLocation) and Android (ActivityRecognition)
- */
-
 import { NativeModules, NativeEventEmitter } from 'react-native';
 
 const { MotionModule } = NativeModules;
@@ -26,18 +21,10 @@ export const MotionEvents = {
   },
 };
 
-// Mock for development
 const MockMotionModule: MotionNativeModule = {
-  async requestPermission() {
-    console.log('[Mock] Motion permission requested');
-    return true;
-  },
-  async startDrivingDetection() {
-    console.log('[Mock] Driving detection started');
-  },
-  async stopDrivingDetection() {
-    console.log('[Mock] Driving detection stopped');
-  },
+  async requestPermission() { return true; },
+  async startDrivingDetection() { console.log('[Mock] Driving detection started'); },
+  async stopDrivingDetection() { console.log('[Mock] Driving detection stopped'); },
 };
 
 export const motionModule: MotionNativeModule = MotionModule || MockMotionModule;

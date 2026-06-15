@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { User } from '../services/backend/interface';
+import { persist } from '../lib/persistence';
 
 interface AuthState {
   user: User | null;
@@ -8,13 +9,41 @@ interface AuthState {
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   logout: () => void;
+  updateProfile: (data: Partial<User>) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
-  setLoading: (isLoading) => set({ isLoading }),
-  logout: () => set({ user: null, isAuthenticated: false }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    {
+      name: 'auth',
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    },
+    (set, get) => ({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+
+      setUser: (user) => {
+        set({ user, isAuthenticated: !!user });
+      },
+
+      setLoading: (loading) => {
+        set({ isLoading: loading });
+      },
+
+      logout: () => {
+        set({ user: null, isAuthenticated: false });
+      },
+
+      updateProfile: (data) => {
+        const current = get().user;
+        if (current) {
+          set({ user: { ...current, ...data } });
+        }
+      },
+    })
+  )
+);

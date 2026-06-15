@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { SafeScreen } from '../../src/components/ui';
 
 export default function BrainScanModal() {
-  // Mock brain scan data
   const regions = [
     { name: 'Prefrontal Cortex', label: 'Decision Making', score: 72, status: 'Recovering' },
     { name: 'Nucleus Accumbens', label: 'Reward Center', score: 45, status: 'Damaged' },
@@ -14,85 +14,80 @@ export default function BrainScanModal() {
   ];
 
   return (
-    <View style={styles.container}>
-      <Pressable style={styles.closeBtn} onPress={() => router.back()}>
-        <Text style={styles.closeText}>✕</Text>
-      </Pressable>
-
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.badge}>🧠 WEEKLY BRAIN SCAN</Text>
-        <Text style={styles.title}>Brain Health Report</Text>
-        <Text style={styles.date}>Week of {new Date().toLocaleDateString()}</Text>
-
-        {/* Brain Visualization */}
-        <View style={styles.brainViz}>
-          <Text style={styles.brainEmoji}>🧠</Text>
-          <Text style={styles.overallScore}>72</Text>
-          <Text style={styles.overallLabel}>Overall Health</Text>
-        </View>
-
-        {/* Regions */}
-        <View style={styles.regionsCard}>
-          <Text style={styles.sectionTitle}>Brain Region Analysis</Text>
-          {regions.map((region) => (
-            <View key={region.name} style={styles.regionRow}>
-              <View style={styles.regionInfo}>
-                <Text style={styles.regionName}>{region.name}</Text>
-                <Text style={styles.regionLabel}>{region.label}</Text>
-              </View>
-              <View style={styles.regionRight}>
-                <Text
-                  style={[
-                    styles.regionScore,
-                    { color: region.score >= 70 ? Colors.SUCCESS : region.score >= 50 ? Colors.WARNING : Colors.DANGER },
-                  ]}
-                >
-                  {region.score}%
-                </Text>
-                <Text style={styles.regionStatus}>{region.status}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Doctor's Note */}
-        <View style={styles.noteCard}>
-          <Text style={styles.noteTitle}>📋 AI Doctor's Note</Text>
-          <Text style={styles.noteText}>
-            Patient shows significant improvement in prefrontal cortex activity since reducing
-            social media usage. Reward center remains compromised from dopamine overstimulation
-            but is showing early signs of recalibration. Recommend continued app blocking and
-            increased focus sessions. Prognosis: Full recovery possible within 8-12 weeks at
-            current trajectory.
-          </Text>
-        </View>
-
-        <Pressable style={styles.shareBtn}>
-          <Text style={styles.shareBtnText}>Share Brain Scan 📤</Text>
+    <SafeScreen>
+      <View style={{ flex: 1 }}>
+        <Pressable style={styles.closeBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close">
+          <Text style={styles.closeText}>✕</Text>
         </Pressable>
-      </ScrollView>
-    </View>
+
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={styles.badge}>🧠 WEEKLY BRAIN SCAN</Text>
+          <Text style={styles.title}>Brain Health Report</Text>
+          <Text style={styles.date}>Week of {new Date().toLocaleDateString()}</Text>
+
+          <View style={styles.brainViz}>
+            <Text style={styles.brainEmoji}>🧠</Text>
+            <Text style={styles.overallScore}>72</Text>
+            <Text style={styles.overallLabel}>Overall Health</Text>
+          </View>
+
+          <View style={styles.regionsCard}>
+            <Text style={styles.sectionTitle}>Brain Region Analysis</Text>
+            {regions.map((region) => (
+              <View key={region.name} style={styles.regionRow}>
+                <View style={styles.regionInfo}>
+                  <Text style={styles.regionName}>{region.name}</Text>
+                  <Text style={styles.regionLabel}>{region.label}</Text>
+                </View>
+                <View style={styles.regionRight}>
+                  <Text
+                    style={[
+                      styles.regionScore,
+                      { color: region.score >= 70 ? Colors.SUCCESS : region.score >= 50 ? Colors.WARNING : Colors.DANGER },
+                    ]}
+                  >
+                    {region.score}%
+                  </Text>
+                  <Text style={styles.regionStatus}>{region.status}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.noteCard}>
+            <Text style={styles.noteTitle}>📋 AI Doctor's Note</Text>
+            <Text style={styles.noteText}>
+              Patient shows significant improvement in prefrontal cortex activity since reducing
+              social media usage. Reward center remains compromised from dopamine overstimulation
+              but is showing early signs of recalibration. Recommend continued app blocking and
+              increased focus sessions. Prognosis: Full recovery possible within 8-12 weeks at
+              current trajectory.
+            </Text>
+          </View>
+
+          <Pressable style={styles.shareBtn} accessibilityRole="button" accessibilityLabel="Share brain scan">
+            <Text style={styles.shareBtnText}>Share Brain Scan 📤</Text>
+          </Pressable>
+        </ScrollView>
+      </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
   closeBtn: {
     position: 'absolute',
-    top: 60,
-    right: 24,
+    top: Spacing.sm,
+    right: Spacing.xl,
     zIndex: 10,
-    padding: 8,
+    padding: Spacing.sm,
   },
   closeText: {
-    fontSize: 20,
+    fontSize: Typography.sizes.xl,
     color: Colors.TEXT_SECONDARY,
   },
   content: {
-    paddingTop: 80,
+    paddingTop: Spacing['2xl'],
     paddingHorizontal: Spacing.xl,
     paddingBottom: 40,
     alignItems: 'center',
@@ -106,7 +101,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.sizes['2xl'],
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
+    fontWeight: Typography.weights.bold,
     marginBottom: Spacing.xs,
   },
   date: {
@@ -117,7 +112,7 @@ const styles = StyleSheet.create({
   brainViz: {
     width: 160,
     height: 160,
-    borderRadius: 80,
+    borderRadius: Radius.full,
     backgroundColor: Colors.SURFACE,
     alignItems: 'center',
     justifyContent: 'center',
@@ -126,13 +121,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   brainEmoji: {
-    fontSize: 32,
-    marginBottom: 4,
+    fontSize: Sizing.iconLg,
+    marginBottom: Spacing.xs,
   },
   overallScore: {
     fontSize: Typography.sizes['3xl'],
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '800',
+    fontWeight: Typography.weights.extrabold,
   },
   overallLabel: {
     fontSize: Typography.sizes.sm,
@@ -141,14 +136,14 @@ const styles = StyleSheet.create({
   regionsCard: {
     width: '100%',
     backgroundColor: Colors.SURFACE,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
   },
   sectionTitle: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
     marginBottom: Spacing.md,
   },
   regionRow: {
@@ -165,7 +160,7 @@ const styles = StyleSheet.create({
   regionName: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '500',
+    fontWeight: Typography.weights.medium,
   },
   regionLabel: {
     fontSize: Typography.sizes.sm,
@@ -177,7 +172,7 @@ const styles = StyleSheet.create({
   },
   regionScore: {
     fontSize: Typography.sizes.lg,
-    fontWeight: '700',
+    fontWeight: Typography.weights.bold,
   },
   regionStatus: {
     fontSize: Typography.sizes.sm,
@@ -187,7 +182,7 @@ const styles = StyleSheet.create({
   noteCard: {
     width: '100%',
     backgroundColor: `${Colors.PRIMARY}11`,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
     borderWidth: 1,
@@ -196,23 +191,23 @@ const styles = StyleSheet.create({
   noteTitle: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
     marginBottom: Spacing.md,
   },
   noteText: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_SECONDARY,
-    lineHeight: 22,
+    lineHeight: Typography.lineHeight.normal,
   },
   shareBtn: {
-    paddingHorizontal: 32,
+    paddingHorizontal: Spacing['2xl'],
     paddingVertical: 14,
     backgroundColor: Colors.PRIMARY,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
   },
   shareBtnText: {
-    color: '#fff',
+    color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.md,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
 });

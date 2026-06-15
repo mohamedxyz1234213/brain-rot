@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { theme } from '../../constants/theme';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+import { Colors, Typography, Spacing, Radius, ANIMATION } from '../../constants/theme';
 
 type FocusMode = 'pomodoro' | 'deep_work' | 'flow' | 'quick_sprint';
 
@@ -9,16 +11,20 @@ interface FocusTimerProps {
   targetMinutes: number;
   taskTitle?: string;
   isActive: boolean;
+  remainingSeconds: number;
+  distractionCount: number;
   onComplete: () => void;
   onCancel: () => void;
   onDistraction: () => void;
+  onPause: () => void;
+  onResume: () => void;
 }
 
 const MODE_LABELS: Record<FocusMode, string> = {
-  pomodoro: 'Pomodoro',
-  deep_work: 'Deep Work',
-  flow: 'Flow State',
-  quick_sprint: 'Quick Sprint',
+  pomodoro: 'Pomodoro 🍅',
+  deep_work: 'Deep Work 🧠',
+  flow: 'Flow State 🌊',
+  quick_sprint: 'Quick Sprint ⚡',
 };
 
 export function FocusTimer({
@@ -26,35 +32,17 @@ export function FocusTimer({
   targetMinutes,
   taskTitle,
   isActive,
+  remainingSeconds,
+  distractionCount,
   onComplete,
   onCancel,
   onDistraction,
+  onPause,
+  onResume,
 }: FocusTimerProps) {
-  const [secondsLeft, setSecondsLeft] = useState(targetMinutes * 60);
   const [isPaused, setIsPaused] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   const totalSeconds = targetMinutes * 60;
-  const progress = 1 - secondsLeft / totalSeconds;
-
-  useEffect(() => {
-    if (isActive && !isPaused) {
-      intervalRef.current = setInterval(() => {
-        setSecondsLeft((prev) => {
-          if (prev <= 1) {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            onComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isActive, isPaused, onComplete]);
+  const progress = 1 - remainingSeconds / totalSeconds;
 
   const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -63,24 +51,37 @@ export function FocusTimer({
   }, []);
 
   const togglePause = () => {
+    if (isPaused) {
+      onResume();
+    } else {
+      onPause();
+    }
     setIsPaused(!isPaused);
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.modeLabel}>{MODE_LABELS[mode]}</Text>
+  const handleDistraction = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    onDistraction();
+  };
 
+  return (
+    <Animated.View entering={FadeIn.duration(500)} style={styles.container}>
+      <Text style={styles.modeLabel}>{MODE_LABELS[mode]}</Text>
       {taskTitle && <Text style={styles.taskTitle}>{taskTitle}</Text>}
 
       <View style={styles.timerCircle}>
-        <View style={styles.progressRing}>
-          <Text style={styles.timerText}>{formatTime(secondsLeft)}</Text>
-          <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
-        </View>
+        <Text style={styles.timerText}>{formatTime(remainingSeconds)}</Text>
+        <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
       </View>
 
+      {distractionCount > 0 && (
+        <Text style={styles.distractionCount}>
+          😵 {distractionCount} distractions
+        </Text>
+      )}
+
       <View style={styles.controls}>
-        <Pressable style={styles.secondaryBtn} onPress={onDistraction}>
+        <Pressable style={styles.secondaryBtn} onPress={handleDistraction}>
           <Text style={styles.secondaryBtnText}>😵 Distracted</Text>
         </Pressable>
 
@@ -97,7 +98,7 @@ export function FocusTimer({
           <Text style={styles.dangerBtnText}>✗ End</Text>
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -106,85 +107,87 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    backgroundColor: theme.colors.background,
+    padding: Spacing.xl,
+    backgroundColor: Colors.BACKGROUND,
   },
   modeLabel: {
-    fontSize: theme.typography.lg,
-    color: theme.colors.primary,
+    fontSize: Typography.sizes.lg,
+    color: Colors.PRIMARY,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 2,
   },
   taskTitle: {
-    fontSize: theme.typography.md,
-    color: theme.colors.textSecondary,
-    marginBottom: 32,
+    fontSize: Typography.sizes.md,
+    color: Colors.TEXT_SECONDARY,
+    marginBottom: Spacing['2xl'],
   },
   timerCircle: {
     width: 240,
     height: 240,
     borderRadius: 120,
     borderWidth: 4,
-    borderColor: theme.colors.primary,
+    borderColor: Colors.PRIMARY,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 48,
-  },
-  progressRing: {
-    alignItems: 'center',
+    marginBottom: Spacing['3xl'],
   },
   timerText: {
     fontSize: 48,
-    color: theme.colors.textPrimary,
+    color: Colors.TEXT_PRIMARY,
     fontWeight: '200',
     fontVariant: ['tabular-nums'],
   },
   progressText: {
-    fontSize: theme.typography.md,
-    color: theme.colors.textSecondary,
-    marginTop: 4,
+    fontSize: Typography.sizes.md,
+    color: Colors.TEXT_SECONDARY,
+    marginTop: Spacing.xs,
+  },
+  distractionCount: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.WARNING,
+    marginBottom: Spacing.lg,
   },
   controls: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
   },
   primaryBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.md,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.PRIMARY,
+    borderRadius: Radius.md,
   },
   resumeBtn: {
-    backgroundColor: theme.colors.success,
+    backgroundColor: Colors.SUCCESS,
   },
   primaryBtnText: {
     color: '#fff',
-    fontSize: theme.typography.md,
+    fontSize: Typography.sizes.md,
     fontWeight: '600',
   },
   secondaryBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.SURFACE,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: `${theme.colors.secondary}44`,
+    borderColor: `${Colors.SECONDARY}44`,
   },
   secondaryBtnText: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.typography.md,
+    color: Colors.TEXT_PRIMARY,
+    fontSize: Typography.sizes.md,
   },
   dangerBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: `${theme.colors.danger}22`,
-    borderRadius: theme.radius.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: `${Colors.DANGER}22`,
+    borderRadius: Radius.md,
   },
   dangerBtnText: {
-    color: theme.colors.danger,
-    fontSize: theme.typography.md,
+    color: Colors.DANGER,
+    fontSize: Typography.sizes.md,
     fontWeight: '600',
   },
 });

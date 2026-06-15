@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, FlatList } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 import { useAccountabilityStore } from '../../src/stores/accountabilityStore';
 
 export default function AccountabilityScreen() {
@@ -9,31 +10,18 @@ export default function AccountabilityScreen() {
     circles,
     challenges,
     leaderboard,
-    fetchChallenges,
-    fetchLeaderboard,
     joinChallenge,
   } = useAccountabilityStore();
 
-  useEffect(() => {
-    fetchChallenges();
-    fetchLeaderboard();
-  }, []);
-
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← Back</Text>
-        </Pressable>
-        <Text style={styles.title}>Accountability</Text>
-      </View>
+    <SafeScreen>
+      <ScreenHeader title="Accountability" onBack={() => router.back()} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Circles Section */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>My Circles</Text>
-            <Pressable style={styles.addBtn}>
+            <Pressable style={styles.addBtn} accessibilityRole="button" accessibilityLabel="Create circle">
               <Text style={styles.addBtnText}>+ Create</Text>
             </Pressable>
           </View>
@@ -57,7 +45,6 @@ export default function AccountabilityScreen() {
           )}
         </View>
 
-        {/* Challenges Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Active Challenges</Text>
           {challenges.map((challenge) => (
@@ -75,6 +62,8 @@ export default function AccountabilityScreen() {
                   challenge.isJoined && styles.joinBtnJoined,
                 ]}
                 onPress={() => joinChallenge(challenge.id)}
+                accessibilityRole="button"
+                accessibilityLabel={challenge.isJoined ? 'Already joined' : 'Join challenge'}
               >
                 <Text style={styles.joinBtnText}>
                   {challenge.isJoined ? 'Joined ✓' : 'Join'}
@@ -84,7 +73,6 @@ export default function AccountabilityScreen() {
           ))}
         </View>
 
-        {/* Leaderboard Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🏆 Leaderboard</Text>
           {leaderboard.map((entry) => (
@@ -100,33 +88,12 @@ export default function AccountabilityScreen() {
             </View>
           ))}
         </View>
-
-        <View style={{ height: 40 }} />
       </ScrollView>
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  backBtn: {
-    fontSize: Typography.sizes.md,
-    color: Colors.PRIMARY,
-    marginBottom: Spacing.sm,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-  },
   section: {
     paddingHorizontal: Spacing.xl,
     marginBottom: Spacing['2xl'],
@@ -140,19 +107,19 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Typography.sizes.lg,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
     marginBottom: Spacing.md,
   },
   addBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     backgroundColor: Colors.PRIMARY,
     borderRadius: 8,
   },
   addBtnText: {
-    color: '#fff',
+    color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.sm,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   emptyCard: {
     padding: Spacing.xl,
@@ -178,12 +145,12 @@ const styles = StyleSheet.create({
   circleName: {
     fontSize: Typography.sizes.lg,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   circleMembers: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   challengeCard: {
     flexDirection: 'row',
@@ -199,44 +166,44 @@ const styles = StyleSheet.create({
   challengeTitle: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   challengeDesc: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   challengeMeta: {
     fontSize: Typography.sizes.sm,
     color: Colors.PRIMARY,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   joinBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
     backgroundColor: Colors.PRIMARY,
     borderRadius: 8,
-    marginLeft: 12,
+    marginLeft: Spacing.md,
   },
   joinBtnJoined: {
     backgroundColor: Colors.SUCCESS,
   },
   joinBtnText: {
-    color: '#fff',
+    color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.sm,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   leaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 0.5,
-    borderBottomColor: `${Colors.SECONDARY}33`,
+    borderBottomColor: `${Colors.BORDER}33`,
   },
   rank: {
     fontSize: Typography.sizes.lg,
     color: Colors.PRIMARY,
-    fontWeight: '700',
+    fontWeight: Typography.weights.bold,
     width: 36,
   },
   leaderInfo: {
@@ -245,7 +212,7 @@ const styles = StyleSheet.create({
   leaderName: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '500',
+    fontWeight: Typography.weights.medium,
   },
   leaderMeta: {
     fontSize: Typography.sizes.sm,
@@ -255,6 +222,6 @@ const styles = StyleSheet.create({
   leaderScore: {
     fontSize: Typography.sizes.xl,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
+    fontWeight: Typography.weights.bold,
   },
 });

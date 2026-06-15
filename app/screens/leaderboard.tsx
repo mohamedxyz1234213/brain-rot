@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 const TABS = ['Score', 'Streak', 'XP', 'Focus'] as const;
 
@@ -42,21 +43,17 @@ export default function LeaderboardScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← Back</Text>
-        </Pressable>
-        <Text style={styles.title}>🏅 Global Leaderboard</Text>
-      </View>
+    <SafeScreen>
+      <ScreenHeader title="🏅 Global Leaderboard" onBack={() => router.back()} />
 
-      {/* Tabs */}
       <View style={styles.tabs}>
         {TABS.map((tab) => (
           <Pressable
             key={tab}
             style={[styles.tab, activeTab === tab && styles.tabActive]}
             onPress={() => setActiveTab(tab)}
+            accessibilityRole="button"
+            accessibilityLabel={`${tab} tab`}
           >
             <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
               {tab}
@@ -65,8 +62,7 @@ export default function LeaderboardScreen() {
         ))}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Top 3 Podium */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         <View style={styles.podium}>
           {getSortedData().slice(0, 3).map((entry, index) => (
             <View
@@ -86,7 +82,6 @@ export default function LeaderboardScreen() {
           ))}
         </View>
 
-        {/* Full List */}
         {getSortedData().slice(3).map((entry) => (
           <View key={entry.name} style={styles.listRow}>
             <Text style={styles.listRank}>#{entry.rank}</Text>
@@ -97,43 +92,22 @@ export default function LeaderboardScreen() {
             <Text style={styles.listValue}>{getValue(entry)}</Text>
           </View>
         ))}
-
-        <View style={{ height: 40 }} />
       </ScrollView>
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.md,
-  },
-  backBtn: {
-    fontSize: Typography.sizes.md,
-    color: Colors.PRIMARY,
-    marginBottom: Spacing.sm,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-  },
   tabs: {
     flexDirection: 'row',
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.lg,
-    gap: 8,
+    gap: Spacing.sm,
   },
   tab: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: Radius.md,
     backgroundColor: Colors.SURFACE,
     alignItems: 'center',
   },
@@ -143,11 +117,11 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_SECONDARY,
-    fontWeight: '500',
+    fontWeight: Typography.weights.medium,
   },
   tabTextActive: {
-    color: '#fff',
-    fontWeight: '600',
+    color: Colors.TEXT_ON_PRIMARY,
+    fontWeight: Typography.weights.semibold,
   },
   podium: {
     flexDirection: 'row',
@@ -160,7 +134,7 @@ const styles = StyleSheet.create({
   podiumItem: {
     alignItems: 'center',
     backgroundColor: Colors.SURFACE,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.md,
     width: 100,
   },
@@ -171,22 +145,22 @@ const styles = StyleSheet.create({
   },
   podiumAvatar: {
     fontSize: 28,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   podiumRank: {
     fontSize: 20,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   podiumName: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   podiumValue: {
     fontSize: Typography.sizes.sm,
     color: Colors.PRIMARY,
-    fontWeight: '700',
-    marginTop: 4,
+    fontWeight: Typography.weights.bold,
+    marginTop: Spacing.xs,
   },
   listRow: {
     flexDirection: 'row',
@@ -194,12 +168,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
     borderBottomWidth: 0.5,
-    borderBottomColor: `${Colors.SECONDARY}22`,
+    borderBottomColor: `${Colors.BORDER}22`,
   },
   listRank: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_SECONDARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
     width: 36,
   },
   listAvatar: {
@@ -212,11 +186,11 @@ const styles = StyleSheet.create({
   listName: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '500',
+    fontWeight: Typography.weights.medium,
   },
   listValue: {
     fontSize: Typography.sizes.md,
     color: Colors.PRIMARY,
-    fontWeight: '700',
+    fontWeight: Typography.weights.bold,
   },
 });

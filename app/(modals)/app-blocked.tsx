@@ -1,115 +1,98 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
-import { Button } from '../../src/components/ui/Button';
+import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { SafeScreen } from '../../src/components/ui';
 import { Card } from '../../src/components/ui/Card';
+import { Button } from '../../src/components/ui/Button';
+import { useTaskStore } from '../../src/stores/taskStore';
+import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
 
-export default function AppBlockedModal() {
+export default function AppBlockedScreen() {
+  const appName = 'TikTok';
+  const unlockerTasks = useTaskStore((s) => s.getTaskUnlockerTasks());
+  const limits = useScreenTimeStore((s) => s.limits);
+
+  const handleTaskUnlock = () => {
+    if (unlockerTasks.length > 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      useTaskStore.getState().completeTask(unlockerTasks[0].id);
+      router.back();
+    }
+  };
+
+  const handleSlotMachine = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    router.push('/(modals)/slot-machine');
+  };
+
+  const handleHardBlock = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    router.back();
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Roast */}
-      <Text style={styles.roastText}>
-        "You've opened this app 5 times today. A golden retriever has more self control."
-      </Text>
+    <SafeScreen style={{ backgroundColor: Colors.SURFACE }}>
+      <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
+        <Text style={styles.blockEmoji}>🔒</Text>
+        <Text style={styles.blockTitle}>{appName} is Blocked</Text>
+        <Text style={styles.blockReason}>You've hit your daily limit</Text>
 
-      {/* App info */}
-      <Text style={styles.appName}>TikTok is blocked</Text>
-      <Text style={styles.reason}>Daily limit of 30 minutes reached</Text>
+        <Text style={styles.roastText}>"Your phone called. It's embarrassed."</Text>
 
-      {/* Unlock Options */}
-      <View style={styles.options}>
-        <Card style={styles.optionCard}>
-          <Text style={styles.optionEmoji}>✅</Text>
-          <Text style={styles.optionTitle}>Task Unlock</Text>
-          <Text style={styles.optionDesc}>Complete a task → 15 min access</Text>
-          <Button title="View Tasks" onPress={() => router.replace('/(tabs)/tasks')} size="sm" />
-        </Card>
+        <View style={styles.options}>
+          {unlockerTasks.length > 0 && (
+            <Card style={styles.optionCard}>
+              <Text style={styles.optionEmoji}>✅</Text>
+              <Text style={styles.optionTitle}>Task Unlock</Text>
+              <Text style={styles.optionDesc}>Complete "{unlockerTasks[0].title}" for 15 min access</Text>
+              <Button title="Complete Task" onPress={handleTaskUnlock} size="sm" />
+            </Card>
+          )}
 
-        <Card style={styles.optionCard}>
-          <Text style={styles.optionEmoji}>🎰</Text>
-          <Text style={styles.optionTitle}>Slot Machine</Text>
-          <Text style={styles.optionDesc}>Spin for a chance to unlock</Text>
-          <Button title="Spin" onPress={() => router.push('/(modals)/slot-machine')} size="sm" />
-        </Card>
+          <Card style={styles.optionCard}>
+            <Text style={styles.optionEmoji}>🎰</Text>
+            <Text style={styles.optionTitle}>Slot Machine</Text>
+            <Text style={styles.optionDesc}>Spin for a chance to unlock</Text>
+            <Button title="Spin" onPress={handleSlotMachine} size="sm" />
+          </Card>
 
-        <Card style={styles.optionCard}>
-          <Text style={styles.optionEmoji}>⏰</Text>
-          <Text style={styles.optionTitle}>Timer Wait</Text>
-          <Text style={styles.optionDesc}>Wait 10 minutes, then try again</Text>
-          <Button title="Start Timer" onPress={() => {}} size="sm" variant="secondary" />
-        </Card>
+          <Card style={styles.optionCard}>
+            <Text style={styles.optionEmoji}>⏰</Text>
+            <Text style={styles.optionTitle}>Timer Wait</Text>
+            <Text style={styles.optionDesc}>Wait 10 min then re-spin</Text>
+            <Button title="Wait" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} size="sm" variant="secondary" />
+          </Card>
 
-        <Card style={styles.optionCard}>
-          <Text style={styles.optionEmoji}>🔒</Text>
-          <Text style={styles.optionTitle}>Hard Block</Text>
-          <Text style={styles.optionDesc}>Blocked until tomorrow</Text>
-          <Button title="Accept" onPress={() => router.back()} size="sm" variant="danger" />
-        </Card>
-      </View>
+          <Card style={styles.optionCard}>
+            <Text style={styles.optionEmoji}>🚫</Text>
+            <Text style={styles.optionTitle}>Hard Block</Text>
+            <Text style={styles.optionDesc}>No access until tomorrow</Text>
+            <Button title="Accept" onPress={handleHardBlock} size="sm" variant="danger" />
+          </Card>
+        </View>
 
-      {/* Soft exit */}
-      <Button
-        title="I accept my weakness"
-        onPress={() => router.back()}
-        variant="ghost"
-        style={styles.softExit}
-      />
-    </View>
+        <Pressable style={styles.softExit} onPress={() => { router.back(); }} accessibilityRole="button" accessibilityLabel="Accept weakness and exit">
+          <Text style={styles.softExitText}>I accept my weakness 😔</Text>
+        </Pressable>
+      </Animated.View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-    padding: Spacing.lg,
-    justifyContent: 'center',
-  },
-  roastText: {
-    fontSize: Typography.sizes.lg,
-    color: Colors.WARNING,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: Spacing.xl,
-  },
-  appName: {
-    fontSize: Typography.sizes['2xl'],
-    fontWeight: '700',
-    color: Colors.DANGER,
-    textAlign: 'center',
-  },
-  reason: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-    textAlign: 'center',
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.xl,
-  },
-  options: {
-    gap: Spacing.md,
-  },
-  optionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    padding: Spacing.md,
-  },
-  optionEmoji: {
-    fontSize: 24,
-  },
-  optionTitle: {
-    fontSize: Typography.sizes.md,
-    fontWeight: '600',
-    color: Colors.TEXT_PRIMARY,
-    flex: 1,
-  },
-  optionDesc: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.TEXT_SECONDARY,
-    flex: 2,
-  },
-  softExit: {
-    marginTop: Spacing.xl,
-  },
+  content: { flex: 1, padding: Spacing.xl, justifyContent: 'center' },
+  blockEmoji: { fontSize: Sizing.avatarMd, textAlign: 'center', marginBottom: Spacing.lg },
+  blockTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm },
+  blockReason: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.lg },
+  roastText: { fontSize: Typography.sizes.lg, color: Colors.DANGER, textAlign: 'center', marginBottom: Spacing.xl, lineHeight: 24 },
+  options: { gap: Spacing.md, marginBottom: Spacing.xl },
+  optionCard: { alignItems: 'center' },
+  optionEmoji: { fontSize: Sizing.iconLg, marginBottom: Spacing.sm },
+  optionTitle: { fontSize: Typography.sizes.lg, fontWeight: Typography.weights.semibold, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.xs },
+  optionDesc: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.md },
+  softExit: { paddingVertical: Spacing.lg, alignItems: 'center' },
+  softExitText: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY },
 });

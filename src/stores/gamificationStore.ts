@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from '../lib/persistence';
 
 interface Achievement {
   id: string;
@@ -27,7 +28,7 @@ interface GamificationState {
   achievements: Achievement[];
   unlockedAchievements: string[];
   lootBoxes: LootBox[];
-  avatarStage: number; // 0 = zombie, 6 = ascended
+  avatarStage: number;
   villainArcActive: boolean;
   villainArcDaysLeft: number;
   unlockAchievement: (achievementId: string) => void;
@@ -35,6 +36,7 @@ interface GamificationState {
   openLootBox: (lootBoxId: string) => LootItem | null;
   updateAvatarStage: (score: number) => void;
   startVillainArc: () => void;
+  decrementVillainArcDay: () => void;
   endVillainArc: () => void;
 }
 
@@ -65,59 +67,76 @@ const LOOT_POOLS: Record<LootBox['type'], LootItem[]> = {
   ],
 };
 
-export const useGamificationStore = create<GamificationState>((set, get) => ({
-  achievements: [],
-  unlockedAchievements: [],
-  lootBoxes: [],
-  avatarStage: 0,
-  villainArcActive: false,
-  villainArcDaysLeft: 0,
+export const useGamificationStore = create<GamificationState>()(
+  persist(
+    {
+      name: 'gamification',
+      partialize: (state: any) => ({
+        unlockedAchievements: state.unlockedAchievements,
+        avatarStage: state.avatarStage,
+        villainArcActive: state.villainArcActive,
+        villainArcDaysLeft: state.villainArcDaysLeft,
+      }),
+    },
+    (set, get) => ({
+      achievements: [],
+      unlockedAchievements: [],
+      lootBoxes: [],
+      avatarStage: 0,
+      villainArcActive: false,
+      villainArcDaysLeft: 0,
 
-  unlockAchievement: (achievementId) => {
-    const { unlockedAchievements } = get();
-    if (!unlockedAchievements.includes(achievementId)) {
-      set({
-        unlockedAchievements: [...unlockedAchievements, achievementId],
-      });
-    }
-  },
+      unlockAchievement: (achievementId) => {
+        const { unlockedAchievements } = get();
+        if (!unlockedAchievements.includes(achievementId)) {
+          set({ unlockedAchievements: [...unlockedAchievements, achievementId] });
+        }
+      },
 
-  addLootBox: (type) => {
-    const newBox: LootBox = {
-      id: Date.now().toString(),
-      type,
-      contents: [],
-      earnedAt: new Date().toISOString(),
-      opened: false,
-    };
-    set({ lootBoxes: [...get().lootBoxes, newBox] });
-  },
+      addLootBox: (type) => {
+        const newBox: LootBox = {
+          id: `loot_${Date.now()}`,
+          type,
+          contents: [],
+          earnedAt: new Date().toISOString(),
+          opened: false,
+        };
+        set({ lootBoxes: [...get().lootBoxes, newBox] });
+      },
 
-  openLootBox: (lootBoxId) => {
-    const box = get().lootBoxes.find((b) => b.id === lootBoxId);
-    if (!box || box.opened) return null;
+      openLootBox: (lootBoxId) => {
+        const box = get().lootBoxes.find((b: LootBox) => b.id === lootBoxId);
+        if (!box || box.opened) return null;
+        const pool = LOOT_POOLS[box.type as LootBox['type']];
+        const item = pool[Math.floor(Math.random() * pool.length)];
+        set({
+          lootBoxes: get().lootBoxes.map((b: LootBox) =>
+            b.id === lootBoxId ? { ...b, opened: true, contents: [item] } : b
+          ),
+        });
+        return item;
+      },
 
-    const pool = LOOT_POOLS[box.type];
-    const item = pool[Math.floor(Math.random() * pool.length)];
+      updateAvatarStage: (score) => {
+        set({ avatarStage: getAvatarStage(score) });
+      },
 
-    set({
-      lootBoxes: get().lootBoxes.map((b) =>
-        b.id === lootBoxId ? { ...b, opened: true, contents: [item] } : b
-      ),
-    });
+      startVillainArc: () => {
+        set({ villainArcActive: true, villainArcDaysLeft: 3 });
+      },
 
-    return item;
-  },
+      decrementVillainArcDay: () => {
+        const daysLeft = get().villainArcDaysLeft - 1;
+        if (daysLeft <= 0) {
+          set({ villainArcActive: false, villainArcDaysLeft: 0 });
+        } else {
+          set({ villainArcDaysLeft: daysLeft });
+        }
+      },
 
-  updateAvatarStage: (score) => {
-    set({ avatarStage: getAvatarStage(score) });
-  },
-
-  startVillainArc: () => {
-    set({ villainArcActive: true, villainArcDaysLeft: 3 });
-  },
-
-  endVillainArc: () => {
-    set({ villainArcActive: false, villainArcDaysLeft: 0 });
-  },
-}));
+      endVillainArc: () => {
+        set({ villainArcActive: false, villainArcDaysLeft: 0 });
+      },
+    })
+  )
+);

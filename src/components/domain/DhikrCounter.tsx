@@ -1,133 +1,118 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { theme } from '../../constants/theme';
-
-interface DhikrItem {
-  arabic: string;
-  transliteration: string;
-  translation: string;
-  count: number;
-}
+import Animated, { FadeIn } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+import { Colors, Typography, Spacing, Radius } from '../../constants/theme';
 
 interface DhikrCounterProps {
-  item: DhikrItem;
-  currentCount: number;
-  onTap: () => void;
+  arabicText: string;
+  transliteration: string;
+  translation: string;
+  completedCount: number;
+  targetCount: number;
+  onIncrement: () => void;
   onComplete: () => void;
 }
 
-export function DhikrCounter({ item, currentCount, onTap, onComplete }: DhikrCounterProps) {
-  const progress = currentCount / item.count;
-  const isComplete = currentCount >= item.count;
+export function DhikrCounter({
+  arabicText,
+  transliteration,
+  translation,
+  completedCount,
+  targetCount,
+  onIncrement,
+  onComplete,
+}: DhikrCounterProps) {
+  const progress = completedCount / targetCount;
+  const isCompleted = completedCount >= targetCount;
+
+  const handleTap = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (isCompleted) {
+      onComplete();
+    } else {
+      onIncrement();
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.arabic}>{item.arabic}</Text>
-      <Text style={styles.transliteration}>{item.transliteration}</Text>
-      <Text style={styles.translation}>{item.translation}</Text>
+    <Animated.View entering={FadeIn.duration(400)} style={styles.container}>
+      <Text style={styles.arabic}>{arabicText}</Text>
+      <Text style={styles.transliteration}>{transliteration}</Text>
+      <Text style={styles.translation}>{translation}</Text>
 
-      <View style={styles.counterSection}>
-        <Text style={styles.count}>
-          {currentCount} / {item.count}
-        </Text>
-
-        <View style={styles.progressBg}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${Math.min(progress * 100, 100)}%` },
-              isComplete && styles.progressComplete,
-            ]}
-          />
-        </View>
+      <View style={styles.progressBg}>
+        <View style={[styles.progressFill, { width: `${Math.min(progress * 100, 100)}%` }]} />
       </View>
 
-      <Pressable
-        style={[styles.tapBtn, isComplete && styles.tapBtnComplete]}
-        onPress={isComplete ? onComplete : onTap}
-      >
-        <Text style={styles.tapBtnText}>
-          {isComplete ? '✓ Next' : 'Tap'}
+      <Text style={styles.count}>
+        {completedCount} / {targetCount}
+      </Text>
+
+      <Pressable style={styles.tapButton} onPress={handleTap}>
+        <Text style={styles.tapButtonText}>
+          {isCompleted ? '✓ Complete' : 'Tap'}
         </Text>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    alignItems: 'center',
+    backgroundColor: Colors.SURFACE,
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+    borderWidth: 0.5,
+    borderColor: `${Colors.SECONDARY}33`,
   },
   arabic: {
-    fontSize: 28,
-    color: theme.colors.textPrimary,
+    fontSize: Typography.sizes['2xl'],
+    color: Colors.TEXT_PRIMARY,
     textAlign: 'center',
-    marginBottom: 12,
-    fontFamily: 'Amiri',
-    lineHeight: 44,
+    marginBottom: Spacing.sm,
+    lineHeight: 40,
   },
   transliteration: {
-    fontSize: theme.typography.md,
-    color: theme.colors.primary,
+    fontSize: Typography.sizes.md,
+    color: Colors.TEXT_SECONDARY,
     textAlign: 'center',
-    marginBottom: 4,
-    fontStyle: 'italic',
+    marginBottom: Spacing.xs,
   },
   translation: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textSecondary,
+    fontSize: Typography.sizes.sm,
+    color: Colors.TEXT_SECONDARY,
     textAlign: 'center',
-    marginBottom: 24,
-  },
-  counterSection: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  count: {
-    fontSize: theme.typography.xl,
-    color: theme.colors.textPrimary,
-    fontWeight: '700',
-    marginBottom: 8,
-    fontVariant: ['tabular-nums'],
+    marginBottom: Spacing.lg,
   },
   progressBg: {
-    width: '100%',
     height: 6,
-    backgroundColor: `${theme.colors.secondary}33`,
-    borderRadius: 3,
+    backgroundColor: `${Colors.SECONDARY}33`,
+    borderRadius: Radius.full,
     overflow: 'hidden',
+    marginBottom: Spacing.md,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: theme.colors.primary,
-    borderRadius: 3,
+    backgroundColor: Colors.PRIMARY,
+    borderRadius: Radius.full,
   },
-  progressComplete: {
-    backgroundColor: theme.colors.success,
+  count: {
+    fontSize: Typography.sizes.xl,
+    color: Colors.TEXT_PRIMARY,
+    textAlign: 'center',
+    fontWeight: '700',
+    marginBottom: Spacing.lg,
   },
-  tapBtn: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: theme.colors.primary,
+  tapButton: {
+    backgroundColor: Colors.PRIMARY,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.xl,
     alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
   },
-  tapBtnComplete: {
-    backgroundColor: theme.colors.success,
-  },
-  tapBtnText: {
+  tapButtonText: {
     color: '#fff',
-    fontSize: theme.typography.xl,
+    fontSize: Typography.sizes.lg,
     fontWeight: '700',
   },
 });

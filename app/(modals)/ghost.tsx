@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { SafeScreen } from '../../src/components/ui';
 
 interface GhostComparison {
   category: string;
@@ -53,9 +54,9 @@ export default function GhostScreen() {
   const [currentCard, setCurrentCard] = useState(0);
 
   return (
-    <View style={styles.container}>
+    <SafeScreen>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.closeBtn}>
+        <Pressable onPress={() => router.back()} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
           <Text style={styles.closeText}>✕</Text>
         </Pressable>
         <Text style={styles.title}>👻 Ghost of Productivity Past</Text>
@@ -87,46 +88,41 @@ export default function GhostScreen() {
           <Text style={styles.ctaText}>
             The ghost is who you could be. This week, close the gap.
           </Text>
-          <Pressable style={styles.ctaBtn} onPress={() => router.back()}>
+          <Pressable style={styles.ctaBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Challenge accepted">
             <Text style={styles.ctaBtnText}>Challenge Accepted</Text>
           </Pressable>
         </View>
       </ScrollView>
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
   header: {
-    paddingTop: 60,
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.lg,
     alignItems: 'center',
   },
   closeBtn: {
     position: 'absolute',
-    top: 60,
+    top: Spacing.sm,
     right: Spacing.xl,
-    padding: 8,
+    padding: Spacing.sm,
   },
   closeText: {
-    fontSize: 20,
+    fontSize: Typography.sizes.xl,
     color: Colors.TEXT_SECONDARY,
   },
   title: {
     fontSize: Typography.sizes.xl,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
+    fontWeight: Typography.weights.bold,
     marginTop: Spacing.lg,
   },
   subtitle: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   cards: {
     paddingHorizontal: Spacing.lg,
@@ -134,7 +130,7 @@ const styles = StyleSheet.create({
   },
   comparisonCard: {
     backgroundColor: Colors.SURFACE,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
   },
@@ -146,7 +142,7 @@ const styles = StyleSheet.create({
   cardCategory: {
     fontSize: Typography.sizes.lg,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
@@ -167,22 +163,22 @@ const styles = StyleSheet.create({
   sideLabel: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_SECONDARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
     marginBottom: Spacing.xs,
   },
   youText: {
     fontSize: Typography.sizes.sm,
     color: Colors.DANGER,
-    lineHeight: 18,
+    lineHeight: Typography.lineHeight.tight,
   },
   ghostText: {
     fontSize: Typography.sizes.sm,
     color: Colors.SUCCESS,
-    lineHeight: 18,
+    lineHeight: Typography.lineHeight.tight,
   },
   ctaCard: {
     backgroundColor: `${Colors.PRIMARY}11`,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
@@ -190,7 +186,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   ctaEmoji: {
-    fontSize: 40,
+    fontSize: Sizing.avatarSm,
     marginBottom: Spacing.md,
   },
   ctaText: {
@@ -198,17 +194,17 @@ const styles = StyleSheet.create({
     color: Colors.TEXT_PRIMARY,
     textAlign: 'center',
     marginBottom: Spacing.lg,
-    lineHeight: 22,
+    lineHeight: Typography.lineHeight.normal,
   },
   ctaBtn: {
-    paddingHorizontal: 32,
+    paddingHorizontal: Spacing['2xl'],
     paddingVertical: 14,
     backgroundColor: Colors.PRIMARY,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
   },
   ctaBtnText: {
-    color: '#fff',
+    color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.md,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
 });

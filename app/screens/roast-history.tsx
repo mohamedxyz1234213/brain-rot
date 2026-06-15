@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 const ROAST_HISTORY = [
   {
@@ -48,14 +49,8 @@ const ROAST_HISTORY = [
 
 export default function RoastHistoryScreen() {
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← Back</Text>
-        </Pressable>
-        <Text style={styles.title}>Roast History</Text>
-        <Text style={styles.subtitle}>Your Hall of Shame 💀</Text>
-      </View>
+    <SafeScreen>
+      <ScreenHeader title="Roast History" subtitle="Your Hall of Shame 💀" onBack={() => router.back()} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         {ROAST_HISTORY.map((roast) => (
@@ -71,13 +66,13 @@ export default function RoastHistoryScreen() {
               </Text>
             </View>
             <Text style={styles.roastText}>{roast.text}</Text>
-            <Pressable style={styles.shareBtn}>
+            <Pressable style={styles.shareBtn} accessibilityRole="button" accessibilityLabel="Share roast">
               <Text style={styles.shareBtnText}>Share My Shame 💀</Text>
             </Pressable>
           </View>
         ))}
       </ScrollView>
-    </View>
+    </SafeScreen>
   );
 }
 
@@ -90,38 +85,14 @@ function getTimeAgo(date: Date): string {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  backBtn: {
-    fontSize: Typography.sizes.md,
-    color: Colors.PRIMARY,
-    marginBottom: Spacing.sm,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-  },
-  subtitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
-  },
   list: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: 40,
+    paddingBottom: Spacing['3xl'],
   },
   roastCard: {
     padding: Spacing.lg,
     backgroundColor: Colors.SURFACE,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     marginBottom: Spacing.md,
     borderWidth: 0.5,
     borderColor: `${Colors.DANGER}33`,
@@ -141,7 +112,7 @@ const styles = StyleSheet.create({
   roastPersona: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   roastTrigger: {
     fontSize: Typography.sizes.sm,
@@ -156,12 +127,12 @@ const styles = StyleSheet.create({
   roastText: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    lineHeight: 22,
+    lineHeight: Typography.lineHeight.normal,
     marginBottom: Spacing.md,
   },
   shareBtn: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 12,
+    paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     backgroundColor: `${Colors.DANGER}22`,
     borderRadius: 8,
@@ -169,6 +140,6 @@ const styles = StyleSheet.create({
   shareBtnText: {
     fontSize: Typography.sizes.sm,
     color: Colors.DANGER,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
 });

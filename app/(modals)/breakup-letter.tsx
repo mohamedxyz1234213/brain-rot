@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { SafeScreen } from '../../src/components/ui';
 
 const LETTER = `Dear ${'{name}'},
 
@@ -44,71 +45,71 @@ export default function BreakupLetterScreen() {
   }, [charIndex]);
 
   return (
-    <View style={styles.container}>
-      <Pressable style={styles.closeBtn} onPress={() => router.back()}>
-        <Text style={styles.closeText}>✕</Text>
-      </Pressable>
-
-      <View style={styles.letterContainer}>
-        <Text style={styles.letterEmoji}>💔</Text>
-        <Text style={styles.letterTitle}>A Letter From Your Goal</Text>
-
-        <View style={styles.paper}>
-          <Text style={styles.letterText}>{displayedText}</Text>
-          {charIndex < personalizedLetter.length && (
-            <Text style={styles.cursor}>▌</Text>
-          )}
-        </View>
-      </View>
-
-      {showActions && (
-        <View style={styles.actions}>
-          <Pressable style={styles.winBackBtn}>
-            <Text style={styles.winBackText}>Win It Back 💪</Text>
-            <Text style={styles.winBackSubtext}>3 micro-tasks to restart</Text>
-          </Pressable>
-          <Pressable style={styles.letGoBtn} onPress={() => router.back()}>
-            <Text style={styles.letGoText}>Let It Go 🕊️</Text>
-          </Pressable>
-        </View>
-      )}
-
-      {!showActions && charIndex < personalizedLetter.length && (
-        <Pressable
-          style={styles.skipBtn}
-          onPress={() => setCharIndex(personalizedLetter.length)}
-        >
-          <Text style={styles.skipText}>Skip →</Text>
+    <SafeScreen>
+      <View style={{ flex: 1 }}>
+        <Pressable style={styles.closeBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close">
+          <Text style={styles.closeText}>✕</Text>
         </Pressable>
-      )}
-    </View>
+
+        <View style={styles.letterContainer}>
+          <Text style={styles.letterEmoji}>💔</Text>
+          <Text style={styles.letterTitle}>A Letter From Your Goal</Text>
+
+          <View style={styles.paper}>
+            <Text style={styles.letterText}>{displayedText}</Text>
+            {charIndex < personalizedLetter.length && (
+              <Text style={styles.cursor}>▌</Text>
+            )}
+          </View>
+        </View>
+
+        {showActions && (
+          <View style={styles.actions}>
+            <Pressable style={styles.winBackBtn} accessibilityRole="button" accessibilityLabel="Win it back">
+              <Text style={styles.winBackText}>Win It Back 💪</Text>
+              <Text style={styles.winBackSubtext}>3 micro-tasks to restart</Text>
+            </Pressable>
+            <Pressable style={styles.letGoBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Let it go">
+              <Text style={styles.letGoText}>Let It Go 🕊️</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {!showActions && charIndex < personalizedLetter.length && (
+          <Pressable
+            style={styles.skipBtn}
+            onPress={() => setCharIndex(personalizedLetter.length)}
+            accessibilityRole="button"
+            accessibilityLabel="Skip"
+          >
+            <Text style={styles.skipText}>Skip →</Text>
+          </Pressable>
+        )}
+      </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
   closeBtn: {
     position: 'absolute',
-    top: 60,
-    right: 24,
+    top: Spacing.sm,
+    right: Spacing.xl,
     zIndex: 10,
-    padding: 8,
+    padding: Spacing.sm,
   },
   closeText: {
-    fontSize: 20,
+    fontSize: Typography.sizes.xl,
     color: Colors.TEXT_SECONDARY,
   },
   letterContainer: {
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: Spacing.xl,
-    paddingTop: 80,
+    paddingTop: Spacing['2xl'],
   },
   letterEmoji: {
-    fontSize: 40,
+    fontSize: Sizing.avatarSm,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
   },
   paper: {
     backgroundColor: Colors.SURFACE,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.xl,
     borderWidth: 0.5,
     borderColor: `${Colors.DANGER}33`,
@@ -137,27 +138,27 @@ const styles = StyleSheet.create({
   },
   actions: {
     padding: Spacing.xl,
-    paddingBottom: 48,
+    paddingBottom: Spacing['3xl'],
     gap: Spacing.md,
   },
   winBackBtn: {
-    paddingVertical: 16,
+    paddingVertical: Spacing.lg,
     backgroundColor: Colors.PRIMARY,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     alignItems: 'center',
   },
   winBackText: {
-    color: '#fff',
+    color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.lg,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   winBackSubtext: {
-    color: `${'#fff'}99`,
+    color: `${Colors.TEXT_ON_PRIMARY}99`,
     fontSize: Typography.sizes.sm,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   letGoBtn: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
   },
   letGoText: {

@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 const TIERS = [
   {
@@ -83,15 +84,8 @@ const TIERS = [
 
 export default function SubscriptionScreen() {
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← Back</Text>
-        </Pressable>
-        <Text style={styles.title}>Upgrade Your Brain</Text>
-        <Text style={styles.subtitle}>Choose the plan that fits your recovery journey.</Text>
-      </View>
-
+    <SafeScreen>
+      <ScreenHeader title="Upgrade Your Brain" subtitle="Choose the plan that fits your recovery journey." onBack={() => router.back()} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         {TIERS.map((tier) => (
           <View
@@ -139,6 +133,8 @@ export default function SubscriptionScreen() {
                 styles.subscribeBtn,
                 tier.isCurrent && styles.subscribeBtnCurrent,
               ]}
+              accessibilityRole="button"
+              accessibilityLabel={tier.isCurrent ? 'Current plan' : `Subscribe to ${tier.name}`}
             >
               <Text style={styles.subscribeBtnText}>
                 {tier.isCurrent ? 'Current Plan' : `Subscribe to ${tier.name}`}
@@ -147,43 +143,19 @@ export default function SubscriptionScreen() {
           </View>
         ))}
       </ScrollView>
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  backBtn: {
-    fontSize: Typography.sizes.md,
-    color: Colors.PRIMARY,
-    marginBottom: Spacing.sm,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-    marginBottom: Spacing.xs,
-  },
-  subtitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-  },
   list: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: 40,
+    paddingBottom: Spacing['3xl'],
   },
   tierCard: {
     padding: Spacing.xl,
     backgroundColor: Colors.SURFACE,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     marginBottom: Spacing.lg,
     borderWidth: 1,
     borderColor: 'transparent',
@@ -192,21 +164,21 @@ const styles = StyleSheet.create({
     borderColor: Colors.PRIMARY,
   },
   tierCardCurrent: {
-    borderColor: Colors.SECONDARY,
+    borderColor: Colors.BORDER,
   },
   popularBadge: {
     position: 'absolute',
     top: -10,
-    right: 16,
+    right: Spacing.lg,
     backgroundColor: Colors.PRIMARY,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
     borderRadius: 12,
   },
   popularText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
+    color: Colors.TEXT_ON_PRIMARY,
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.bold,
   },
   tierHeader: {
     marginBottom: Spacing.lg,
@@ -214,7 +186,7 @@ const styles = StyleSheet.create({
   tierName: {
     fontSize: Typography.sizes.xl,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
+    fontWeight: Typography.weights.bold,
     marginBottom: Spacing.xs,
   },
   priceRow: {
@@ -224,17 +196,17 @@ const styles = StyleSheet.create({
   price: {
     fontSize: Typography.sizes['3xl'],
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '800',
+    fontWeight: Typography.weights.extrabold,
   },
   period: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_SECONDARY,
-    marginLeft: 4,
+    marginLeft: Spacing.xs,
   },
   yearlyPrice: {
     fontSize: Typography.sizes.sm,
     color: Colors.PRIMARY,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   featureList: {
     marginBottom: Spacing.lg,
@@ -242,13 +214,13 @@ const styles = StyleSheet.create({
   featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   featureCheck: {
     color: Colors.SUCCESS,
     fontSize: 14,
-    marginRight: 8,
-    fontWeight: 'bold',
+    marginRight: Spacing.sm,
+    fontWeight: Typography.weights.bold,
   },
   featureText: {
     fontSize: Typography.sizes.md,
@@ -270,8 +242,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.SURFACE_RAISED,
   },
   subscribeBtnText: {
-    color: '#fff',
+    color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.md,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
 });

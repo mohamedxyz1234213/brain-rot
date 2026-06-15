@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 const WALL_OF_SHAME = [
   { rank: 1, name: 'Anonymous', score: 8, emoji: '💀', reaction: '😂 143' },
@@ -18,14 +19,8 @@ const WALL_OF_SHAME = [
 
 export default function WallOfShameScreen() {
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← Back</Text>
-        </Pressable>
-        <Text style={styles.title}>Wall of Shame 💀</Text>
-        <Text style={styles.subtitle}>The most brain-rotted among us</Text>
-      </View>
+    <SafeScreen>
+      <ScreenHeader title="Wall of Shame 💀" subtitle="The most brain-rotted among us" onBack={() => router.back()} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         <View style={styles.disclaimer}>
@@ -48,47 +43,23 @@ export default function WallOfShameScreen() {
           </View>
         ))}
 
-        <Pressable style={styles.optInBtn}>
+        <Pressable style={styles.optInBtn} accessibilityRole="button" accessibilityLabel="Add me to wall">
           <Text style={styles.optInBtnText}>Add Me to the Wall 🫡</Text>
         </Pressable>
       </ScrollView>
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  backBtn: {
-    fontSize: Typography.sizes.md,
-    color: Colors.PRIMARY,
-    marginBottom: Spacing.sm,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-  },
-  subtitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
-  },
   list: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: 40,
+    paddingBottom: Spacing['3xl'],
   },
   disclaimer: {
     padding: Spacing.md,
     backgroundColor: `${Colors.WARNING}11`,
-    borderRadius: 10,
+    borderRadius: Radius.md,
     marginBottom: Spacing.lg,
   },
   disclaimerText: {
@@ -109,7 +80,7 @@ const styles = StyleSheet.create({
   rank: {
     fontSize: Typography.sizes.lg,
     color: Colors.DANGER,
-    fontWeight: '700',
+    fontWeight: Typography.weights.bold,
     width: 36,
   },
   emoji: {
@@ -122,7 +93,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '500',
+    fontWeight: Typography.weights.medium,
   },
   score: {
     fontSize: Typography.sizes.sm,
@@ -131,8 +102,8 @@ const styles = StyleSheet.create({
   },
   reactionBadge: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: `${Colors.SECONDARY}22`,
+    paddingVertical: Spacing.xs,
+    backgroundColor: `${Colors.TEXT_SECONDARY}22`,
     borderRadius: 12,
   },
   reactionText: {
@@ -141,9 +112,9 @@ const styles = StyleSheet.create({
   },
   optInBtn: {
     marginTop: Spacing.xl,
-    paddingVertical: 16,
+    paddingVertical: Spacing.lg,
     backgroundColor: `${Colors.DANGER}22`,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.DANGER,
@@ -151,6 +122,6 @@ const styles = StyleSheet.create({
   optInBtnText: {
     color: Colors.DANGER,
     fontSize: Typography.sizes.lg,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
 });

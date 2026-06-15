@@ -1,11 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 const { width } = Dimensions.get('window');
 
-// Mock data for charts
+const INSTAGRAM_COLOR = '#E1306C';
+const TIKTOK_COLOR = '#69C9D0';
+const YOUTUBE_COLOR = '#FF0000';
+const TWITTER_COLOR = '#1DA1F2';
+const WHATSAPP_COLOR = '#25D366';
+
 const BRAIN_SCORE_DATA = [65, 68, 72, 58, 75, 80, 77, 82, 79, 85, 88, 84, 90, 87];
 const SCREEN_TIME_DATA = [180, 165, 120, 200, 145, 130, 110, 95, 140, 105, 90, 88, 75, 80];
 
@@ -14,17 +20,9 @@ export default function AnalyticsScreen() {
   const maxScreenTime = Math.max(...SCREEN_TIME_DATA);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← Back</Text>
-        </Pressable>
-        <Text style={styles.title}>Analytics</Text>
-        <Text style={styles.subtitle}>Your recovery journey in numbers</Text>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Brain Score Trend */}
+    <SafeScreen>
+      <ScreenHeader title="Analytics" subtitle="Your recovery journey in numbers" onBack={() => router.back()} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>🧠 Brain Score (14 days)</Text>
           <View style={styles.lineChart}>
@@ -48,7 +46,6 @@ export default function AnalyticsScreen() {
           </View>
         </View>
 
-        {/* Screen Time Trend */}
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>📱 Screen Time (minutes/day)</Text>
           <View style={styles.lineChart}>
@@ -72,7 +69,6 @@ export default function AnalyticsScreen() {
           </View>
         </View>
 
-        {/* Quick Stats */}
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <Text style={styles.statEmoji}>⏱️</Text>
@@ -96,15 +92,14 @@ export default function AnalyticsScreen() {
           </View>
         </View>
 
-        {/* Top Apps */}
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>📊 Top Apps This Week</Text>
           {[
-            { name: 'Instagram', minutes: 85, color: '#E1306C' },
-            { name: 'TikTok', minutes: 62, color: '#69C9D0' },
-            { name: 'YouTube', minutes: 48, color: '#FF0000' },
-            { name: 'Twitter/X', minutes: 31, color: '#1DA1F2' },
-            { name: 'WhatsApp', minutes: 25, color: '#25D366' },
+            { name: 'Instagram', minutes: 85, color: INSTAGRAM_COLOR },
+            { name: 'TikTok', minutes: 62, color: TIKTOK_COLOR },
+            { name: 'YouTube', minutes: 48, color: YOUTUBE_COLOR },
+            { name: 'Twitter/X', minutes: 31, color: TWITTER_COLOR },
+            { name: 'WhatsApp', minutes: 25, color: WHATSAPP_COLOR },
           ].map((app) => (
             <View key={app.name} style={styles.appBarRow}>
               <Text style={styles.appBarName}>{app.name}</Text>
@@ -121,7 +116,6 @@ export default function AnalyticsScreen() {
           ))}
         </View>
 
-        {/* Usage Cost */}
         <View style={styles.costCard}>
           <Text style={styles.costTitle}>💸 Usage Cost Calculator</Text>
           <Text style={styles.costDesc}>
@@ -130,56 +124,30 @@ export default function AnalyticsScreen() {
           <Text style={styles.costAmount}>$312.50</Text>
           <Text style={styles.costSubtext}>on social media this month</Text>
         </View>
-
-        <View style={{ height: 40 }} />
       </ScrollView>
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.BACKGROUND,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  backBtn: {
-    fontSize: Typography.sizes.md,
-    color: Colors.PRIMARY,
-    marginBottom: Spacing.sm,
-  },
-  title: {
-    fontSize: Typography.sizes['2xl'],
-    color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
-  },
-  subtitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
-  },
   chartCard: {
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.xl,
     padding: Spacing.lg,
     backgroundColor: Colors.SURFACE,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
   },
   chartTitle: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
     marginBottom: Spacing.lg,
   },
   lineChart: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     height: 100,
-    gap: 4,
+    gap: Spacing.xs,
   },
   lineBar: {
     flex: 1,
@@ -216,12 +184,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: Typography.sizes.xl,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '700',
+    fontWeight: Typography.weights.bold,
   },
   statLabel: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   appBarRow: {
     flexDirection: 'row',
@@ -236,7 +204,7 @@ const styles = StyleSheet.create({
   appBarBg: {
     flex: 1,
     height: 8,
-    backgroundColor: `${Colors.SECONDARY}33`,
+    backgroundColor: `${Colors.TEXT_SECONDARY}33`,
     borderRadius: 4,
     overflow: 'hidden',
     marginHorizontal: Spacing.sm,
@@ -255,7 +223,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     padding: Spacing.xl,
     backgroundColor: `${Colors.DANGER}11`,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     borderColor: `${Colors.DANGER}33`,
     alignItems: 'center',
@@ -263,7 +231,7 @@ const styles = StyleSheet.create({
   costTitle: {
     fontSize: Typography.sizes.lg,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
     marginBottom: Spacing.sm,
   },
   costDesc: {
@@ -274,11 +242,11 @@ const styles = StyleSheet.create({
   costAmount: {
     fontSize: Typography.sizes['4xl'],
     color: Colors.DANGER,
-    fontWeight: '800',
+    fontWeight: Typography.weights.extrabold,
   },
   costSubtext: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_SECONDARY,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
 });

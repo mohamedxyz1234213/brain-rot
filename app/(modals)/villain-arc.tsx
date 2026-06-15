@@ -1,80 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { SafeScreen } from '../../src/components/ui';
 
 export default function VillainArcScreen() {
   const [daysLeft, setDaysLeft] = useState(3);
   const [isActive, setIsActive] = useState(true);
 
   return (
-    <View style={styles.container}>
-      <Pressable style={styles.closeBtn} onPress={() => router.back()}>
-        <Text style={styles.closeText}>✕</Text>
-      </Pressable>
+    <SafeScreen>
+      <View style={{ flex: 1 }}>
+        <Pressable style={styles.closeBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close">
+          <Text style={styles.closeText}>✕</Text>
+        </Pressable>
 
-      <View style={styles.content}>
-        <Text style={styles.emoji}>😈</Text>
-        <Text style={styles.title}>VILLAIN ARC MODE</Text>
-        <Text style={styles.subtitle}>3 days of chaos. Then redemption.</Text>
+        <View style={styles.content}>
+          <Text style={styles.emoji}>😈</Text>
+          <Text style={styles.title}>VILLAIN ARC MODE</Text>
+          <Text style={styles.subtitle}>3 days of chaos. Then redemption.</Text>
 
-        <View style={styles.statsCard}>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Status</Text>
-            <Text style={styles.statValueEvil}>ACTIVE</Text>
+          <View style={styles.statsCard}>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Status</Text>
+              <Text style={styles.statValueEvil}>ACTIVE</Text>
+            </View>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Days Remaining</Text>
+              <Text style={styles.statValue}>{daysLeft}/3</Text>
+            </View>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Leaderboard Position</Text>
+              <Text style={styles.statValueEvil}>#1 (Worst Score)</Text>
+            </View>
           </View>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Days Remaining</Text>
-            <Text style={styles.statValue}>{daysLeft}/3</Text>
+
+          <View style={styles.rulesCard}>
+            <Text style={styles.rulesTitle}>Villain Arc Rules:</Text>
+            <Text style={styles.rule}>• Worst score = leaderboard top (ironic)</Text>
+            <Text style={styles.rule}>• Menacing avatar unlocked</Text>
+            <Text style={styles.rule}>• Respectful roasts only</Text>
+            <Text style={styles.rule}>• Auto-ends after 3 days</Text>
+            <Text style={styles.rule}>• "Unhinged. Committed. Villainous."</Text>
           </View>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Leaderboard Position</Text>
-            <Text style={styles.statValueEvil}>#1 (Worst Score)</Text>
+
+          <View style={styles.quoteCard}>
+            <Text style={styles.quote}>
+              "Every villain is the hero of their own story. But this story ends in 3 days."
+            </Text>
           </View>
         </View>
 
-        <View style={styles.rulesCard}>
-          <Text style={styles.rulesTitle}>Villain Arc Rules:</Text>
-          <Text style={styles.rule}>• Worst score = leaderboard top (ironic)</Text>
-          <Text style={styles.rule}>• Menacing avatar unlocked</Text>
-          <Text style={styles.rule}>• Respectful roasts only</Text>
-          <Text style={styles.rule}>• Auto-ends after 3 days</Text>
-          <Text style={styles.rule}>• "Unhinged. Committed. Villainous."</Text>
-        </View>
-
-        <View style={styles.quoteCard}>
-          <Text style={styles.quote}>
-            "Every villain is the hero of their own story. But this story ends in 3 days."
+        <View style={styles.footer}>
+          <Pressable style={styles.endBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="End villain arc early">
+            <Text style={styles.endBtnText}>End Villain Arc Early</Text>
+          </Pressable>
+          <Text style={styles.footerNote}>
+            Auto-ends with: "Villain arc over. Time to be the main character."
           </Text>
         </View>
       </View>
-
-      <View style={styles.footer}>
-        <Pressable style={styles.endBtn} onPress={() => router.back()}>
-          <Text style={styles.endBtnText}>End Villain Arc Early</Text>
-        </Pressable>
-        <Text style={styles.footerNote}>
-          Auto-ends with: "Villain arc over. Time to be the main character."
-        </Text>
-      </View>
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0a0a0a',
-  },
   closeBtn: {
     position: 'absolute',
-    top: 60,
-    right: 24,
+    top: Spacing.sm,
+    right: Spacing.xl,
     zIndex: 10,
-    padding: 8,
+    padding: Spacing.sm,
   },
   closeText: {
-    fontSize: 20,
+    fontSize: Typography.sizes.xl,
     color: Colors.TEXT_SECONDARY,
   },
   content: {
@@ -84,13 +83,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
   emoji: {
-    fontSize: 64,
+    fontSize: Sizing.avatarMd,
     marginBottom: Spacing.md,
   },
   title: {
     fontSize: Typography.sizes['2xl'],
     color: Colors.DANGER,
-    fontWeight: '800',
+    fontWeight: Typography.weights.extrabold,
     letterSpacing: 2,
   },
   subtitle: {
@@ -102,7 +101,7 @@ const styles = StyleSheet.create({
   statsCard: {
     width: '100%',
     backgroundColor: Colors.SURFACE,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
     borderWidth: 1,
@@ -121,12 +120,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   statValueEvil: {
     fontSize: Typography.sizes.md,
     color: Colors.DANGER,
-    fontWeight: '700',
+    fontWeight: Typography.weights.bold,
   },
   rulesCard: {
     width: '100%',
@@ -138,13 +137,13 @@ const styles = StyleSheet.create({
   rulesTitle: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
     marginBottom: Spacing.sm,
   },
   rule: {
     fontSize: Typography.sizes.sm,
     color: Colors.TEXT_SECONDARY,
-    lineHeight: 22,
+    lineHeight: Typography.lineHeight.normal,
   },
   quoteCard: {
     paddingHorizontal: Spacing.lg,
@@ -158,21 +157,21 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.xl,
-    paddingBottom: 48,
+    paddingBottom: Spacing['3xl'],
     alignItems: 'center',
   },
   endBtn: {
-    paddingHorizontal: 32,
+    paddingHorizontal: Spacing['2xl'],
     paddingVertical: 14,
     backgroundColor: `${Colors.DANGER}22`,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     borderColor: Colors.DANGER,
   },
   endBtnText: {
     color: Colors.DANGER,
     fontSize: Typography.sizes.md,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   footerNote: {
     fontSize: Typography.sizes.sm,

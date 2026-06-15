@@ -1,23 +1,33 @@
 {
   "expo": {
-    "name": "brain-rot",
-    "slug": "brain-rot",
+    "name": "BrainRot Healer",
+    "slug": "brain-rot-healer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "brainrot",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.brainrothealer.app",
+      "info": {
+        "NSCameraUsageDescription": "BrainRot Healer uses your camera briefly to remind you who is in control. Nothing is stored.",
+        "NSMicrophoneUsageDescription": "BrainRot Healer records your personal promises to play back as accountability reminders."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#0D1117",
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "PACKAGE_USAGE_STATS",
+        "SYSTEM_ALERT_WINDOW",
+        "FOREGROUND_SERVICE",
+        "ACTIVITY_RECOGNITION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.brainrothealer.app"
     },
     "web": {
       "bundler": "metro",
@@ -31,9 +41,10 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#0D1117"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
