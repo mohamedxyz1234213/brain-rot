@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing, Shadow, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
@@ -38,7 +38,7 @@ export default function InterventionModal() {
   if (step < INTERVENTIONISTS.length) {
     const person = INTERVENTIONISTS[step];
     return (
-      <SafeScreen style={{ backgroundColor: Colors.SURFACE }}>
+      <SafeScreen style={{ backgroundColor: Colors.BACKGROUND }}>
         <Animated.View entering={FadeIn.duration(400)} style={styles.content}>
           <Text style={styles.stepIndicator}>Intervention #{step + 1} of {INTERVENTIONISTS.length}</Text>
           <Text style={styles.avatar}>{person.avatar}</Text>
@@ -54,13 +54,13 @@ export default function InterventionModal() {
   }
 
   return (
-    <SafeScreen style={{ backgroundColor: Colors.SURFACE }}>
+      <SafeScreen style={{ backgroundColor: Colors.BACKGROUND }}>
       <Animated.View entering={FadeIn.duration(400)} style={styles.content}>
         <Text style={styles.finalEmoji}>⚠️</Text>
         <Text style={styles.finalTitle}>Choose Your Path</Text>
         <Text style={styles.finalSubtitle}>3 consecutive bad days triggered this intervention</Text>
 
-        <Card style={styles.optionCard}>
+        <Card glass style={styles.optionCard}>
           <Text style={styles.optionEmoji}>🚨</Text>
           <Text style={styles.optionTitle}>Emergency Detox Mode</Text>
           <Text style={styles.optionDesc}>24hr hard block on all social media</Text>
@@ -79,12 +79,12 @@ const styles = StyleSheet.create({
   content: { flex: 1, padding: Spacing.xl, justifyContent: 'center' },
   stepIndicator: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.xl },
   avatar: { fontSize: Sizing.avatarMd, textAlign: 'center', marginBottom: Spacing.lg },
-  name: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, textAlign: 'center' },
+  name: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, textAlign: 'center', letterSpacing: LetterSpacing.tight },
   role: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.xl },
-  message: { fontSize: Typography.sizes.lg, color: Colors.TEXT_PRIMARY, textAlign: 'center', lineHeight: Typography.lineHeight.relaxed, marginBottom: Spacing.xl },
+  message: { fontSize: Typography.sizes.lg, color: Colors.TEXT_PRIMARY, textAlign: 'center', lineHeight: Typography.lineHeight.relaxed, marginBottom: Spacing.xl, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, padding: Spacing.xl, borderWidth: 1, borderColor: Colors.BORDER, ...Shadow.sm },
   actions: { alignItems: 'center' },
   finalEmoji: { fontSize: Sizing.avatarMd, textAlign: 'center', marginBottom: Spacing.lg },
-  finalTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm },
+  finalTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm, letterSpacing: LetterSpacing.tight },
   finalSubtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.xl },
   optionCard: { alignItems: 'center', marginBottom: Spacing.xl },
   optionEmoji: { fontSize: 48, marginBottom: Spacing.md },

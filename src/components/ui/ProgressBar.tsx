@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Colors, Radius, ANIMATION } from '../../constants/theme';
 
@@ -9,6 +10,7 @@ interface ProgressBarProps {
   color?: string;
   backgroundColor?: string;
   animated?: boolean;
+  gradient?: readonly string[];
 }
 
 export function ProgressBar({
@@ -17,6 +19,7 @@ export function ProgressBar({
   color = Colors.PRIMARY_LIGHT,
   backgroundColor = Colors.BORDER,
   animated = true,
+  gradient,
 }: ProgressBarProps) {
   const clampedProgress = Math.min(100, Math.max(0, progress));
   const barColor = clampedProgress >= 100 ? Colors.DANGER : color;
@@ -38,7 +41,16 @@ export function ProgressBar({
 
   return (
     <View style={[styles.container, { height, backgroundColor }]}>
-      <Animated.View style={[styles.fill, fillStyle, { backgroundColor: barColor }]} />
+      <Animated.View style={[styles.fill, fillStyle, { backgroundColor: gradient ? 'transparent' : barColor }]}>
+        {gradient && (
+          <LinearGradient
+            colors={[...gradient] as unknown as [string, string]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
+      </Animated.View>
     </View>
   );
 }

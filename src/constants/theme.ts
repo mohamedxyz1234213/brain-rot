@@ -89,6 +89,22 @@ export const Sizing = {
   touchTarget: 44,
 };
 
+export const Gradients = {
+  brand: ['#6A9099', '#43686F'] as const,
+  brandDark: ['#43686F', '#2C4A50'] as const,
+  surface: ['#1A2332', '#141B27'] as const,
+  success: ['#2EA043', '#1F7A33'] as const,
+  danger: ['#F85149', '#C23A33'] as const,
+  score: ['#F85149', '#D29922', '#2EA043'] as const,
+};
+
+export const Layout = {
+  hairline: 1,
+  maxContentWidth: 520,
+};
+
+export const LetterSpacing = { tight: -0.4, normal: 0, wide: 1.5 };
+
 export const Shadow = {
   sm: {
     shadowColor: '#000',
@@ -111,6 +127,13 @@ export const Shadow = {
     shadowRadius: 8,
     elevation: 8,
   },
+  glow: {
+    shadowColor: '#6A9099',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 10,
+  },
 };
 
 export const ANIMATION = {
@@ -124,6 +147,10 @@ export const ANIMATION = {
     normal: 300,
     slow: 500,
   },
+  entrance: { duration: 450 },
+  stagger: 70,
+  pressScale: 0.96,
+  springSoft: { damping: 18, stiffness: 180, mass: 0.6 },
 };
 
 export const theme = {
@@ -134,4 +161,7 @@ export const theme = {
   sizing: Sizing,
   shadow: Shadow,
   animation: ANIMATION,
+  gradients: Gradients,
+  layout: Layout,
+  letterSpacing: LetterSpacing,
 };

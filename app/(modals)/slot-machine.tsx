@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing, Shadow, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
 import { Button } from '../../src/components/ui/Button';
 
@@ -56,9 +56,9 @@ export default function SlotMachineModal() {
 
 const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
-  title: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.sm },
+  title: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.sm, letterSpacing: LetterSpacing.tight, textAlign: 'center' },
   subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing['2xl'] },
   reels: { flexDirection: 'row', gap: Spacing.lg, marginBottom: Spacing['2xl'] },
-  reel: { fontSize: Sizing.avatarMd, backgroundColor: Colors.SURFACE, padding: Spacing.lg, borderRadius: Radius.lg, overflow: 'hidden' },
+  reel: { fontSize: Sizing.avatarMd, backgroundColor: Colors.SURFACE, padding: Spacing.lg, borderRadius: Radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: Colors.BORDER, ...Shadow.sm },
   resultText: { fontSize: Typography.sizes.lg, color: Colors.WARNING, textAlign: 'center', marginBottom: Spacing.xl },
 });

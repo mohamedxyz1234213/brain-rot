@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadow, Layout } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 const TABS = ['Score', 'Streak', 'XP', 'Focus'] as const;
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: Radius.md,
+    borderRadius: Radius.full,
     backgroundColor: Colors.SURFACE,
     alignItems: 'center',
   },
@@ -134,14 +134,18 @@ const styles = StyleSheet.create({
   podiumItem: {
     alignItems: 'center',
     backgroundColor: Colors.SURFACE,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     padding: Spacing.md,
     width: 100,
+    borderWidth: Layout.hairline,
+    borderColor: Colors.BORDER,
+    ...Shadow.sm,
   },
   podiumFirst: {
     paddingVertical: Spacing.xl,
-    borderWidth: 1,
+    borderWidth: Layout.hairline,
     borderColor: Colors.PRIMARY,
+    ...Shadow.glow,
   },
   podiumAvatar: {
     fontSize: 28,
@@ -167,8 +171,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
-    borderBottomWidth: 0.5,
-    borderBottomColor: `${Colors.BORDER}22`,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    backgroundColor: Colors.SURFACE,
+    borderRadius: Radius.lg,
+    borderWidth: Layout.hairline,
+    borderColor: Colors.BORDER,
   },
   listRank: {
     fontSize: Typography.sizes.md,

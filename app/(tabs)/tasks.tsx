@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, TextInput, Modal, ActivityIndicator } from 'react-native';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing, Shadow, LetterSpacing, ANIMATION } from '../../src/constants/theme';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
 import { EmptyState } from '../../src/components/ui/EmptyState';
@@ -131,8 +131,8 @@ export default function TasksScreen() {
           />
         ) : (
           filteredTasks.map((task, i) => (
-            <Animated.View key={task.id} entering={FadeInLeft.duration(300).delay(i * 50)}>
-              <Card style={styles.taskCard}>
+          <Animated.View key={task.id} entering={FadeInLeft.duration(300).delay(Math.min(i, 6) * ANIMATION.stagger)}>
+              <Card dense glass style={styles.taskCard}>
                 <View style={styles.taskRow}>
                   <Pressable
                     style={[styles.checkbox, task.status === 'completed' && styles.checkboxCompleted]}
@@ -171,7 +171,7 @@ export default function TasksScreen() {
 
       <Modal visible={showAddModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <Animated.View entering={FadeInLeft.duration(300)} style={styles.modalContent}>
             <Text style={styles.modalTitle}>New Task</Text>
             <TextInput
               style={styles.input}
@@ -199,13 +199,13 @@ export default function TasksScreen() {
               <Button title="Cancel" onPress={() => setShowAddModal(false)} variant="ghost" size="md" />
               <Button title="Add Task" onPress={handleAddTask} size="md" />
             </View>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
 
       <Modal visible={showPlanModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, styles.planContent]}>
+          <Animated.View entering={FadeInLeft.duration(300)} style={[styles.modalContent, styles.planContent]}>
             <Text style={styles.modalTitle}>Plan My Day</Text>
             {planOffline && <Text style={styles.offlineNote}>⚡ Offline planner — connect AI for smarter scheduling</Text>}
 
@@ -251,7 +251,7 @@ export default function TasksScreen() {
             <View style={styles.modalActions}>
               <Button title="Done" onPress={() => setShowPlanModal(false)} size="md" />
             </View>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </SafeScreen>
@@ -261,17 +261,17 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.lg },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY },
+  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
   tabs: { paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg, maxHeight: Sizing.touchTarget },
-  tab: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, marginRight: Spacing.sm, borderRadius: Radius.full, backgroundColor: Colors.SURFACE, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center' },
-  tabActive: { backgroundColor: Colors.PRIMARY },
+  tab: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, marginRight: Spacing.sm, borderRadius: Radius.full, backgroundColor: Colors.SURFACE, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.BORDER },
+  tabActive: { backgroundColor: Colors.PRIMARY_DARK, borderColor: Colors.PRIMARY_LIGHT, ...Shadow.sm },
   tabText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
   tabTextActive: { color: Colors.TEXT_ON_PRIMARY, fontWeight: 600 },
   list: { flex: 1 },
   listContent: { flexGrow: 1, padding: Spacing.lg, paddingBottom: Spacing['3xl'] },
-  taskCard: { marginBottom: Spacing.sm },
+  taskCard: { marginBottom: Spacing.md },
   taskRow: { flexDirection: 'row', alignItems: 'center' },
-  checkbox: { width: Sizing.iconMd, height: Sizing.iconMd, borderRadius: Radius.full, borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
+  checkbox: { width: Sizing.touchTarget, height: Sizing.touchTarget, borderRadius: Radius.full, borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
   checkboxCompleted: { backgroundColor: Colors.SUCCESS, borderColor: Colors.SUCCESS },
   checkmark: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.sm, fontWeight: 700 },
   taskContent: { flex: 1 },
@@ -285,18 +285,18 @@ const styles = StyleSheet.create({
   abandonBtn: { padding: Spacing.sm },
   abandonText: { fontSize: Typography.sizes.lg, color: Colors.DANGER, fontWeight: 600 },
   modalOverlay: { flex: 1, backgroundColor: Colors.OVERLAY, justifyContent: 'center', padding: Spacing.xl },
-  modalContent: { backgroundColor: Colors.SURFACE, borderRadius: Radius.lg, padding: Spacing.xl },
+  modalContent: { backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, padding: Spacing.xl, borderWidth: 1, borderColor: Colors.BORDER, ...Shadow.lg },
   modalTitle: { fontSize: Typography.sizes.xl, fontWeight: 700, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.lg },
-  input: { backgroundColor: Colors.SURFACE_RAISED, borderRadius: Radius.md, padding: Spacing.md, fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.lg },
+  input: { backgroundColor: Colors.SURFACE_RAISED, borderRadius: Radius.lg, padding: Spacing.md, fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.lg, borderWidth: 1, borderColor: Colors.BORDER },
   priorityRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.xl },
-  priorityBtn: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.BORDER },
+  priorityBtn: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.BORDER, minHeight: Sizing.touchTarget, justifyContent: 'center' },
   priorityBtnActive: { backgroundColor: Colors.DANGER_LIGHT },
   priorityBtnText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
   modalActions: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.md },
   planContent: { maxHeight: '80%' },
   offlineNote: { fontSize: Typography.sizes.sm, color: Colors.WARNING, marginBottom: Spacing.md },
   energyRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
-  energyBtn: { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.BORDER, alignItems: 'center' },
+  energyBtn: { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.BORDER, alignItems: 'center', minHeight: Sizing.touchTarget, justifyContent: 'center' },
   energyBtnActive: { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY },
   energyBtnText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
   energyBtnTextActive: { color: Colors.TEXT_ON_PRIMARY, fontWeight: 600 },
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   planEmptyText: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center' },
   planBlock: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm },
   planTime: { width: 56, fontSize: Typography.sizes.sm, color: Colors.PRIMARY_LIGHT, fontWeight: 700 },
-  planBlockBody: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.SURFACE_RAISED, borderRadius: Radius.md, padding: Spacing.md },
+  planBlockBody: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.SURFACE_RAISED, borderRadius: Radius.lg, padding: Spacing.md, borderWidth: 1, borderColor: Colors.BORDER },
   planTask: { flex: 1, fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY },
   planTaskBreak: { color: Colors.TEXT_SECONDARY, fontStyle: 'italic' },
   planDuration: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginLeft: Spacing.sm },

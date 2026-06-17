@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadow, Layout, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 import { useBrainScoreStore } from '../../src/stores/brainScoreStore';
 import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
@@ -132,12 +132,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     padding: Spacing.lg,
     backgroundColor: Colors.SURFACE,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
+    borderWidth: Layout.hairline,
+    borderColor: Colors.BORDER,
+    ...Shadow.sm,
   },
   chartTitle: {
     fontSize: Typography.sizes.md,
     color: Colors.TEXT_PRIMARY,
     fontWeight: Typography.weights.semibold,
+    letterSpacing: LetterSpacing.tight,
     marginBottom: Spacing.lg,
   },
   sampleNote: {
@@ -161,7 +165,7 @@ const styles = StyleSheet.create({
   },
   lineBar: {
     flex: 1,
-    borderRadius: 3,
+    borderRadius: Radius.full,
     minHeight: 4,
   },
   chartLabels: {
@@ -184,8 +188,11 @@ const styles = StyleSheet.create({
     width: (width - Spacing.lg * 2 - Spacing.md) / 2,
     padding: Spacing.lg,
     backgroundColor: Colors.SURFACE,
-    borderRadius: 12,
+    borderRadius: Radius.xl,
     alignItems: 'center',
+    borderWidth: Layout.hairline,
+    borderColor: Colors.BORDER,
+    ...Shadow.sm,
   },
   statEmoji: {
     fontSize: 28,
@@ -215,13 +222,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 8,
     backgroundColor: `${Colors.TEXT_SECONDARY}33`,
-    borderRadius: 4,
+    borderRadius: Radius.full,
     overflow: 'hidden',
     marginHorizontal: Spacing.sm,
   },
   appBarFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: Radius.full,
   },
   appBarValue: {
     fontSize: Typography.sizes.sm,
@@ -233,10 +240,11 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     padding: Spacing.xl,
     backgroundColor: `${Colors.DANGER}11`,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
+    borderRadius: Radius.xl,
+    borderWidth: Layout.hairline,
     borderColor: `${Colors.DANGER}33`,
     alignItems: 'center',
+    ...Shadow.sm,
   },
   costTitle: {
     fontSize: Typography.sizes.lg,

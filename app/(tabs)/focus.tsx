@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing, Shadow, Gradients, LetterSpacing, ANIMATION } from '../../src/constants/theme';
 import { Button } from '../../src/components/ui/Button';
+import { CircularProgress } from '../../src/components/ui/CircularProgress';
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
 import { useFocusStore, FocusMode } from '../../src/stores/focusStore';
 import { useXPStore } from '../../src/stores/xpStore';
@@ -89,11 +90,13 @@ export default function FocusScreen() {
     const progress = 1 - remainingSeconds / (activeSession.targetMinutes * 60);
     return (
       <SafeScreen>
-        <Animated.View entering={FadeInDown.duration(400)} style={styles.timerContainer}>
+        <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.timerContainer}>
           <Text style={styles.modeLabel}>{MODES.find((m) => m.id === activeSession.mode)?.name ?? activeSession.mode}</Text>
-          <View style={styles.timerCircle}>
+          <View style={[styles.timerCircle, isActive && !isPaused && styles.timerCircleActive]}>
+            <CircularProgress progress={progress * 100} size={240} strokeWidth={14} gradient={Gradients.brand}>
             <Text style={styles.timerText}>{formatTime(remainingSeconds)}</Text>
             <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
+            </CircularProgress>
           </View>
           {distractionCount > 0 && <Text style={styles.distractionText}>{distractionCount} distractions</Text>}
           <View style={styles.controls}>
@@ -120,7 +123,7 @@ export default function FocusScreen() {
   if (completed) {
     return (
       <SafeScreen>
-        <Animated.View entering={FadeInDown.duration(400)} style={styles.timerContainer}>
+        <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.timerContainer}>
           <Text style={styles.celebrateEmoji}>🎉</Text>
           <Text style={styles.celebrateTitle}>Session Complete</Text>
           <Text style={styles.celebrateSub}>
@@ -138,14 +141,14 @@ export default function FocusScreen() {
 
   return (
     <SafeScreen>
-      <View style={styles.header}>
+      <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.header}>
         <Text style={styles.title}>Focus Session</Text>
         <Text style={styles.subtitle}>Total today: {totalFocusMinutes} min</Text>
-      </View>
-      <Animated.View entering={FadeInDown.duration(400)} style={styles.modes}>
-        {MODES.map((mode) => (
+      </Animated.View>
+      <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration).delay(ANIMATION.stagger)} style={styles.modes}>
+        {MODES.map((mode, index) => (
+          <Animated.View key={mode.id} entering={FadeInDown.duration(300).delay(index * ANIMATION.stagger)} style={styles.modeCardWrap}>
           <Pressable
-            key={mode.id}
             style={[styles.modeCard, selectedMode === mode.id && styles.modeCardActive]}
             onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSelectedMode(mode.id); }}
             accessibilityRole="button"
@@ -155,6 +158,7 @@ export default function FocusScreen() {
             <Text style={styles.modeName}>{mode.name}</Text>
             <Text style={styles.modeDuration}>{mode.duration} min</Text>
           </Pressable>
+          </Animated.View>
         ))}
       </Animated.View>
       <Button title="Start Focus Session" onPress={handleStartSession} size="lg" />
@@ -164,29 +168,31 @@ export default function FocusScreen() {
 
 const styles = StyleSheet.create({
   header: { padding: Spacing.xl, paddingTop: Spacing.lg },
-  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY },
+  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
   subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginTop: Spacing.sm },
   modes: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md, marginBottom: Spacing['2xl'], paddingHorizontal: Spacing.xl },
-  modeCard: { width: '47%', alignItems: 'center', padding: Spacing.xl, backgroundColor: Colors.SURFACE, borderRadius: Radius.lg, borderWidth: 1, borderColor: Colors.BORDER },
-  modeCardActive: { borderColor: Colors.PRIMARY_LIGHT, borderWidth: 2 },
+  modeCardWrap: { width: '47%' },
+  modeCard: { alignItems: 'center', padding: Spacing.xl, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, borderWidth: 1, borderColor: Colors.BORDER, minHeight: 150, ...Shadow.sm },
+  modeCardActive: { borderColor: Colors.PRIMARY_LIGHT, borderWidth: 2, backgroundColor: Colors.PRIMARY_DARK, ...Shadow.glow },
   modeEmoji: { fontSize: Typography.sizes['3xl'], marginBottom: Spacing.sm },
   modeName: { fontSize: Typography.sizes.lg, fontWeight: 600, color: Colors.TEXT_PRIMARY },
   modeDuration: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
   timerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl },
-  modeLabel: { fontSize: Typography.sizes.md, color: Colors.PRIMARY_LIGHT, fontWeight: 600, marginBottom: Spacing.lg, textTransform: 'uppercase', letterSpacing: 2 },
-  timerCircle: { width: 240, height: 240, borderRadius: 120, borderWidth: 4, borderColor: Colors.PRIMARY_LIGHT, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing['2xl'] },
-  timerText: { fontSize: Typography.sizes['4xl'], color: Colors.TEXT_PRIMARY, fontWeight: 300 },
+  modeLabel: { fontSize: Typography.sizes.md, color: Colors.PRIMARY_LIGHT, fontWeight: 600, marginBottom: Spacing.lg, textTransform: 'uppercase', letterSpacing: LetterSpacing.wide },
+  timerCircle: { width: 240, height: 240, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing['2xl'] },
+  timerCircleActive: { ...Shadow.glow },
+  timerText: { fontSize: Typography.sizes['4xl'], color: Colors.TEXT_PRIMARY, fontWeight: 300, letterSpacing: LetterSpacing.tight },
   progressText: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
   distractionText: { fontSize: Typography.sizes.sm, color: Colors.WARNING, marginBottom: Spacing.lg },
   controls: { flexDirection: 'row', gap: Spacing.md },
-  primaryBtn: { paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md, backgroundColor: Colors.PRIMARY, borderRadius: Radius.md, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center' },
+  primaryBtn: { paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md, backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center', ...Shadow.sm },
   resumeBtn: { backgroundColor: Colors.SUCCESS },
   primaryBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.md, fontWeight: 600 },
-  secondaryBtn: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, backgroundColor: Colors.SURFACE, borderRadius: Radius.md, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center' },
+  secondaryBtn: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, backgroundColor: Colors.SURFACE, borderRadius: Radius.lg, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center' },
   secondaryBtnText: { color: Colors.TEXT_PRIMARY, fontSize: Typography.sizes.md },
-  dangerBtn: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, backgroundColor: Colors.DANGER_LIGHT, borderRadius: Radius.md, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center' },
+  dangerBtn: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, backgroundColor: Colors.DANGER_LIGHT, borderRadius: Radius.lg, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center' },
   dangerBtnText: { color: Colors.DANGER, fontSize: Typography.sizes.md, fontWeight: 600 },
-  celebrateEmoji: { fontSize: 64, marginBottom: Spacing.lg },
+  celebrateEmoji: { fontSize: Sizing.avatarLg, marginBottom: Spacing.lg },
   celebrateTitle: { fontSize: Typography.sizes['3xl'], fontWeight: 800, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.sm },
   celebrateSub: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.xl },
   xpPill: { backgroundColor: `${Colors.SUCCESS}22`, borderRadius: Radius.full, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm, borderWidth: 1, borderColor: Colors.SUCCESS },

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing, Shadow, Gradients, LetterSpacing } from '../../src/constants/theme';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
 import { ProgressBar } from '../../src/components/ui/ProgressBar';
@@ -45,7 +45,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(500).delay(100)}>
-          <Card style={styles.statsCard}>
+          <Card glass style={styles.statsCard}>
             <Text style={styles.cardTitle}>Stats Overview</Text>
             <View style={styles.statsGrid}>
               <View style={styles.statItem}>
@@ -65,13 +65,13 @@ export default function ProfileScreen() {
                 <Text style={styles.statValue}>{totalScreenMinutes} min</Text>
               </View>
             </View>
-            <ProgressBar progress={levelInfo.progress * 100} height={4} />
+            <ProgressBar progress={levelInfo.progress * 100} height={6} gradient={Gradients.brand} />
             <Text style={styles.xpProgress}>{Math.round(levelInfo.progress * 100)}% to {levelInfo.maxXP} XP</Text>
           </Card>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(500).delay(200)}>
-          <Card style={styles.subCard}>
+          <Card glass style={styles.subCard}>
             <View style={styles.subRow}>
               <Text style={styles.cardTitle}>Subscription</Text>
               <Text style={[styles.tierBadge, tier !== 'free' && styles.tierBadgeActive]}>{tier.toUpperCase()}</Text>
@@ -93,6 +93,7 @@ export default function ProfileScreen() {
           ].map((nav) => (
             <Pressable key={nav.route} style={styles.navItem} onPress={() => router.push(nav.route)} accessibilityRole="button" accessibilityLabel={nav.label}>
               <Text style={styles.navItemText}>{nav.icon}  {nav.label}</Text>
+              <Text style={styles.chevron}>→</Text>
             </Pressable>
           ))}
         </Animated.View>
@@ -108,14 +109,14 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   content: { padding: Spacing.lg, paddingBottom: Spacing['3xl'] },
   avatarSection: { alignItems: 'center', marginBottom: Spacing.xl },
-  avatarCircle: { width: Sizing.avatarLg, height: Sizing.avatarLg, borderRadius: Radius.full, backgroundColor: Colors.SURFACE, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT },
+  avatarCircle: { width: Sizing.avatarLg, height: Sizing.avatarLg, borderRadius: Radius.full, backgroundColor: Colors.SURFACE, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT, ...Shadow.glow },
   avatarEmoji: { fontSize: Typography.sizes['3xl'] },
-  userName: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, marginTop: Spacing.md },
+  userName: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, marginTop: Spacing.md, letterSpacing: LetterSpacing.tight },
   userLevel: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
   statsCard: { marginBottom: Spacing.lg },
   cardTitle: { fontSize: Typography.sizes.lg, fontWeight: 600, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.md },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
-  statItem: { width: '45%', marginBottom: Spacing.md },
+  statItem: { width: '45%', marginBottom: Spacing.md, backgroundColor: Colors.SURFACE_RAISED, borderRadius: Radius.lg, padding: Spacing.md },
   statLabel: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
   statValue: { fontSize: Typography.sizes.lg, fontWeight: 700, color: Colors.TEXT_PRIMARY },
   xpProgress: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginTop: Spacing.sm },
@@ -123,7 +124,8 @@ const styles = StyleSheet.create({
   subRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   tierBadge: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, fontWeight: 600 },
   tierBadgeActive: { color: Colors.SUCCESS },
-  navItem: { backgroundColor: Colors.SURFACE, borderRadius: Radius.md, padding: Spacing.lg, marginBottom: Spacing.sm, borderWidth: 1, borderColor: Colors.BORDER, minHeight: Sizing.touchTarget },
+  navItem: { backgroundColor: Colors.SURFACE, borderRadius: Radius.lg, padding: Spacing.lg, marginBottom: Spacing.sm, borderWidth: 1, borderColor: Colors.BORDER, minHeight: Sizing.touchTarget, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   navItemText: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, fontWeight: 500 },
+  chevron: { fontSize: Typography.sizes.lg, color: Colors.TEXT_SECONDARY },
   signOutBtn: { marginTop: Spacing.md },
 });

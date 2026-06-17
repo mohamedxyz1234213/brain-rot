@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, Redirect } from 'expo-router';
-import { Colors, Typography } from '../../src/constants/theme';
+import { Colors, Typography, Radius, Shadow, Layout, Spacing } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/stores/authStore';
 
 export default function TabLayout() {
@@ -15,14 +15,18 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.TEXT_ON_PRIMARY,
+        tabBarActiveTintColor: Colors.PRIMARY_LIGHT,
         tabBarInactiveTintColor: Colors.TEXT_SECONDARY,
         tabBarStyle: {
           backgroundColor: Colors.SURFACE,
           borderTopColor: Colors.BORDER,
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
+          borderTopWidth: Layout.hairline,
+          height: 64,
+          paddingBottom: Spacing.sm,
+          paddingTop: Spacing.xs,
+          borderTopLeftRadius: Radius.xl,
+          borderTopRightRadius: Radius.xl,
+          ...Shadow.lg,
         },
         tabBarLabelStyle: {
           fontSize: Typography.sizes.sm,
@@ -34,35 +38,35 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="tasks"
         options={{
           title: 'Tasks',
-          tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-done" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'checkmark-done' : 'checkmark-done-outline'} size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="focus"
         options={{
           title: 'Focus',
-          tabBarIcon: ({ color, size }) => <Ionicons name="timer" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'timer' : 'timer-outline'} size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="religion"
         options={{
           title: 'Prayers',
-          tabBarIcon: ({ color, size }) => <Ionicons name="moon" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'moon' : 'moon-outline'} size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />,
         }}
       />
     </Tabs>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadow, Layout, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 const TIERS = [
@@ -155,13 +155,15 @@ const styles = StyleSheet.create({
   tierCard: {
     padding: Spacing.xl,
     backgroundColor: Colors.SURFACE,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     marginBottom: Spacing.lg,
-    borderWidth: 1,
+    borderWidth: Layout.hairline,
     borderColor: 'transparent',
+    ...Shadow.sm,
   },
   tierCardPopular: {
     borderColor: Colors.PRIMARY,
+    ...Shadow.glow,
   },
   tierCardCurrent: {
     borderColor: Colors.BORDER,
@@ -173,12 +175,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.PRIMARY,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
-    borderRadius: 12,
+    borderRadius: Radius.full,
   },
   popularText: {
     color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.xs,
     fontWeight: Typography.weights.bold,
+    letterSpacing: LetterSpacing.tight,
   },
   tierHeader: {
     marginBottom: Spacing.lg,
@@ -218,7 +221,7 @@ const styles = StyleSheet.create({
   },
   featureCheck: {
     color: Colors.SUCCESS,
-    fontSize: 14,
+    fontSize: Typography.sizes.md,
     marginRight: Spacing.sm,
     fontWeight: Typography.weights.bold,
   },
@@ -233,10 +236,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   subscribeBtn: {
-    paddingVertical: 14,
+    paddingVertical: Spacing.lg,
     backgroundColor: Colors.PRIMARY,
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     alignItems: 'center',
+    minHeight: 44,
   },
   subscribeBtnCurrent: {
     backgroundColor: Colors.SURFACE_RAISED,

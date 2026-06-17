@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing, Shadow, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
@@ -35,7 +35,7 @@ export default function AppBlockedScreen() {
   };
 
   return (
-    <SafeScreen style={{ backgroundColor: Colors.SURFACE }}>
+    <SafeScreen style={{ backgroundColor: Colors.BACKGROUND }}>
       <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
         <Text style={styles.blockEmoji}>🔒</Text>
         <Text style={styles.blockTitle}>{appName} is Blocked</Text>
@@ -45,7 +45,7 @@ export default function AppBlockedScreen() {
 
         <View style={styles.options}>
           {unlockerTasks.length > 0 && (
-            <Card style={styles.optionCard}>
+            <Card glass style={styles.optionCard}>
               <Text style={styles.optionEmoji}>✅</Text>
               <Text style={styles.optionTitle}>Task Unlock</Text>
               <Text style={styles.optionDesc}>Complete "{unlockerTasks[0].title}" for 15 min access</Text>
@@ -53,21 +53,21 @@ export default function AppBlockedScreen() {
             </Card>
           )}
 
-          <Card style={styles.optionCard}>
+          <Card glass style={styles.optionCard}>
             <Text style={styles.optionEmoji}>🎰</Text>
             <Text style={styles.optionTitle}>Slot Machine</Text>
             <Text style={styles.optionDesc}>Spin for a chance to unlock</Text>
             <Button title="Spin" onPress={handleSlotMachine} size="sm" />
           </Card>
 
-          <Card style={styles.optionCard}>
+          <Card glass style={styles.optionCard}>
             <Text style={styles.optionEmoji}>⏰</Text>
             <Text style={styles.optionTitle}>Timer Wait</Text>
             <Text style={styles.optionDesc}>Wait 10 min then re-spin</Text>
             <Button title="Wait" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} size="sm" variant="secondary" />
           </Card>
 
-          <Card style={styles.optionCard}>
+          <Card glass style={styles.optionCard}>
             <Text style={styles.optionEmoji}>🚫</Text>
             <Text style={styles.optionTitle}>Hard Block</Text>
             <Text style={styles.optionDesc}>No access until tomorrow</Text>
@@ -86,11 +86,11 @@ export default function AppBlockedScreen() {
 const styles = StyleSheet.create({
   content: { flex: 1, padding: Spacing.xl, justifyContent: 'center' },
   blockEmoji: { fontSize: Sizing.avatarMd, textAlign: 'center', marginBottom: Spacing.lg },
-  blockTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm },
+  blockTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm, letterSpacing: LetterSpacing.tight },
   blockReason: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.lg },
-  roastText: { fontSize: Typography.sizes.lg, color: Colors.DANGER, textAlign: 'center', marginBottom: Spacing.xl, lineHeight: 24 },
+  roastText: { fontSize: Typography.sizes.lg, color: Colors.DANGER, textAlign: 'center', marginBottom: Spacing.xl, lineHeight: Typography.lineHeight.relaxed },
   options: { gap: Spacing.md, marginBottom: Spacing.xl },
-  optionCard: { alignItems: 'center' },
+  optionCard: { alignItems: 'center', ...Shadow.sm },
   optionEmoji: { fontSize: Sizing.iconLg, marginBottom: Spacing.sm },
   optionTitle: { fontSize: Typography.sizes.lg, fontWeight: Typography.weights.semibold, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.xs },
   optionDesc: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.md },

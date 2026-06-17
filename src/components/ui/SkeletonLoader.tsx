@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing } from 'react-native-reanimated';
-import { Colors, Radius, Spacing } from '../../constants/theme';
+import { Colors, Radius, Spacing, Layout } from '../../constants/theme';
 
 interface SkeletonLoaderProps {
   width?: number | string;
@@ -13,7 +13,7 @@ interface SkeletonLoaderProps {
 export function SkeletonLoader({
   width = '100%',
   height = 20,
-  borderRadius = Radius.sm,
+  borderRadius = Radius.lg,
   style,
 }: SkeletonLoaderProps) {
   const opacity = useSharedValue(0.2);
@@ -64,9 +64,9 @@ export function SkeletonCard({ lines = 3 }: SkeletonCardProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.SURFACE,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     padding: Spacing.lg,
-    borderWidth: 1,
+    borderWidth: Layout.hairline,
     borderColor: Colors.BORDER,
   },
 });

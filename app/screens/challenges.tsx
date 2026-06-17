@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadow, Layout } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
-const EXTREME_COLOR = '#ff4500';
-const LEGENDARY_COLOR = '#9b59b6';
+const EXTREME_COLOR = Colors.DANGER;
+const LEGENDARY_COLOR = Colors.PRIMARY_LIGHT;
 
 const CHALLENGES = [
   {
@@ -116,11 +116,12 @@ const styles = StyleSheet.create({
   },
   challengeCard: {
     backgroundColor: Colors.SURFACE,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
-    borderWidth: 0.5,
-    borderColor: `${Colors.BORDER}33`,
+    borderWidth: Layout.hairline,
+    borderColor: Colors.BORDER,
+    ...Shadow.sm,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -148,8 +149,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: Spacing.md,
-    borderTopWidth: 0.5,
-    borderTopColor: `${Colors.BORDER}22`,
+    borderTopWidth: Layout.hairline,
+    borderTopColor: Colors.BORDER_LIGHT,
     marginBottom: Spacing.md,
   },
   metaItem: {
@@ -168,8 +169,11 @@ const styles = StyleSheet.create({
   joinBtn: {
     paddingVertical: Spacing.md,
     backgroundColor: Colors.PRIMARY,
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     alignItems: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
+    ...Shadow.sm,
   },
   joinBtnText: {
     color: Colors.TEXT_ON_PRIMARY,

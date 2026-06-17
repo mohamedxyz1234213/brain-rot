@@ -2,9 +2,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Colors, Typography, Spacing, Radius, Sizing, Shadow } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing, Shadow, Gradients, LetterSpacing, ANIMATION } from '../../src/constants/theme';
 import { Card } from '../../src/components/ui/Card';
 import { ProgressBar } from '../../src/components/ui/ProgressBar';
+import { CircularProgress } from '../../src/components/ui/CircularProgress';
 import { Button } from '../../src/components/ui/Button';
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -143,7 +144,7 @@ export default function DashboardScreen() {
           />
         }
       >
-        <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
+        <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.header}>
           <View>
             <Text style={styles.greeting}>{greeting}</Text>
             <Text style={styles.subtitle}>Let's heal your brain today</Text>
@@ -153,7 +154,7 @@ export default function DashboardScreen() {
 
         {briefing && (
           <Animated.View entering={FadeInDown.duration(400)}>
-            <Card style={styles.briefingCard}>
+            <Card glass style={styles.briefingCard}>
               <View style={styles.briefingHeader}>
                 <Text style={styles.briefingTag}>📺 Morning Briefing</Text>
                 <Pressable onPress={dismissBriefing} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dismiss briefing">
@@ -166,12 +167,14 @@ export default function DashboardScreen() {
         )}
 
         <Animated.View entering={FadeInDown.duration(500).delay(100)}>
-          <Card style={styles.scoreCard}>
+          <Card glass variant="raised" style={styles.scoreCard}>
             <View style={styles.scoreContainer}>
-              <Text style={styles.scoreValue}>{brainScore}</Text>
-              <Text style={styles.scoreLabel}>Brain Score</Text>
-              <Text style={styles.levelLabel}>{levelName}</Text>
-              <ProgressBar progress={brainScore} height={4} />
+              <CircularProgress progress={brainScore} size={190} strokeWidth={14} gradient={Gradients.score}>
+                <Text style={styles.scoreValue}>{brainScore}</Text>
+                <Text style={styles.scoreLabel}>Brain Score</Text>
+                <Text style={styles.levelLabel}>{levelName}</Text>
+              </CircularProgress>
+              <ProgressBar progress={brainScore} height={6} gradient={Gradients.score} />
             </View>
           </Card>
         </Animated.View>
@@ -188,7 +191,7 @@ export default function DashboardScreen() {
 
         {frogTask && (
           <Animated.View entering={FadeInDown.duration(500).delay(300)}>
-            <Card style={styles.frogCard}>
+              <Card glass style={styles.frogCard}>
               <Text style={styles.frogEmoji}>🐸</Text>
               <Text style={styles.frogTitle}>Eat the Frog</Text>
               <Text style={styles.frogTask}>{frogTask.title}</Text>
@@ -211,16 +214,16 @@ export default function DashboardScreen() {
         )}
 
         <Animated.View entering={FadeInDown.duration(500).delay(500)}>
-          <Card style={styles.levelCard}>
+            <Card glass style={styles.levelCard}>
             <Text style={styles.levelTitle}>Level {level}</Text>
             <Text style={styles.xpText}>{xp} XP · {Math.round(levelInfo.progress * 100)}% to next</Text>
-            <ProgressBar progress={levelInfo.progress * 100} height={4} />
+            <ProgressBar progress={levelInfo.progress * 100} height={6} gradient={Gradients.brand} />
           </Card>
         </Animated.View>
 
         {activeSession && (
           <Animated.View entering={FadeInDown.duration(400)}>
-            <Card style={styles.focusCard}>
+            <Card glass style={styles.focusCard}>
               <Text style={styles.focusTitle}>Focus Active</Text>
               <Text style={styles.focusMode}>{activeSession.mode} · {Math.floor((activeSession.targetMinutes * 60 - useFocusStore.getState().remainingSeconds) / 60)} min</Text>
             </Card>
@@ -228,7 +231,7 @@ export default function DashboardScreen() {
         )}
 
         <Animated.View entering={FadeInDown.duration(500).delay(600)}>
-          <Card style={styles.motivationCard}>
+          <Card glass style={styles.motivationCard}>
             <Text style={styles.motivationText}>"Time is an Amanah. Every minute scrolling is a minute stolen from your purpose."</Text>
           </Card>
         </Animated.View>
@@ -239,10 +242,10 @@ export default function DashboardScreen() {
 
 function StatCard({ label, value, progress }: { label: string; value: string; progress: number }) {
   return (
-    <Card style={styles.statCard}>
+    <Card dense glass style={styles.statCard}>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-      <ProgressBar progress={progress} height={4} />
+      <ProgressBar progress={progress} height={5} gradient={Gradients.brand} />
     </Card>
   );
 }
@@ -251,37 +254,37 @@ function AppLimitPill({ name, used, limit, isHard }: { name: string; used: numbe
   const progress = (used / limit) * 100;
   const color = progress > 90 ? Colors.DANGER : progress > 70 ? Colors.WARNING : Colors.PRIMARY_LIGHT;
   return (
-    <Card style={styles.appLimitPill}>
+    <Card dense glass style={styles.appLimitPill}>
       <Text style={styles.appName}>{name}</Text>
       <Text style={styles.appTime}>{used}m / {limit}m</Text>
       {isHard && <Text style={styles.hardBadge}>Hard Block</Text>}
-      <ProgressBar progress={progress} color={color} height={4} />
+      <ProgressBar progress={progress} color={color} height={5} gradient={progress <= 70 ? Gradients.brand : undefined} />
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: Spacing.lg },
+  content: { padding: Spacing.lg, paddingBottom: Spacing['3xl'] },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.xl },
-  greeting: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY },
+  greeting: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
   subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
-  syncDot: { width: Sizing.iconSm, height: Sizing.iconSm, borderRadius: Sizing.iconSm / 2, backgroundColor: Colors.SUCCESS },
-  briefingCard: { marginBottom: Spacing.xl, borderWidth: 1, borderColor: Colors.PRIMARY_LIGHT },
+  syncDot: { width: Sizing.iconSm, height: Sizing.iconSm, borderRadius: Sizing.iconSm / 2, backgroundColor: Colors.SUCCESS, ...Shadow.glow },
+  briefingCard: { marginBottom: Spacing.xl, borderLeftWidth: Spacing.xs, borderColor: Colors.PRIMARY_LIGHT },
   briefingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
   briefingTag: { fontSize: Typography.sizes.sm, fontWeight: 700, color: Colors.PRIMARY_LIGHT },
   briefingDismiss: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY },
   briefingText: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.relaxed },
-  scoreCard: { alignItems: 'center', marginBottom: Spacing.xl },
-  scoreContainer: { alignItems: 'center' },
-  scoreValue: { fontSize: Typography.sizes['4xl'], fontWeight: 800, color: Colors.TEXT_PRIMARY },
+  scoreCard: { alignItems: 'center', marginBottom: Spacing.xl, ...Shadow.glow },
+  scoreContainer: { alignItems: 'center', gap: Spacing.lg, width: '100%' },
+  scoreValue: { fontSize: Typography.sizes['4xl'], fontWeight: 800, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
   scoreLabel: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
   levelLabel: { fontSize: Typography.sizes.sm, color: Colors.PRIMARY_LIGHT, marginTop: Spacing.xs },
   statsRow: { marginBottom: Spacing.xl },
-  statCard: { width: 120, marginRight: Spacing.sm, padding: Spacing.md },
+  statCard: { width: 132, marginRight: Spacing.sm, padding: Spacing.md },
   statValue: { fontSize: Typography.sizes.lg, fontWeight: 700, color: Colors.TEXT_PRIMARY },
   statLabel: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.sm },
   sectionTitle: { fontSize: Typography.sizes.lg, fontWeight: 600, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.md },
-  frogCard: { alignItems: 'center', marginBottom: Spacing.xl, borderWidth: 1, borderColor: Colors.WARNING },
+  frogCard: { alignItems: 'center', marginBottom: Spacing.xl, borderColor: Colors.WARNING, backgroundColor: Colors.WARNING_LIGHT },
   frogEmoji: { fontSize: Typography.sizes['3xl'], marginBottom: Spacing.sm },
   frogTitle: { fontSize: Typography.sizes.lg, fontWeight: 600, color: Colors.TEXT_PRIMARY, marginTop: Spacing.sm },
   frogTask: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs, marginBottom: Spacing.md },

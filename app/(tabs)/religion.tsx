@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing, Shadow, LetterSpacing, ANIMATION } from '../../src/constants/theme';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
@@ -88,14 +88,16 @@ export default function ReligionScreen() {
   return (
     <SafeScreen>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Prayers & Worship</Text>
+        <Animated.Text entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.title}>Prayers & Worship</Animated.Text>
         <Text style={styles.methodText}>Method: {method}</Text>
 
-        <Animated.View entering={FadeInDown.duration(400)}>
-          {prayers.map((prayer) => (
-            <Card key={prayer} style={styles.prayerCard}>
+        <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)}>
+          {prayers.map((prayer, index) => (
+            <Animated.View key={prayer} entering={FadeInDown.duration(300).delay(index * ANIMATION.stagger)}>
+            <Card dense glass style={styles.prayerCard}>
               <View style={styles.prayerRow}>
                 <View style={styles.prayerLeft}>
+                  <View style={[styles.statusDot, { backgroundColor: PRAYER_STATUS_COLORS[todayStatuses[prayer] ?? 'pending'] }]} />
                   <View>
                     <Text style={styles.prayerName}>{PRAYER_LABELS[prayer]}</Text>
                     <Text style={styles.prayerTime}>{prayerTimes[prayer]}</Text>
@@ -122,11 +124,12 @@ export default function ReligionScreen() {
                 </View>
               </View>
             </Card>
+            </Animated.View>
           ))}
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(500).delay(200)}>
-          <Card style={styles.sectionCard}>
+          <Card glass style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Quran Progress</Text>
             <Text style={styles.quranText}>Page {quranProgress.currentPage} · Juz {quranProgress.currentJuz}/30 · {quranProgress.pagesReadToday} pages today</Text>
             <View style={styles.quranActions}>
@@ -136,7 +139,7 @@ export default function ReligionScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(500).delay(300)}>
-          <Card style={styles.sectionCard}>
+          <Card glass style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Dhikr Counter</Text>
             <Text style={styles.dhikrText}>سُبْحَانَ اللهِ وَبِحَمْدِهِ</Text>
             <Text style={styles.dhikrTrans}>SubhanAllahi wa biHamdihi</Text>
@@ -147,7 +150,7 @@ export default function ReligionScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(500).delay(400)}>
-          <Card style={styles.sectionCard}>
+          <Card glass style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Fasting Tracker</Text>
             <Text style={styles.fastingText}>Track voluntary fasts and Ramadan</Text>
             <Button title="Log Fast" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }} size="sm" />
@@ -160,16 +163,17 @@ export default function ReligionScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: Spacing.lg, paddingBottom: Spacing['3xl'] },
-  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY },
+  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
   methodText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs, marginBottom: Spacing.xl },
-  prayerCard: { marginBottom: Spacing.sm },
+  prayerCard: { marginBottom: Spacing.md },
   prayerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   prayerLeft: { flexDirection: 'row', alignItems: 'center' },
+  statusDot: { width: Spacing.sm, height: Spacing.sm, borderRadius: Radius.full, marginRight: Spacing.md },
   prayerName: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, fontWeight: 600 },
-  prayerTime: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginTop: 2 },
+  prayerTime: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
   prayerRight: { flexDirection: 'row' },
   prayerActions: { flexDirection: 'row', gap: Spacing.sm },
-  statusBtn: { width: Sizing.iconLg, height: Sizing.iconLg, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center' },
+  statusBtn: { width: Sizing.touchTarget, height: Sizing.touchTarget, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center', ...Shadow.sm },
   statusBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.sm, fontWeight: 700 },
   statusIndicator: { width: Sizing.iconLg + Spacing.sm, height: Sizing.iconLg + Spacing.sm, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center' },
   statusText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.lg, fontWeight: 700 },
@@ -177,9 +181,9 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: Typography.sizes.lg, fontWeight: 600, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.md },
   quranText: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, lineHeight: Typography.lineHeight.normal },
   quranActions: { marginTop: Spacing.md },
-  dhikrText: { fontSize: Typography.sizes['2xl'], color: Colors.TEXT_PRIMARY, textAlign: 'center', lineHeight: Typography.lineHeight.loose, marginBottom: Spacing.sm },
+  dhikrText: { fontSize: Typography.sizes['2xl'], color: Colors.TEXT_PRIMARY, textAlign: 'center', lineHeight: Typography.lineHeight.loose, marginBottom: Spacing.sm, fontFamily: Typography.families.arabicQuran },
   dhikrTrans: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.lg },
-  dhikrButton: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, paddingVertical: Spacing.xl, alignItems: 'center' },
+  dhikrButton: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.xl, paddingVertical: Spacing.xl, alignItems: 'center', minHeight: Sizing.touchTarget, ...Shadow.glow },
   dhikrButtonText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.xl, fontWeight: 700 },
   fastingText: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.md, lineHeight: Typography.lineHeight.normal },
 });

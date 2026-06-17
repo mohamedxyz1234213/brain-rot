@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, KeyboardAvoidingView, Pla
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadow, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useSettingsStore } from '../../src/stores/settingsStore';
@@ -94,14 +94,14 @@ export default function SignInScreen() {
 
 const styles = StyleSheet.create({
   content: { flex: 1, padding: Spacing.xl, justifyContent: 'center' },
-  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.sm },
+  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.sm, letterSpacing: LetterSpacing.tight },
   subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.xl },
   form: { marginBottom: Spacing.xl },
   inputGroup: { marginBottom: Spacing.lg },
   label: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.sm },
-  input: { backgroundColor: Colors.SURFACE, borderRadius: Radius.md, padding: Spacing.lg, fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, borderWidth: 1, borderColor: Colors.BORDER },
+  input: { backgroundColor: Colors.SURFACE, borderRadius: Radius.lg, padding: Spacing.lg, fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, borderWidth: 1, borderColor: Colors.BORDER, minHeight: 44 },
   actions: { gap: Spacing.md },
-  signInBtn: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, paddingVertical: Spacing.lg, alignItems: 'center' },
+  signInBtn: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, paddingVertical: Spacing.lg, alignItems: 'center', ...Shadow.sm },
   signInBtnDisabled: { opacity: 0.4 },
   signInBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.lg, fontWeight: 600 },
   signUpLink: { paddingVertical: Spacing.md, alignItems: 'center' },

@@ -1,8 +1,9 @@
 import React, { useCallback } from 'react';
-import { Pressable, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
+import { Pressable, Text, StyleSheet, View, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Colors, Radius, Spacing, Typography, Sizing, ANIMATION } from '../../constants/theme';
+import { Colors, Radius, Spacing, Typography, Sizing, Shadow, Gradients, ANIMATION } from '../../constants/theme';
 
 interface ButtonProps {
   title: string;
@@ -30,13 +31,21 @@ export function Button({
   const scale = useSharedValue(1);
 
   const handlePressIn = useCallback(() => {
-    scale.value = withSpring(0.95, ANIMATION.spring);
+    scale.value = withSpring(ANIMATION.pressScale, ANIMATION.springSoft);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
 
   const handlePressOut = useCallback(() => {
-    scale.value = withSpring(1, ANIMATION.spring);
+    scale.value = withSpring(1, ANIMATION.springSoft);
   }, []);
+
+  const content = loading ? (
+    <ActivityIndicator color={variant === 'ghost' ? Colors.PRIMARY_LIGHT : Colors.TEXT_ON_PRIMARY} />
+  ) : (
+    <Text style={[styles.text, styles[`text_${variant}`], styles[`text_${size}`], textStyle]}>
+      {title}
+    </Text>
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -53,37 +62,43 @@ export function Button({
       accessibilityLabel={title}
       accessibilityState={{ disabled: disabled || loading }}
     >
-      {loading ? (
-        <ActivityIndicator color={variant === 'ghost' ? Colors.PRIMARY_LIGHT : Colors.TEXT_ON_PRIMARY} />
+      {variant === 'primary' && !disabled ? (
+        <LinearGradient
+          colors={[...Gradients.brand] as unknown as [string, string]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
       ) : (
-        <Text style={[styles.text, styles[`text_${variant}`], styles[`text_${size}`], textStyle]}>
-          {title}
-        </Text>
+        <View style={StyleSheet.absoluteFill} />
       )}
+      <View style={styles.content}>{content}</View>
     </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: Sizing.touchTarget,
+    overflow: 'hidden',
   },
-  primary: { backgroundColor: Colors.PRIMARY },
+  primary: { backgroundColor: Colors.PRIMARY, ...Shadow.sm },
   secondary: {
     backgroundColor: Colors.SURFACE_RAISED,
     borderWidth: 1,
     borderColor: Colors.BORDER,
   },
-  danger: { backgroundColor: Colors.DANGER },
+  danger: { backgroundColor: Colors.DANGER, ...Shadow.sm },
   ghost: { backgroundColor: 'transparent' },
   size_sm: { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg },
   size_md: { paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl },
   size_lg: { paddingVertical: Spacing.lg, paddingHorizontal: Spacing['2xl'] },
-  disabled: { opacity: 0.4 },
-  text: { fontWeight: 600 },
+  disabled: { opacity: 0.5, elevation: 0, shadowOpacity: 0 },
+  content: { alignItems: 'center', justifyContent: 'center' },
+  text: { fontWeight: Typography.weights.semibold },
   text_primary: { color: Colors.TEXT_ON_PRIMARY },
   text_secondary: { color: Colors.TEXT_PRIMARY },
   text_danger: { color: Colors.TEXT_ON_PRIMARY },

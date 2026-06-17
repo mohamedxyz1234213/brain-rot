@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { Colors, ANIMATION } from '../../constants/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -12,6 +12,7 @@ interface CircularProgressProps {
   strokeWidth?: number;
   color?: string;
   backgroundColor?: string;
+  gradient?: readonly string[];
   children?: React.ReactNode;
 }
 
@@ -21,6 +22,7 @@ export function CircularProgress({
   strokeWidth = 12,
   color = Colors.PRIMARY_LIGHT,
   backgroundColor = Colors.BORDER,
+  gradient,
   children,
 }: CircularProgressProps) {
   const radius = (size - strokeWidth) / 2;
@@ -40,6 +42,19 @@ export function CircularProgress({
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       <Svg width={size} height={size} style={styles.svg}>
+        {gradient && (
+          <Defs>
+            <SvgLinearGradient id="progressGradient" x1="0" y1="0" x2="1" y2="1">
+              {gradient.map((stopColor, index) => (
+                <Stop
+                  key={stopColor}
+                  offset={`${(index / Math.max(gradient.length - 1, 1)) * 100}%`}
+                  stopColor={stopColor}
+                />
+              ))}
+            </SvgLinearGradient>
+          </Defs>
+        )}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -52,7 +67,7 @@ export function CircularProgress({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={color}
+          stroke={gradient ? 'url(#progressGradient)' : color}
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={circumference}

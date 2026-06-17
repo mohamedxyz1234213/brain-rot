@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, Typography, Spacing, Radius, Shadow, Gradients, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
 import { useAuthStore } from '../../src/stores/authStore';
 
@@ -29,7 +30,9 @@ export default function WelcomeScreen() {
   return (
     <SafeScreen>
       <Animated.View entering={FadeInDown.duration(600)} style={styles.content}>
-        <Text style={styles.emoji}>🧠</Text>
+        <LinearGradient colors={[...Gradients.brandDark] as unknown as [string, string]} style={styles.heroOrb}>
+          <Text style={styles.emoji}>🧠</Text>
+        </LinearGradient>
         <Text style={styles.title}>BrainRot Healer</Text>
         <Text style={styles.subtitle}>Recover from social media addiction. Get roasted. Get healed.</Text>
 
@@ -72,15 +75,16 @@ function FeatureRow({ emoji, text }: { emoji: string; text: string }) {
 
 const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: 'center', padding: Spacing.xl },
-  emoji: { fontSize: Typography.sizes['4xl'], textAlign: 'center', marginBottom: Spacing.lg },
-  title: { fontSize: Typography.sizes['3xl'], fontWeight: 800, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm },
+  heroOrb: { width: 112, height: 112, borderRadius: Radius.full, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.lg, ...Shadow.glow },
+  emoji: { fontSize: Typography.sizes['4xl'], textAlign: 'center' },
+  title: { fontSize: Typography.sizes['3xl'], fontWeight: 800, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm, letterSpacing: LetterSpacing.tight },
   subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center', lineHeight: Typography.lineHeight.normal, marginBottom: Spacing['2xl'] },
   features: { marginBottom: Spacing['2xl'] },
-  featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.lg },
+  featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.BORDER },
   featureEmoji: { fontSize: Typography.sizes.xl, marginRight: Spacing.md },
   featureText: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.normal },
   actions: { gap: Spacing.md },
-  primaryBtn: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, paddingVertical: Spacing.lg, alignItems: 'center' },
+  primaryBtn: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, paddingVertical: Spacing.lg, alignItems: 'center', ...Shadow.sm },
   primaryBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.lg, fontWeight: 600 },
   secondaryBtn: { borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center' },
   secondaryBtnText: { color: Colors.TEXT_SECONDARY, fontSize: Typography.sizes.md },

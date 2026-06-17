@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadow, Gradients, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
 import { ProgressBar } from '../../src/components/ui/ProgressBar';
 import { useBrainScoreStore } from '../../src/stores/brainScoreStore';
@@ -94,7 +94,7 @@ export default function QuizScreen() {
     <SafeScreen>
       <View style={styles.header}>
         <Text style={styles.progress}>{currentQuestion + 1} / {QUESTIONS.length}</Text>
-        <ProgressBar progress={((currentQuestion + 1) / QUESTIONS.length) * 100} height={4} />
+        <ProgressBar progress={((currentQuestion + 1) / QUESTIONS.length) * 100} height={6} gradient={Gradients.brand} />
       </View>
 
       <Animated.View entering={FadeInDown.duration(400)} style={styles.questionContent}>
@@ -115,16 +115,16 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: Spacing.xl, marginBottom: Spacing.xl },
   progress: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.sm },
   questionContent: { flex: 1, paddingHorizontal: Spacing.xl },
-  question: { fontSize: Typography.sizes.xl, color: Colors.TEXT_PRIMARY, fontWeight: 600, lineHeight: Typography.lineHeight.relaxed, marginBottom: Spacing.xl },
-  optionBtn: { padding: Spacing.lg, backgroundColor: Colors.SURFACE, borderRadius: Radius.md, marginBottom: Spacing.md, borderWidth: 1, borderColor: Colors.BORDER },
+  question: { fontSize: Typography.sizes.xl, color: Colors.TEXT_PRIMARY, fontWeight: 600, lineHeight: Typography.lineHeight.relaxed, marginBottom: Spacing.xl, letterSpacing: LetterSpacing.tight },
+  optionBtn: { padding: Spacing.lg, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, marginBottom: Spacing.md, borderWidth: 1, borderColor: Colors.BORDER, minHeight: 44, ...Shadow.sm },
   optionText: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.normal },
   resultContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.xl },
   resultEmoji: { fontSize: Typography.sizes['4xl'], marginBottom: Spacing.xl },
-  resultScore: { fontSize: Typography.sizes['4xl'], color: Colors.DANGER, fontWeight: 800, marginBottom: Spacing.md },
+  resultScore: { fontSize: Typography.sizes['4xl'], color: Colors.DANGER, fontWeight: 800, marginBottom: Spacing.md, letterSpacing: LetterSpacing.tight },
   resultInitial: { fontSize: Typography.sizes.lg, color: Colors.PRIMARY_LIGHT, fontWeight: 600, marginBottom: Spacing.lg },
   resultTitle: { fontSize: Typography.sizes['2xl'], color: Colors.TEXT_PRIMARY, fontWeight: 700, marginBottom: Spacing.md, textAlign: 'center' },
   resultMessage: { fontSize: Typography.sizes.lg, color: Colors.TEXT_SECONDARY, textAlign: 'center', lineHeight: Typography.lineHeight.relaxed },
   resultActions: { padding: Spacing.xl, paddingBottom: Spacing['3xl'] },
-  startBtn: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, paddingVertical: Spacing.lg, alignItems: 'center' },
+  startBtn: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, paddingVertical: Spacing.lg, alignItems: 'center', ...Shadow.sm },
   startBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.lg, fontWeight: 600 },
 });

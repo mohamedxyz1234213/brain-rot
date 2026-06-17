@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadow, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
 import { useRoastStore, RoastPersona } from '../../src/stores/roastStore';
 import { useBrainScoreStore } from '../../src/stores/brainScoreStore';
@@ -96,7 +96,7 @@ export default function RoastModal() {
   const emoji = PERSONA_EMOJIS[activeRoast?.persona || selectedPersona] || '🪖';
 
   return (
-    <SafeScreen style={{ backgroundColor: Colors.SURFACE }}>
+    <SafeScreen style={{ backgroundColor: Colors.BACKGROUND }}>
       <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
         <View style={styles.personaHeader}>
           <Text style={styles.personaEmoji}>{emoji}</Text>
@@ -134,17 +134,17 @@ const styles = StyleSheet.create({
   content: { flex: 1, padding: Spacing.xl, justifyContent: 'center' },
   personaHeader: { alignItems: 'center', marginBottom: Spacing.lg },
   personaEmoji: { fontSize: 48 },
-  personaName: { fontSize: Typography.sizes.lg, fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, marginTop: Spacing.sm },
-  offlineBadge: { fontSize: 10, color: Colors.WARNING, backgroundColor: `${Colors.WARNING}22`, paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: 4, marginTop: Spacing.xs },
-  evidence: { marginBottom: Spacing.xl, padding: Spacing.md, backgroundColor: `${Colors.PRIMARY_DARK}44`, borderRadius: Radius.md },
+  personaName: { fontSize: Typography.sizes.lg, fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, marginTop: Spacing.sm, letterSpacing: LetterSpacing.tight },
+  offlineBadge: { fontSize: Typography.sizes.xs, color: Colors.WARNING, backgroundColor: Colors.WARNING_LIGHT, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs, borderRadius: Radius.full, marginTop: Spacing.xs },
+  evidence: { marginBottom: Spacing.xl, padding: Spacing.md, backgroundColor: Colors.PRIMARY_DARK, borderRadius: Radius.xl, borderWidth: 1, borderColor: Colors.PRIMARY_LIGHT },
   evidenceTitle: { fontSize: Typography.sizes.sm, fontWeight: Typography.weights.semibold, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.xs },
   evidenceItem: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
-  roastBox: { marginBottom: Spacing['2xl'] },
+  roastBox: { marginBottom: Spacing['2xl'], backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, padding: Spacing.xl, borderWidth: 1, borderColor: Colors.DANGER_LIGHT, ...Shadow.sm },
   roastText: { fontSize: Typography.sizes.lg, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.relaxed },
   cursor: { fontSize: Typography.sizes.lg, color: Colors.PRIMARY_LIGHT },
   actions: { gap: Spacing.md },
-  deservedBtn: { backgroundColor: `${Colors.DANGER}22`, borderRadius: Radius.md, paddingVertical: Spacing.lg, alignItems: 'center', borderWidth: 1, borderColor: Colors.DANGER },
+  deservedBtn: { backgroundColor: Colors.DANGER_LIGHT, borderRadius: Radius.lg, paddingVertical: Spacing.lg, alignItems: 'center', borderWidth: 1, borderColor: Colors.DANGER },
   deservedBtnText: { color: Colors.DANGER, fontSize: Typography.sizes.md, fontWeight: Typography.weights.semibold },
-  proveBtn: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.md, paddingVertical: Spacing.lg, alignItems: 'center' },
+  proveBtn: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, paddingVertical: Spacing.lg, alignItems: 'center', ...Shadow.sm },
   proveBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.md, fontWeight: Typography.weights.semibold },
 });

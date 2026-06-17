@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Switch, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Colors, Typography, Spacing, Radius, Layout } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 import { useSettingsStore } from '../../src/stores/settingsStore';
 import { useReligionStore } from '../../src/stores/religionStore';
@@ -181,6 +181,12 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: Spacing.xl,
     marginBottom: Spacing.xl,
+    backgroundColor: Colors.SURFACE,
+    borderRadius: Radius.xl,
+    paddingVertical: Spacing.md,
+    marginHorizontal: Spacing.lg,
+    borderWidth: Layout.hairline,
+    borderColor: Colors.BORDER,
   },
   sectionTitle: {
     fontSize: Typography.sizes.sm,
@@ -196,8 +202,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 44,
     paddingVertical: Spacing.md,
-    borderBottomWidth: 0.5,
-    borderBottomColor: `${Colors.BORDER}33`,
+    borderBottomWidth: Layout.hairline,
+    borderBottomColor: Colors.BORDER_LIGHT,
   },
   itemLabel: {
     fontSize: Typography.sizes.md,
