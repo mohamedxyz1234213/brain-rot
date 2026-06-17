@@ -112,12 +112,18 @@ function getOfflineRoast(personaId: string, trigger: string, context: RoastConte
 /**
  * Generate AI Day Plan
  */
+export interface DayPlanBlock {
+  time: string;
+  task: string;
+  duration: number;
+}
+
 export async function generateDayPlan(
   tasks: { title: string; priority: string; estimatedMinutes: number }[],
   preferences: { energyLevel: 'morning' | 'afternoon' | 'evening'; workHours: number }
-): Promise<{ schedule: { time: string; task: string; duration: number }[] } | null> {
+): Promise<{ schedule: DayPlanBlock[]; isOffline: boolean }> {
   if (!API_URL || !process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY) {
-    return null;
+    return { schedule: buildOfflineSchedule(tasks, preferences), isOffline: true };
   }
 
   try {
@@ -150,14 +156,49 @@ Put high priority/hardest tasks during peak energy. Include breaks.`,
       const text = data.content?.[0]?.text || '';
       const jsonMatch = text.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
-        return { schedule: JSON.parse(jsonMatch[0]) };
+        return { schedule: JSON.parse(jsonMatch[0]) as DayPlanBlock[], isOffline: false };
       }
     }
   } catch (error) {
-    console.warn('AI day plan generation failed:', error);
+    console.warn('AI day plan generation failed, using offline planner:', error);
   }
 
-  return null;
+  return { schedule: buildOfflineSchedule(tasks, preferences), isOffline: true };
+}
+
+const PRIORITY_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+function buildOfflineSchedule(
+  tasks: { title: string; priority: string; estimatedMinutes: number }[],
+  preferences: { energyLevel: 'morning' | 'afternoon' | 'evening'; workHours: number }
+): DayPlanBlock[] {
+  if (tasks.length === 0) return [];
+
+  // Highest-priority work goes into the peak-energy window first.
+  const ordered = [...tasks].sort(
+    (a, b) => (PRIORITY_RANK[a.priority] ?? 2) - (PRIORITY_RANK[b.priority] ?? 2)
+  );
+
+  const startHour = preferences.energyLevel === 'morning' ? 8 : preferences.energyLevel === 'afternoon' ? 12 : 17;
+  let cursor = startHour * 60; // minutes since midnight
+  const fmt = (mins: number) => {
+    const h = Math.floor((mins % (24 * 60)) / 60);
+    const m = mins % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  };
+
+  const schedule: DayPlanBlock[] = [];
+  ordered.forEach((t, i) => {
+    const duration = t.estimatedMinutes && t.estimatedMinutes > 0 ? t.estimatedMinutes : 30;
+    schedule.push({ time: fmt(cursor), task: t.title, duration });
+    cursor += duration;
+    // Short break after each block except the last.
+    if (i < ordered.length - 1) {
+      schedule.push({ time: fmt(cursor), task: 'Break', duration: 10 });
+      cursor += 10;
+    }
+  });
+  return schedule;
 }
 
 /**

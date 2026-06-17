@@ -116,7 +116,22 @@ export const useBrainScoreStore = create<BrainScoreState>()(
           sleepScore * 0.1
         );
 
-        set({ currentScore: totalScore, breakdown });
+        // Upsert today's snapshot so analytics has real history.
+        const today = new Date().toISOString().split('T')[0];
+        const existing: BrainScoreEntry[] = get().scores;
+        const todayIndex = existing.findIndex((e: BrainScoreEntry) => e.date === today);
+        const entry: BrainScoreEntry = {
+          id: todayIndex >= 0 ? existing[todayIndex].id : `bs_${Date.now()}`,
+          date: today,
+          score: totalScore,
+          breakdown,
+        };
+        const scores =
+          todayIndex >= 0
+            ? existing.map((e: BrainScoreEntry, i: number) => (i === todayIndex ? entry : e))
+            : [entry, ...existing].slice(0, 30);
+
+        set({ currentScore: totalScore, breakdown, scores });
         return totalScore;
       },
 

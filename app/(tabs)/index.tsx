@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Colors, Typography, Spacing, Radius, Sizing, Shadow } from '../../src/constants/theme';
@@ -14,6 +14,14 @@ import { useTaskStore } from '../../src/stores/taskStore';
 import { useFocusStore } from '../../src/stores/focusStore';
 import { useStreakStore } from '../../src/stores/streakStore';
 import { useXPStore } from '../../src/stores/xpStore';
+import { useReligionStore } from '../../src/stores/religionStore';
+import { useSettingsStore } from '../../src/stores/settingsStore';
+import { generateMorningBriefing } from '../../src/services/aiService';
+
+const todayKey = () => new Date().toISOString().split('T')[0];
+
+// Tracks the day the briefing was dismissed, for the lifetime of the app session.
+let briefingDismissedOn: string | null = null;
 
 export default function DashboardScreen() {
   const user = useAuthStore((s) => s.user);
@@ -21,6 +29,8 @@ export default function DashboardScreen() {
   const levelName = useBrainScoreStore((s) => s.getLevelName());
   const totalMinutes = useScreenTimeStore((s) => s.totalMinutesToday);
   const limits = useScreenTimeStore((s) => s.limits);
+  const logs = useScreenTimeStore((s) => s.logs);
+  const prayerLogs = useReligionStore((s) => s.prayerLogs);
   const tasks = useTaskStore((s) => s.tasks);
   const frogTask = useTaskStore((s) => s.getEatTheFrogTask());
   const activeSession = useFocusStore((s) => s.activeSession);
@@ -32,9 +42,81 @@ export default function DashboardScreen() {
 
   const todayTasks = tasks.filter((t) => t.status === 'pending');
   const completedToday = tasks.filter((t) => t.status === 'completed').length;
-  const prayerCount = 3;
+  const today = todayKey();
+  const prayerCount = prayerLogs.filter(
+    (l) => l.date.startsWith(today) && (l.status === 'on_time' || l.status === 'late')
+  ).length;
   const screenTimeHours = Math.floor(totalMinutes / 60);
   const screenTimeMins = totalMinutes % 60;
+
+  const usedForLimit = useCallback(
+    (appBundleId: string) =>
+      logs
+        .filter((lg) => lg.appBundleId === appBundleId)
+        .reduce((sum, lg) => sum + lg.minutesUsed, 0),
+    [logs]
+  );
+
+  const morningBriefingEnabled = useSettingsStore((s) => s.morningBriefingEnabled);
+  const scores = useBrainScoreStore((s) => s.scores);
+  const [briefing, setBriefing] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!morningBriefingEnabled) return;
+    if (briefingDismissedOn === todayKey()) return;
+    let cancelled = false;
+    const yesterday = scores.length > 1 ? scores[1] : scores[0];
+    generateMorningBriefing(user?.name ?? 'you', {
+      screenTime: totalMinutes,
+      tasksCompleted: completedToday,
+      tasksTotal: todayTasks.length + completedToday,
+      brainScore: yesterday?.score ?? brainScore,
+      streakDays: streak?.currentDays ?? 0,
+    }).then((text) => {
+      if (!cancelled) setBriefing(text);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [morningBriefingEnabled]);
+
+  const dismissBriefing = () => {
+    Haptics.selectionAsync();
+    briefingDismissedOn = todayKey();
+    setBriefing(null);
+  };
+
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    const stMinutes = useScreenTimeStore.getState().calculateTotalMinutes();
+    const allTasks = useTaskStore.getState().tasks;
+    const done = allTasks.filter((t) => t.status === 'completed').length;
+    const stLimit =
+      useScreenTimeStore.getState().limits.reduce((s, l) => s + l.dailyLimitMinutes, 0) || 180;
+    const focusMin = useFocusStore.getState().totalFocusMinutesToday;
+    const religionEnabled = useSettingsStore.getState().religionEnabled;
+    const day = todayKey();
+    const prayed = useReligionStore
+      .getState()
+      .prayerLogs.filter(
+        (l) => l.date.startsWith(day) && (l.status === 'on_time' || l.status === 'late')
+      ).length;
+
+    useBrainScoreStore.getState().calculateScore({
+      screenTimeMinutes: stMinutes,
+      screenTimeLimit: stLimit,
+      tasksCompleted: done,
+      tasksTotal: Math.max(allTasks.length, 1),
+      focusSessions: focusMin >= 50 ? 2 : focusMin > 0 ? 1 : 0,
+      prayersCompleted: prayed,
+      prayersTotal: 5,
+      sleepHour: 23,
+      religionEnabled,
+    });
+    setRefreshing(false);
+  }, []);
 
   const handleCompleteFrog = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -49,7 +131,18 @@ export default function DashboardScreen() {
 
   return (
     <SafeScreen>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.PRIMARY_LIGHT}
+            colors={[Colors.PRIMARY_LIGHT]}
+          />
+        }
+      >
         <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
           <View>
             <Text style={styles.greeting}>{greeting}</Text>
@@ -57,6 +150,20 @@ export default function DashboardScreen() {
           </View>
           <View style={styles.syncDot} />
         </Animated.View>
+
+        {briefing && (
+          <Animated.View entering={FadeInDown.duration(400)}>
+            <Card style={styles.briefingCard}>
+              <View style={styles.briefingHeader}>
+                <Text style={styles.briefingTag}>📺 Morning Briefing</Text>
+                <Pressable onPress={dismissBriefing} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dismiss briefing">
+                  <Text style={styles.briefingDismiss}>✕</Text>
+                </Pressable>
+              </View>
+              <Text style={styles.briefingText}>{briefing}</Text>
+            </Card>
+          </Animated.View>
+        )}
 
         <Animated.View entering={FadeInDown.duration(500).delay(100)}>
           <Card style={styles.scoreCard}>
@@ -96,7 +203,7 @@ export default function DashboardScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {limits.map((limit, i) => (
                 <Animated.View key={limit.id} entering={FadeInRight.duration(300).delay(i * 100)}>
-                  <AppLimitPill name={limit.appName} used={0} limit={limit.dailyLimitMinutes} isHard={limit.isHardBlock} />
+                  <AppLimitPill name={limit.appName} used={usedForLimit(limit.appBundleId)} limit={limit.dailyLimitMinutes} isHard={limit.isHardBlock} />
                 </Animated.View>
               ))}
             </ScrollView>
@@ -159,6 +266,11 @@ const styles = StyleSheet.create({
   greeting: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY },
   subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
   syncDot: { width: Sizing.iconSm, height: Sizing.iconSm, borderRadius: Sizing.iconSm / 2, backgroundColor: Colors.SUCCESS },
+  briefingCard: { marginBottom: Spacing.xl, borderWidth: 1, borderColor: Colors.PRIMARY_LIGHT },
+  briefingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
+  briefingTag: { fontSize: Typography.sizes.sm, fontWeight: 700, color: Colors.PRIMARY_LIGHT },
+  briefingDismiss: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY },
+  briefingText: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.relaxed },
   scoreCard: { alignItems: 'center', marginBottom: Spacing.xl },
   scoreContainer: { alignItems: 'center' },
   scoreValue: { fontSize: Typography.sizes['4xl'], fontWeight: 800, color: Colors.TEXT_PRIMARY },

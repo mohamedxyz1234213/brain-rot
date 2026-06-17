@@ -32,6 +32,7 @@ export default function FocusScreen() {
 
   const [selectedMode, setSelectedMode] = useState<FocusMode>('pomodoro');
   const [isPaused, setIsPaused] = useState(false);
+  const [completed, setCompleted] = useState<{ mode: FocusMode; minutes: number; xp: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -55,10 +56,16 @@ export default function FocusScreen() {
 
   const handleCompleteSession = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const session = useFocusStore.getState().activeSession;
+    const mode = session?.mode ?? selectedMode;
+    const minutes = session?.targetMinutes ?? 0;
     endSession(true);
     const xpMap: Record<FocusMode, number> = { pomodoro: 30, deep_work: 50, flow: 40, quick_sprint: 30 };
-    useXPStore.getState().addXP(xpMap[selectedMode] ?? 30, `Focus session completed: ${selectedMode}`);
+    const xp = xpMap[mode] ?? 30;
+    useXPStore.getState().addXP(xp, `Focus session completed: ${mode}`);
     useStreakStore.getState().incrementStreak('focus');
+    setIsPaused(false);
+    setCompleted({ mode, minutes, xp });
   };
 
   const handleEndSession = () => {
@@ -105,6 +112,25 @@ export default function FocusScreen() {
               <Text style={styles.dangerBtnText}>End</Text>
             </Pressable>
           </View>
+        </Animated.View>
+      </SafeScreen>
+    );
+  }
+
+  if (completed) {
+    return (
+      <SafeScreen>
+        <Animated.View entering={FadeInDown.duration(400)} style={styles.timerContainer}>
+          <Text style={styles.celebrateEmoji}>🎉</Text>
+          <Text style={styles.celebrateTitle}>Session Complete</Text>
+          <Text style={styles.celebrateSub}>
+            {completed.minutes} min of {MODES.find((m) => m.id === completed.mode)?.name ?? completed.mode}
+          </Text>
+          <View style={styles.xpPill}>
+            <Text style={styles.xpPillText}>+{completed.xp} XP</Text>
+          </View>
+          <View style={{ height: Spacing['2xl'] }} />
+          <Button title="Done" onPress={() => { Haptics.selectionAsync(); setCompleted(null); }} size="lg" />
         </Animated.View>
       </SafeScreen>
     );
@@ -160,4 +186,9 @@ const styles = StyleSheet.create({
   secondaryBtnText: { color: Colors.TEXT_PRIMARY, fontSize: Typography.sizes.md },
   dangerBtn: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, backgroundColor: Colors.DANGER_LIGHT, borderRadius: Radius.md, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center' },
   dangerBtnText: { color: Colors.DANGER, fontSize: Typography.sizes.md, fontWeight: 600 },
+  celebrateEmoji: { fontSize: 64, marginBottom: Spacing.lg },
+  celebrateTitle: { fontSize: Typography.sizes['3xl'], fontWeight: 800, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.sm },
+  celebrateSub: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.xl },
+  xpPill: { backgroundColor: `${Colors.SUCCESS}22`, borderRadius: Radius.full, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm, borderWidth: 1, borderColor: Colors.SUCCESS },
+  xpPillText: { color: Colors.SUCCESS, fontSize: Typography.sizes.lg, fontWeight: 700 },
 });

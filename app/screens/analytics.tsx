@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
+import { useBrainScoreStore } from '../../src/stores/brainScoreStore';
+import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
+import { useSettingsStore } from '../../src/stores/settingsStore';
 
 const { width } = Dimensions.get('window');
 
@@ -12,21 +15,30 @@ const YOUTUBE_COLOR = '#FF0000';
 const TWITTER_COLOR = '#1DA1F2';
 const WHATSAPP_COLOR = '#25D366';
 
-const BRAIN_SCORE_DATA = [65, 68, 72, 58, 75, 80, 77, 82, 79, 85, 88, 84, 90, 87];
-const SCREEN_TIME_DATA = [180, 165, 120, 200, 145, 130, 110, 95, 140, 105, 90, 88, 75, 80];
+const SAMPLE_BRAIN_SCORES = [65, 68, 72, 58, 75, 80, 77, 82, 79, 85, 88, 84, 90, 87];
 
 export default function AnalyticsScreen() {
-  const maxScore = Math.max(...BRAIN_SCORE_DATA);
-  const maxScreenTime = Math.max(...SCREEN_TIME_DATA);
+  const scores = useBrainScoreStore((s) => s.scores);
+  const totalMinutes = useScreenTimeStore((s) => s.totalMinutesToday);
+  const hourlyRate = useSettingsStore((s) => s.hourlyRate);
+
+  // Real history is stored newest-first; chart reads oldest -> newest.
+  const hasHistory = scores.length > 0;
+  const brainScoreData = hasHistory
+    ? [...scores].reverse().map((e) => e.score)
+    : SAMPLE_BRAIN_SCORES;
+
+  const monthlyCost = ((totalMinutes * 30) / 60) * hourlyRate;
 
   return (
     <SafeScreen>
       <ScreenHeader title="Analytics" subtitle="Your recovery journey in numbers" onBack={() => router.back()} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>🧠 Brain Score (14 days)</Text>
+          <Text style={styles.chartTitle}>🧠 Brain Score ({brainScoreData.length} days)</Text>
+          {!hasHistory && <Text style={styles.sampleNote}>Sample data — your real trend appears as you use the app</Text>}
           <View style={styles.lineChart}>
-            {BRAIN_SCORE_DATA.map((score, i) => (
+            {brainScoreData.map((score, i) => (
               <View
                 key={i}
                 style={[
@@ -41,32 +53,17 @@ export default function AnalyticsScreen() {
             ))}
           </View>
           <View style={styles.chartLabels}>
-            <Text style={styles.chartLabel}>14 days ago</Text>
+            <Text style={styles.chartLabel}>{brainScoreData.length} days ago</Text>
             <Text style={styles.chartLabel}>Today</Text>
           </View>
         </View>
 
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>📱 Screen Time (minutes/day)</Text>
-          <View style={styles.lineChart}>
-            {SCREEN_TIME_DATA.map((mins, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.lineBar,
-                  {
-                    height: (mins / maxScreenTime) * 100,
-                    backgroundColor:
-                      mins <= 90 ? Colors.SUCCESS : mins <= 150 ? Colors.WARNING : Colors.DANGER,
-                  },
-                ]}
-              />
-            ))}
-          </View>
-          <View style={styles.chartLabels}>
-            <Text style={styles.chartLabel}>14 days ago</Text>
-            <Text style={styles.chartLabel}>Today</Text>
-          </View>
+          <Text style={styles.chartTitle}>📱 Screen Time Today</Text>
+          <Text style={styles.bigStat}>
+            {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m
+          </Text>
+          <Text style={styles.sampleNote}>Logged across your tracked apps today</Text>
         </View>
 
         <View style={styles.statsGrid}>
@@ -119,10 +116,10 @@ export default function AnalyticsScreen() {
         <View style={styles.costCard}>
           <Text style={styles.costTitle}>💸 Usage Cost Calculator</Text>
           <Text style={styles.costDesc}>
-            At $25/hour, you spent the equivalent of:
+            At ${hourlyRate}/hour, you spent the equivalent of:
           </Text>
-          <Text style={styles.costAmount}>$312.50</Text>
-          <Text style={styles.costSubtext}>on social media this month</Text>
+          <Text style={styles.costAmount}>${monthlyCost.toFixed(2)}</Text>
+          <Text style={styles.costSubtext}>projected over a month at today's pace</Text>
         </View>
       </ScrollView>
     </SafeScreen>
@@ -142,6 +139,19 @@ const styles = StyleSheet.create({
     color: Colors.TEXT_PRIMARY,
     fontWeight: Typography.weights.semibold,
     marginBottom: Spacing.lg,
+  },
+  sampleNote: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.TEXT_SECONDARY,
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.md,
+    fontStyle: 'italic',
+  },
+  bigStat: {
+    fontSize: Typography.sizes['3xl'],
+    color: Colors.TEXT_PRIMARY,
+    fontWeight: Typography.weights.extrabold,
+    marginBottom: Spacing.xs,
   },
   lineChart: {
     flexDirection: 'row',

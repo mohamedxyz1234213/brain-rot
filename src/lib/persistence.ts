@@ -7,6 +7,7 @@ export function persist<S extends object>(
     name: string;
     version?: number;
     partialize?: (state: any) => any;
+    onHydrate?: (set: (partial: any) => void) => void;
   },
   stateCreator: (set: any, get: any, store: any) => S
 ): (set: any, get: any, store: any) => S {
@@ -16,21 +17,25 @@ export function persist<S extends object>(
     if (isClient) {
       const key = `brainrot_${config.name}`;
 
-      AsyncStorage.getItem(key).then((value) => {
-        if (value) {
-          try {
-            const parsed = JSON.parse(value);
-            if (parsed.version === (config.version || 1)) {
-              const toMerge = config.partialize
-                ? config.partialize(parsed.data)
-                : parsed.data;
-              set(toMerge);
+      AsyncStorage.getItem(key)
+        .then((value) => {
+          if (value) {
+            try {
+              const parsed = JSON.parse(value);
+              if (parsed.version === (config.version || 1)) {
+                const toMerge = config.partialize
+                  ? config.partialize(parsed.data)
+                  : parsed.data;
+                set(toMerge);
+              }
+            } catch {
+              // ignore corrupted data
             }
-          } catch {
-            // ignore corrupted data
           }
-        }
-      });
+        })
+        .finally(() => {
+          config.onHydrate?.(set);
+        });
 
       store.subscribe(() => {
         const currentState = get();
@@ -42,6 +47,8 @@ export function persist<S extends object>(
           JSON.stringify({ version: config.version || 1, data: toStore })
         );
       });
+    } else {
+      config.onHydrate?.(set);
     }
 
     return initialState;

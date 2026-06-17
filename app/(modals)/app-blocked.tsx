@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
 import { Card } from '../../src/components/ui/Card';
@@ -11,9 +11,10 @@ import { useTaskStore } from '../../src/stores/taskStore';
 import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
 
 export default function AppBlockedScreen() {
-  const appName = 'TikTok';
-  const unlockerTasks = useTaskStore((s) => s.getTaskUnlockerTasks());
+  const params = useLocalSearchParams<{ app?: string }>();
   const limits = useScreenTimeStore((s) => s.limits);
+  const appName = params.app ?? limits[0]?.appName ?? 'This app';
+  const unlockerTasks = useTaskStore((s) => s.getTaskUnlockerTasks());
 
   const handleTaskUnlock = () => {
     if (unlockerTasks.length > 0) {

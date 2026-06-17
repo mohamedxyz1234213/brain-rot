@@ -13,7 +13,7 @@ import { useStreakStore } from '../../src/stores/streakStore';
 import { useSettingsStore } from '../../src/stores/settingsStore';
 import { useAuthStore } from '../../src/stores/authStore';
 import { roastPersonas } from '../../src/data/roastPersonas';
-import { roastTemplates } from '../../src/data/roastTemplates';
+import { generateRoast } from '../../src/services/aiService';
 
 const PERSONA_EMOJIS: Record<string, string> = { egyptian_dad: '🇪🇬', egyptian_mom: '🇪🇬', future_self: '👻', drill_sergeant: '🪖', sigmund_freud: '🧠', david_goggins: '💪' };
 
@@ -32,30 +32,53 @@ export default function RoastModal() {
   const streak = useStreakStore((s) => s.getStreak('screen_time'));
 
   useEffect(() => {
-    if (!activeRoast) {
-      const persona = selectedPersona || 'drill_sergeant';
-      const templates = roastTemplates[persona as RoastPersona] || roastTemplates.drill_sergeant;
-      const template = templates[Math.floor(Math.random() * templates.length)];
-      const name = useAuthStore.getState().user?.name ?? 'there';
-      const context = { name, app: 'TikTok', count: String(3), minutes: String(45), dollars: String(Math.round(45 * 0.5)) };
-      const text = template.replace(/\{(\w+)\}/g, (_, key: string) => (context as Record<string, string>)[key] || key);
-      useRoastStore.getState().addRoast({ persona, trigger: 'daily_review', text, isOffline: true });
-    }
+    if (activeRoast) return;
+    let cancelled = false;
+    const persona = (selectedPersona || 'drill_sergeant') as RoastPersona;
+    const st = useScreenTimeStore.getState();
+    const taskState = useTaskStore.getState();
+    const topApp = st.getOverageApps()[0] ?? st.limits[0];
+    const topMinutes = topApp
+      ? st.logs.filter((l) => l.appBundleId === topApp.appBundleId).reduce((s, l) => s + l.minutesUsed, 0)
+      : st.totalMinutesToday;
+
+    generateRoast(persona, 'daily_review', {
+      userName: useAuthStore.getState().user?.name ?? 'there',
+      screenTimeToday: st.totalMinutesToday,
+      screenTimeLimit: st.limits.reduce((s, l) => s + l.dailyLimitMinutes, 0) || 180,
+      tasksCompleted: taskState.tasks.filter((t) => t.status === 'completed').length,
+      tasksTotal: Math.max(taskState.tasks.length, 1),
+      topWastedApp: topApp?.appName ?? 'social media',
+      topWastedMinutes: topMinutes,
+      blockedAttempts: 0,
+      streakDays: useStreakStore.getState().getStreak('screen_time')?.currentDays ?? 0,
+    }).then((result) => {
+      if (cancelled) return;
+      useRoastStore.getState().addRoast({
+        persona,
+        trigger: 'daily_review',
+        text: result.text,
+        isOffline: result.isOffline,
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    const roast = useRoastStore.getState().activeRoast;
-    if (!roast) return;
-    setFullText(roast.text);
+    if (!activeRoast) return;
+    setFullText(activeRoast.text);
     setIsTyping(true);
     setDisplayText('');
     let i = 0;
     const interval = setInterval(() => {
-      if (i < roast.text.length) { setDisplayText(roast.text.slice(0, i + 1)); i++; }
+      if (i < activeRoast.text.length) { setDisplayText(activeRoast.text.slice(0, i + 1)); i++; }
       else { setIsTyping(false); clearInterval(interval); }
     }, 30);
     return () => clearInterval(interval);
-  }, [useRoastStore.getState().activeRoast?.id]);
+  }, [activeRoast?.id]);
 
   const handleDeserved = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);

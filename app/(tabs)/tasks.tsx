@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, TextInput, Modal, ActivityIndicator } from 'react-native';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
@@ -10,6 +10,9 @@ import { SafeScreen } from '../../src/components/ui/SafeScreen';
 import { useTaskStore } from '../../src/stores/taskStore';
 import { useXPStore } from '../../src/stores/xpStore';
 import { useStreakStore } from '../../src/stores/streakStore';
+import { generateDayPlan, DayPlanBlock } from '../../src/services/aiService';
+
+type EnergyLevel = 'morning' | 'afternoon' | 'evening';
 
 const TABS = ['Today', 'Upcoming', 'Completed', 'Abandoned'] as const;
 type TaskTab = 'today' | 'upcoming' | 'completed' | 'abandoned';
@@ -31,6 +34,12 @@ export default function TasksScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newPriority, setNewPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
+
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planSchedule, setPlanSchedule] = useState<DayPlanBlock[]>([]);
+  const [planOffline, setPlanOffline] = useState(false);
+  const [energyLevel, setEnergyLevel] = useState<EnergyLevel>('morning');
 
   const handleAddTask = () => {
     if (!newTitle.trim()) return;
@@ -63,13 +72,39 @@ export default function TasksScreen() {
     useXPStore.getState().deductXP(20, 'Task abandoned');
   };
 
+  const handlePlanDay = async (energy: EnergyLevel) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setEnergyLevel(energy);
+    setPlanLoading(true);
+    const pending = useTaskStore.getState().tasks.filter((t) => t.status === 'pending');
+    const result = await generateDayPlan(
+      pending.map((t) => ({
+        title: t.title,
+        priority: t.priority,
+        estimatedMinutes: t.estimatedMinutes ?? 30,
+      })),
+      { energyLevel: energy, workHours: 8 }
+    );
+    setPlanSchedule(result.schedule);
+    setPlanOffline(result.isOffline);
+    setPlanLoading(false);
+  };
+
+  const openPlanModal = () => {
+    setShowPlanModal(true);
+    handlePlanDay('morning');
+  };
+
   const tabMap: Record<string, TaskTab> = { Today: 'today', Upcoming: 'upcoming', Completed: 'completed', Abandoned: 'abandoned' };
 
   return (
     <SafeScreen>
       <View style={styles.header}>
         <Text style={styles.title}>Tasks</Text>
-        <Button title="+ Add" onPress={() => setShowAddModal(true)} size="sm" />
+        <View style={styles.headerActions}>
+          <Button title="✨ Plan Day" onPress={openPlanModal} variant="ghost" size="sm" />
+          <Button title="+ Add" onPress={() => setShowAddModal(true)} size="sm" />
+        </View>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabs}>
@@ -167,12 +202,65 @@ export default function TasksScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={showPlanModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, styles.planContent]}>
+            <Text style={styles.modalTitle}>Plan My Day</Text>
+            {planOffline && <Text style={styles.offlineNote}>⚡ Offline planner — connect AI for smarter scheduling</Text>}
+
+            <View style={styles.energyRow}>
+              {(['morning', 'afternoon', 'evening'] as const).map((e) => (
+                <Pressable
+                  key={e}
+                  style={[styles.energyBtn, energyLevel === e && styles.energyBtnActive]}
+                  onPress={() => handlePlanDay(e)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Peak energy: ${e}`}
+                >
+                  <Text style={[styles.energyBtnText, energyLevel === e && styles.energyBtnTextActive]}>{e}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {planLoading ? (
+              <View style={styles.planEmpty}>
+                <ActivityIndicator color={Colors.PRIMARY_LIGHT} />
+                <Text style={styles.planEmptyText}>Building your schedule…</Text>
+              </View>
+            ) : planSchedule.length === 0 ? (
+              <View style={styles.planEmpty}>
+                <Text style={styles.planEmptyText}>No pending tasks to schedule. Add some first.</Text>
+              </View>
+            ) : (
+              <ScrollView style={styles.planList} contentContainerStyle={{ paddingBottom: Spacing.md }}>
+                {planSchedule.map((block, i) => (
+                  <View key={i} style={styles.planBlock}>
+                    <Text style={styles.planTime}>{block.time}</Text>
+                    <View style={styles.planBlockBody}>
+                      <Text style={[styles.planTask, block.task === 'Break' && styles.planTaskBreak]} numberOfLines={2}>
+                        {block.task === 'Break' ? '☕ Break' : block.task}
+                      </Text>
+                      <Text style={styles.planDuration}>{block.duration} min</Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
+            <View style={styles.modalActions}>
+              <Button title="Done" onPress={() => setShowPlanModal(false)} size="md" />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.lg },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY },
   tabs: { paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg, maxHeight: Sizing.touchTarget },
   tab: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, marginRight: Spacing.sm, borderRadius: Radius.full, backgroundColor: Colors.SURFACE, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center' },
@@ -205,4 +293,20 @@ const styles = StyleSheet.create({
   priorityBtnActive: { backgroundColor: Colors.DANGER_LIGHT },
   priorityBtnText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
   modalActions: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.md },
+  planContent: { maxHeight: '80%' },
+  offlineNote: { fontSize: Typography.sizes.sm, color: Colors.WARNING, marginBottom: Spacing.md },
+  energyRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
+  energyBtn: { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.BORDER, alignItems: 'center' },
+  energyBtnActive: { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY },
+  energyBtnText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
+  energyBtnTextActive: { color: Colors.TEXT_ON_PRIMARY, fontWeight: 600 },
+  planList: { marginBottom: Spacing.lg },
+  planEmpty: { paddingVertical: Spacing['2xl'], alignItems: 'center', gap: Spacing.md },
+  planEmptyText: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center' },
+  planBlock: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm },
+  planTime: { width: 56, fontSize: Typography.sizes.sm, color: Colors.PRIMARY_LIGHT, fontWeight: 700 },
+  planBlockBody: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.SURFACE_RAISED, borderRadius: Radius.md, padding: Spacing.md },
+  planTask: { flex: 1, fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY },
+  planTaskBreak: { color: Colors.TEXT_SECONDARY, fontStyle: 'italic' },
+  planDuration: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginLeft: Spacing.sm },
 });

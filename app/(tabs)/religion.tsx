@@ -39,8 +39,12 @@ export default function ReligionScreen() {
   const quranProgress = useReligionStore((s) => s.quranProgress);
   const updateQuranProgress = useReligionStore((s) => s.updateQuranProgress);
   const method = useReligionStore((s) => s.selectedCalculationMethod);
+  const dhikrSessions = useReligionStore((s) => s.dhikrSessions);
   const [todayStatuses, setTodayStatuses] = useState<Record<PrayerName, PrayerStatus>>({} as any);
-  const [dhikrCount, setDhikrCount] = useState(0);
+
+  const DHIKR_TARGET = 33;
+  const activeDhikr = dhikrSessions[dhikrSessions.length - 1];
+  const dhikrCount = activeDhikr && !activeDhikr.isCompleted ? activeDhikr.completedCount : activeDhikr?.isCompleted ? activeDhikr.targetCount : 0;
 
   const prayerTimes = getPrayerTimes(method);
   const prayers: PrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
@@ -68,7 +72,12 @@ export default function ReligionScreen() {
 
   const handleDhikrTap = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setDhikrCount((c) => c + 1);
+    const store = useReligionStore.getState();
+    const current = store.dhikrSessions[store.dhikrSessions.length - 1];
+    if (!current || current.isCompleted) {
+      store.startDhikr('subhanallah', DHIKR_TARGET);
+    }
+    store.incrementDhikr();
   };
 
   const handleReadQuran = () => {
