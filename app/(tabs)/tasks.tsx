@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, TextInput, Modal, ActivityIndicator } from 'react-native';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -27,7 +27,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 export default function TasksScreen() {
   const activeTab = useTaskStore((s) => s.activeTab);
   const setActiveTab = useTaskStore((s) => s.setActiveTab);
-  const filteredTasks = useTaskStore((s) => s.getFilteredTasks());
+  const tasks = useTaskStore((s) => s.tasks);
   const addTask = useTaskStore((s) => s.addTask);
   const completeTask = useTaskStore((s) => s.completeTask);
   const abandonTask = useTaskStore((s) => s.abandonTask);
@@ -96,6 +96,21 @@ export default function TasksScreen() {
   };
 
   const tabMap: Record<string, TaskTab> = { Today: 'today', Upcoming: 'upcoming', Completed: 'completed', Abandoned: 'abandoned' };
+  const filteredTasks = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    switch (activeTab) {
+      case 'today':
+        return tasks.filter((task) => task.status === 'pending' && (!task.dueDate || task.dueDate.startsWith(today)));
+      case 'upcoming':
+        return tasks.filter((task) => task.status === 'pending' && task.dueDate && !task.dueDate.startsWith(today));
+      case 'completed':
+        return tasks.filter((task) => task.status === 'completed');
+      case 'abandoned':
+        return tasks.filter((task) => task.status === 'abandoned');
+      default:
+        return tasks;
+    }
+  }, [activeTab, tasks]);
 
   return (
     <SafeScreen>

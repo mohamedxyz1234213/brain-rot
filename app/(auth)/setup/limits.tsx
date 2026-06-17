@@ -46,7 +46,7 @@ export default function SetupLimitsScreen() {
         addLimit({ userId: 'current_user', appBundleId: app.bundleId, appName: app.name, dailyLimitMinutes: limits[bundleId] ?? 30, isEnabled: true, isHardBlock: false });
       }
     }
-    router.push('/(auth)/setup/religion');
+    router.push('/setup/religion');
   };
 
   return (
@@ -86,7 +86,7 @@ export default function SetupLimitsScreen() {
 
         <View style={styles.actions}>
           <Button title="Continue" onPress={handleContinue} size="lg" />
-          <Button title="Skip" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/(auth)/setup/religion'); }} variant="ghost" size="md" />
+          <Button title="Skip" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/setup/religion'); }} variant="ghost" size="md" />
         </View>
       </ScrollView>
     </SafeAreaView>

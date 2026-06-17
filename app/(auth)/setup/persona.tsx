@@ -9,6 +9,7 @@ import { Card } from '../../../src/components/ui/Card';
 import { Button } from '../../../src/components/ui/Button';
 import { useSettingsStore } from '../../../src/stores/settingsStore';
 import { useXPStore } from '../../../src/stores/xpStore';
+import { useAuthStore } from '../../../src/stores/authStore';
 
 const PERSONAS = [
   { id: 'egyptian_dad', name: 'Egyptian Dad', emoji: '🇪🇬', sample: '"أنت مش ابن العيلة، ابن خالتك بقى طبيب وانت بقى... سكران على الموبايل."' },
@@ -32,6 +33,50 @@ export default function SetupPersonaScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     useSettingsStore.getState().setRoastPersona(selectedPersona);
     useXPStore.getState().addXP(50, 'Setup completed');
+    const auth = useAuthStore.getState();
+    if (!auth.isAuthenticated) {
+      auth.setUser({
+        id: `user_${Date.now()}`,
+        clerkId: `clerk_${Date.now()}`,
+        name: 'User',
+        email: 'user@brainrot.local',
+        brainScore: 0,
+        xp: 0,
+        level: 'Zombie',
+        streakDays: 0,
+        roastPersona: selectedPersona,
+        language: useSettingsStore.getState().language,
+        religionEnabled: useSettingsStore.getState().religionEnabled,
+        subscriptionTier: 'free',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    router.replace('/(tabs)');
+  };
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    useSettingsStore.getState().setRoastPersona('drill_sergeant');
+    const auth = useAuthStore.getState();
+    if (!auth.isAuthenticated) {
+      auth.setUser({
+        id: `user_${Date.now()}`,
+        clerkId: `clerk_${Date.now()}`,
+        name: 'User',
+        email: 'user@brainrot.local',
+        brainScore: 0,
+        xp: 0,
+        level: 'Zombie',
+        streakDays: 0,
+        roastPersona: 'drill_sergeant',
+        language: useSettingsStore.getState().language,
+        religionEnabled: useSettingsStore.getState().religionEnabled,
+        subscriptionTier: 'free',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
     router.replace('/(tabs)');
   };
 
@@ -55,7 +100,7 @@ export default function SetupPersonaScreen() {
 
         <View style={styles.actions}>
           <Button title="Start Healing" onPress={handleContinue} size="lg" disabled={!selectedPersona} />
-          <Button title="Skip" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); useSettingsStore.getState().setRoastPersona('drill_sergeant'); router.replace('/(tabs)'); }} variant="ghost" size="md" />
+          <Button title="Skip" onPress={handleSkip} variant="ghost" size="md" />
         </View>
       </ScrollView>
     </SafeAreaView>

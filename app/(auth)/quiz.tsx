@@ -65,7 +65,7 @@ export default function QuizScreen() {
       sleepScore: 100 - percentage * 0.1,
     });
     useXPStore.getState().addXP(25, 'Quiz completed');
-    router.push('/(auth)/setup/limits');
+    router.push('/setup/limits');
   };
 
   if (showResult) {

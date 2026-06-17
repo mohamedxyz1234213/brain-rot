@@ -36,7 +36,7 @@ export default function SetupReligionScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     useReligionStore.getState().setCalculationMethod(method as any);
     useSettingsStore.getState().setReligionEnabled(enabledFeatures.size > 0);
-    router.push('/(auth)/setup/persona');
+    router.push('/setup/persona');
   };
 
   return (
@@ -80,7 +80,7 @@ export default function SetupReligionScreen() {
 
         <View style={styles.actions}>
           <Button title="Continue" onPress={handleContinue} size="lg" />
-          <Button title="Skip" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/(auth)/setup/persona'); }} variant="ghost" size="md" />
+          <Button title="Skip" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/setup/persona'); }} variant="ghost" size="md" />
         </View>
       </ScrollView>
     </SafeAreaView>

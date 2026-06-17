@@ -77,7 +77,7 @@ export default function SettingsScreen() {
     {
       title: 'App Blocking',
       items: [
-        { kind: 'nav', label: 'Manage App Limits', onPress: go('/(auth)/setup/limits') },
+        { kind: 'nav', label: 'Manage App Limits', onPress: go('/setup/limits') },
         { kind: 'toggle', label: 'Smart Blocking (auto-tighten)', value: local.smartBlocking, onChange: setLocalKey('smartBlocking') },
         { kind: 'toggle', label: 'Doom Scroll Tax', value: local.doomScrollTax, onChange: setLocalKey('doomScrollTax') },
         { kind: 'toggle', label: 'Greyscale Mode', value: local.greyscale, onChange: setLocalKey('greyscale') },
@@ -97,14 +97,14 @@ export default function SettingsScreen() {
     {
       title: 'Roast Settings',
       items: [
-        { kind: 'nav', label: 'Change Roast Persona', hint: s.roastPersona.replace(/_/g, ' '), onPress: go('/(auth)/setup/persona') },
+        { kind: 'nav', label: 'Change Roast Persona', hint: s.roastPersona.replace(/_/g, ' '), onPress: go('/setup/persona') },
       ],
     },
     {
       title: 'Religion',
       items: [
         { kind: 'toggle', label: 'Islamic Features', value: s.religionEnabled, onChange: bind(s.religionEnabled, s.setReligionEnabled) },
-        { kind: 'nav', label: 'Prayer Calculation Method', onPress: go('/(auth)/setup/religion') },
+        { kind: 'nav', label: 'Prayer Calculation Method', onPress: go('/setup/religion') },
         { kind: 'nav', label: 'Quran Daily Goal', hint: `${quranGoal} page${quranGoal === 1 ? '' : 's'}`, onPress: cycleQuranGoal },
       ],
     },

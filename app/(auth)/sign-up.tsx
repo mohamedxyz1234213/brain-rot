@@ -39,7 +39,7 @@ export default function SignUpScreen() {
 
     useXPStore.getState().addXP(50, 'Account created');
     setIsLoading(false);
-    router.push('/(auth)/setup/limits');
+    router.push('/setup/limits');
   };
 
   return (
