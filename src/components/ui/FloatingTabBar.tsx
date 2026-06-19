@@ -1,11 +1,10 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Colors, Spacing, Radius, Shadow, Glass, Sizing, Typography, LetterSpacing } from '../../constants/theme';
+import { Colors, Spacing, Radius, Shadow, Glass, Sizing, Typography } from '../../constants/theme';
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -15,11 +14,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
   const insets = useSafeAreaInsets();
 
   return (
-    <Animated.View
-      entering={FadeInUp.duration(400)}
-      pointerEvents="box-none"
-      style={[styles.wrap, { bottom: insets.bottom + Spacing.sm }]}
-    >
+    <View pointerEvents="box-none" style={[styles.wrap, { bottom: insets.bottom + Spacing.sm }]}>
       <View style={styles.shadow}>
         <BlurView intensity={40} tint="light" style={styles.bar}>
           {state.routes.map((route, index) => {
@@ -61,7 +56,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
           })}
         </BlurView>
       </View>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -73,7 +68,7 @@ const styles = StyleSheet.create({
   },
   shadow: {
     borderRadius: Radius.full,
-    backgroundColor: 'rgba(255,255,255,0.82)',
+    backgroundColor: 'rgba(255,255,255,0.88)',
     ...Shadow.lg,
   },
   bar: {
@@ -84,7 +79,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: Glass.border,
+    borderColor: Glass.borderSlate,
     overflow: 'hidden',
   },
   item: {
@@ -103,8 +98,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
   },
   pillActive: {
-    backgroundColor: Colors.PRIMARY,
-    ...Shadow.glow,
+    backgroundColor: Colors.PRIMARY_DARK,
+    ...Shadow.sm,
   },
   label: {
     fontFamily: Typography.families.featureSemi,

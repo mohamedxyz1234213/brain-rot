@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius['2xl'],
     overflow: 'hidden',
     padding: Spacing.xl,
-    paddingBottom: Spacing['2xl'],
+    paddingBottom: Spacing.xl,
     ...Shadow.glow,
   },
   header: {
@@ -74,5 +74,5 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   badge: { flexDirection: 'row', alignItems: 'center', paddingTop: 4 },
-  body: { alignItems: 'center', marginTop: Spacing.xl },
+  body: { alignItems: 'center', marginTop: Spacing.lg },
 });

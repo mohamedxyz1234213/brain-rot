@@ -155,18 +155,18 @@ export default function FocusScreen() {
       />
       <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration).delay(ANIMATION.stagger)} style={styles.modes}>
         {MODES.map((mode, index) => (
-          <Animated.View key={mode.id} entering={FadeInDown.duration(300).delay(index * ANIMATION.stagger)} style={styles.modeCardWrap}>
+          <View key={mode.id} style={styles.modeCardWrap}>
           <Pressable
             style={[styles.modeCard, selectedMode === mode.id && styles.modeCardActive]}
             onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSelectedMode(mode.id); }}
             accessibilityRole="button"
             accessibilityLabel={mode.name}
           >
-            <Ionicons name={mode.icon} size={Typography.sizes['3xl']} color={selectedMode === mode.id ? Colors.TEXT_ON_PRIMARY : Colors.PRIMARY_LIGHT} style={styles.modeEmoji} />
-            <Text style={styles.modeName}>{mode.name}</Text>
-            <Text style={styles.modeDuration}>{mode.duration} min</Text>
+            <Ionicons name={mode.icon} size={Typography.sizes['3xl']} color={selectedMode === mode.id ? Colors.PRIMARY_DARK : Colors.PRIMARY_LIGHT} style={styles.modeEmoji} />
+            <Text style={[styles.modeName, selectedMode === mode.id && styles.modeNameActive]}>{mode.name}</Text>
+            <Text style={[styles.modeDuration, selectedMode === mode.id && styles.modeDurationActive]}>{mode.duration} min</Text>
           </Pressable>
-          </Animated.View>
+          </View>
         ))}
       </Animated.View>
       <Button title="Start Focus Session" onPress={handleStartSession} size="lg" />
@@ -180,10 +180,12 @@ const styles = StyleSheet.create({
   modes: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md, marginBottom: Spacing['2xl'], paddingHorizontal: Spacing.xl },
   modeCardWrap: { width: '47%', flexGrow: 1 },
   modeCard: { alignItems: 'center', padding: Spacing.xl, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, borderWidth: 1, borderColor: Colors.BORDER, minHeight: 150, ...Shadow.sm },
-  modeCardActive: { borderColor: Colors.PRIMARY_LIGHT, borderWidth: 2, backgroundColor: Colors.PRIMARY_DARK, ...Shadow.glow },
+  modeCardActive: { borderColor: Colors.PRIMARY_LIGHT, backgroundColor: '#EEF3F1', ...Shadow.sm },
   modeEmoji: { marginBottom: Spacing.sm },
   modeName: { fontSize: Typography.sizes.lg, fontFamily: Typography.families.featureSemi, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
+  modeNameActive: { color: Colors.PRIMARY_DARK },
   modeDuration: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.numeric, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs, letterSpacing: LetterSpacing.tight },
+  modeDurationActive: { color: Colors.PRIMARY },
   timerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl },
   modeLabel: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureSemi, color: Colors.PRIMARY, marginBottom: Spacing.lg, textTransform: 'uppercase', letterSpacing: LetterSpacing.wide },
   timerCircle: { width: 240, height: 240, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing['2xl'] },

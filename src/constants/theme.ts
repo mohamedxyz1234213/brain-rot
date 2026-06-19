@@ -28,6 +28,17 @@ export const Colors = {
   BORDER_LIGHT: 'rgba(40,49,51,0.05)',
   OVERLAY: 'rgba(40,49,51,0.45)',
   BLACK: '#000000',
+
+  // ('#131313', 'Background'),
+   // ('#2D2B2D', 'Card BG'),
+  //  ('#4A4B48', 'Tertiary'),
+  //  ('#6D6D69', 'Muted Text'),
+  //  ('#8E9292', 'Secondary Text'),
+  //  ('#B3B0AD', 'Light Text'),
+    //('#D2D2D1', 'Warm White'),
+    //('#F0F0F0', 'Pure White'),
+   // ('#B4845F', 'Coral Accent'),
+   // ('#7C4932', 'Deep Coral'),
 };
 
 export const Typography = {
@@ -127,8 +138,8 @@ export const Gradients = {
 // Glassmorphism base layers — translucent warm white that lets the canvas
 // gradient read through the card, finished with a bright top-light rim.
 export const Glass = {
-  fill: 'rgba(255,255,255,0.58)',
-  fillStrong: 'rgba(255,255,255,0.72)',
+  fill: 'rgba(255,255,255,0.62)',
+  fillStrong: 'rgba(255,255,255,0.78)',
   border: 'rgba(255,255,255,0.65)', // bright glass rim highlight
   borderSlate: 'rgba(40,49,51,0.08)', // subtle slate hairline alt
 };
@@ -143,34 +154,34 @@ export const Layout = {
 
 export const LetterSpacing = { tight: -0.4, normal: 0, wide: 1.5 };
 
-// Slate-tinted shadows (rgb 40,49,51) — natural soft depth on the warm surface.
+// Warm brown-tinted shadows keep depth natural on the cream canvas.
 export const Shadow = {
   sm: {
-    shadowColor: '#283133',
+    shadowColor: '#3C2814',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
   md: {
-    shadowColor: '#283133',
+    shadowColor: '#3C2814',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 16,
     elevation: 4,
   },
   lg: {
-    shadowColor: '#283133',
+    shadowColor: '#3C2814',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
+    shadowOpacity: 0.10,
+    shadowRadius: 28,
     elevation: 8,
   },
   glow: {
-    shadowColor: '#43686F',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
+    shadowColor: '#3C2814',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.10,
+    shadowRadius: 30,
     elevation: 8,
   },
 };

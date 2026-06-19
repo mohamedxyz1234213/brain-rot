@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     overflow: 'hidden',
     borderWidth: Layout.hairline,
-    borderColor: Glass.border,
+    borderColor: Glass.borderSlate,
     ...Shadow.md,
   },
   base: {
