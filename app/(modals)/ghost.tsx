@@ -9,7 +9,7 @@ interface GhostComparison {
   category: string;
   you: string;
   ghost: string;
-  emoji: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
 }
 
 const COMPARISONS: GhostComparison[] = [
@@ -17,37 +17,37 @@ const COMPARISONS: GhostComparison[] = [
     category: 'Screen Time',
     you: '4h 23m on social media',
     ghost: '0 minutes — used phone only for calls & tasks',
-    emoji: '📱',
+    icon: 'phone-portrait-outline',
   },
   {
     category: 'Tasks',
     you: '3/8 completed (2 abandoned)',
     ghost: '8/8 completed by 4pm',
-    emoji: '✅',
+    icon: 'checkmark-circle-outline',
   },
   {
     category: 'Focus',
     you: '1 interrupted session (12 min)',
     ghost: '3 deep work sessions (2h 45m total)',
-    emoji: '🎯',
+    icon: 'locate-outline',
   },
   {
     category: 'Prayer',
     you: '3/5 (2 missed)',
     ghost: '5/5 on time — started day with Fajr',
-    emoji: '🕌',
+    icon: 'moon-outline',
   },
   {
     category: 'Sleep',
     you: 'Slept at 2:17am after scrolling',
     ghost: 'In bed by 10:30pm, read Quran, slept by 11',
-    emoji: '😴',
+    icon: 'bed-outline',
   },
   {
     category: 'Brain Score',
     you: '42 (Struggling)',
     ghost: '94 (Ascended)',
-    emoji: '🧠',
+    icon: 'hardware-chip-outline',
   },
 ];
 
@@ -60,14 +60,14 @@ export default function GhostScreen() {
         <Pressable onPress={() => router.back()} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
           <Ionicons name="close" size={Sizing.iconLg} color={Colors.TEXT_SECONDARY} />
         </Pressable>
-        <Text style={styles.title}>👻 Ghost of Productivity Past</Text>
+        <Text style={styles.title}>Ghost of Productivity Past</Text>
         <Text style={styles.subtitle}>What if you had followed through?</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.cards}>
         {COMPARISONS.map((item, index) => (
           <View key={index} style={styles.comparisonCard}>
-            <Text style={styles.cardEmoji}>{item.emoji}</Text>
+            <Ionicons name={item.icon} size={28} color={Colors.PRIMARY} style={styles.cardIcon} />
             <Text style={styles.cardCategory}>{item.category}</Text>
 
             <View style={styles.splitView}>
@@ -77,7 +77,7 @@ export default function GhostScreen() {
               </View>
               <View style={styles.divider} />
               <View style={[styles.side, styles.ghostSide]}>
-                <Text style={styles.sideLabel}>Ghost You 👻</Text>
+                <Text style={styles.sideLabel}>Ghost You</Text>
                 <Text style={styles.ghostText}>{item.ghost}</Text>
               </View>
             </View>
@@ -85,7 +85,7 @@ export default function GhostScreen() {
         ))}
 
         <View style={styles.ctaCard}>
-          <Text style={styles.ctaEmoji}>💪</Text>
+          <Ionicons name="fitness-outline" size={Sizing.avatarSm} color={Colors.PRIMARY} style={styles.ctaIcon} />
           <Text style={styles.ctaText}>
             The ghost is who you could be. This week, close the gap.
           </Text>
@@ -131,9 +131,8 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     marginBottom: Spacing.md,
   },
-  cardEmoji: {
-    fontSize: 28,
-    textAlign: 'center',
+  cardIcon: {
+    alignSelf: 'center',
     marginBottom: Spacing.sm,
   },
   cardCategory: {
@@ -182,8 +181,7 @@ const styles = StyleSheet.create({
     borderColor: `${Colors.PRIMARY}44`,
     marginTop: Spacing.md,
   },
-  ctaEmoji: {
-    fontSize: Sizing.avatarSm,
+  ctaIcon: {
     marginBottom: Spacing.md,
   },
   ctaText: {

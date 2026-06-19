@@ -22,12 +22,12 @@ export default function BrainScanModal() {
         </Pressable>
 
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.badge}>🧠 WEEKLY BRAIN SCAN</Text>
+          <Text style={styles.badge}>WEEKLY BRAIN SCAN</Text>
           <Text style={styles.title}>Brain Health Report</Text>
           <Text style={styles.date}>Week of {new Date().toLocaleDateString()}</Text>
 
           <View style={styles.brainViz}>
-            <Text style={styles.brainEmoji}>🧠</Text>
+            <Ionicons name="hardware-chip-outline" size={Sizing.iconLg} color={Colors.PRIMARY} style={styles.brainIcon} />
             <Text style={styles.overallScore}>72</Text>
             <Text style={styles.overallLabel}>Overall Health</Text>
           </View>
@@ -56,7 +56,7 @@ export default function BrainScanModal() {
           </View>
 
           <View style={styles.noteCard}>
-            <Text style={styles.noteTitle}>📋 AI Doctor's Note</Text>
+            <Text style={styles.noteTitle}>AI Doctor's Note</Text>
             <Text style={styles.noteText}>
               Patient shows significant improvement in prefrontal cortex activity since reducing
               social media usage. Reward center remains compromised from dopamine overstimulation
@@ -67,7 +67,7 @@ export default function BrainScanModal() {
           </View>
 
           <Pressable style={styles.shareBtn} accessibilityRole="button" accessibilityLabel="Share brain scan">
-            <Text style={styles.shareBtnText}>Share Brain Scan 📤</Text>
+            <Text style={styles.shareBtnText}>Share Brain Scan</Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -117,8 +117,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.PRIMARY,
     marginBottom: Spacing.xl,
   },
-  brainEmoji: {
-    fontSize: Sizing.iconLg,
+  brainIcon: {
     marginBottom: Spacing.xs,
   },
   overallScore: {

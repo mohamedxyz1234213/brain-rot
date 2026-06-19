@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius } from '../../../src/constants/theme';
 import { Card } from '../../../src/components/ui/Card';
 import { Button } from '../../../src/components/ui/Button';
@@ -12,12 +13,12 @@ import { useXPStore } from '../../../src/stores/xpStore';
 import { useAuthStore } from '../../../src/stores/authStore';
 
 const PERSONAS = [
-  { id: 'egyptian_dad', name: 'Egyptian Dad', emoji: '🇪🇬', sample: '"أنت مش ابن العيلة، ابن خالتك بقى طبيب وانت بقى... سكران على الموبايل."' },
-  { id: 'egyptian_mom', name: 'Egyptian Mom', emoji: '🇪🇬', sample: '"أنا عيني وجعتني من العياط عليك. ده انا ماما ولا ده حياتي كلها حاجة."' },
-  { id: 'future_self', name: 'Future Self (45)', emoji: '👻', sample: '"I wish I could tell you to put the phone down. The life you\'re building right now is the one I\'m living."' },
-  { id: 'drill_sergeant', name: 'Drill Sergeant', emoji: '🪖', sample: '"DROP THE PHONE AND GIVE ME 20! YOUR DOPAMINE IS COMPROMISED SOLDIER!"' },
-  { id: 'sigmund_freud', name: 'Sigmund Freud', emoji: '🧠', sample: '"Your scrolling is a manifestation of unresolved Oedipal desire for maternal validation."' },
-  { id: 'david_goggins', name: 'David Goggins', emoji: '💪', sample: '"You\'re staying soft. WHILE YOU SCROLL, I DID 1000 PUSHUPS. STAY HARD."' },
+  { id: 'egyptian_dad', name: 'Egyptian Dad', icon: 'person-outline', sample: '"أنت مش ابن العيلة، ابن خالتك بقى طبيب وانت بقى... سكران على الموبايل."' },
+  { id: 'egyptian_mom', name: 'Egyptian Mom', icon: 'heart-outline', sample: '"أنا عيني وجعتني من العياط عليك. ده انا ماما ولا ده حياتي كلها حاجة."' },
+  { id: 'future_self', name: 'Future Self (45)', icon: 'time-outline', sample: '"I wish I could tell you to put the phone down. The life you\'re building right now is the one I\'m living."' },
+  { id: 'drill_sergeant', name: 'Drill Sergeant', icon: 'shield-outline', sample: '"DROP THE PHONE AND GIVE ME 20! YOUR DOPAMINE IS COMPROMISED SOLDIER!"' },
+  { id: 'sigmund_freud', name: 'Sigmund Freud', icon: 'hardware-chip-outline', sample: '"Your scrolling is a manifestation of unresolved Oedipal desire for maternal validation."' },
+  { id: 'david_goggins', name: 'David Goggins', icon: 'fitness-outline', sample: '"You\'re staying soft. WHILE YOU SCROLL, I DID 1000 PUSHUPS. STAY HARD."' },
 ];
 
 export default function SetupPersonaScreen() {
@@ -91,7 +92,7 @@ export default function SetupPersonaScreen() {
         {PERSONAS.map((persona, i) => (
           <Animated.View key={persona.id} entering={FadeInDown.duration(300).delay(i * 80)}>
             <Pressable style={[styles.personaCard, selectedPersona === persona.id && styles.personaCardActive]} onPress={() => handleSelect(persona.id)}>
-              <Text style={styles.personaEmoji}>{persona.emoji}</Text>
+              <Ionicons name={persona.icon as React.ComponentProps<typeof Ionicons>['name']} size={32} color={Colors.PRIMARY} style={styles.personaIcon} />
               <Text style={styles.personaName}>{persona.name}</Text>
               <Text style={styles.personaSample}>{persona.sample}</Text>
             </Pressable>
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.xl },
   personaCard: { backgroundColor: Colors.SURFACE, borderRadius: Radius.lg, padding: Spacing.lg, marginBottom: Spacing.md, borderWidth: 0.5, borderColor: `${Colors.PRIMARY_DARK}44` },
   personaCardActive: { borderColor: Colors.PRIMARY_LIGHT, borderWidth: 2 },
-  personaEmoji: { fontSize: 36, marginBottom: Spacing.sm },
+  personaIcon: { marginBottom: Spacing.sm },
   personaName: { fontSize: Typography.sizes.lg, fontWeight: '600', color: Colors.TEXT_ON_SURFACE, marginBottom: Spacing.sm },
   personaSample: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, lineHeight: 20 },
   actions: { marginTop: Spacing.xl, gap: Spacing.md },

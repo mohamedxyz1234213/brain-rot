@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius, Shadow, Layout, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 import { useBrainScoreStore } from '../../src/stores/brainScoreStore';
@@ -35,7 +36,7 @@ export default function AnalyticsScreen() {
       <ScreenHeader title="Analytics" subtitle="Your recovery journey in numbers" onBack={() => router.back()} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>🧠 Brain Score ({brainScoreData.length} days)</Text>
+          <Text style={styles.chartTitle}>Brain Score ({brainScoreData.length} days)</Text>
           {!hasHistory && <Text style={styles.sampleNote}>Sample data — your real trend appears as you use the app</Text>}
           <View style={styles.lineChart}>
             {brainScoreData.map((score, i) => (
@@ -59,7 +60,7 @@ export default function AnalyticsScreen() {
         </View>
 
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>📱 Screen Time Today</Text>
+          <Text style={styles.chartTitle}>Screen Time Today</Text>
           <Text style={styles.bigStat}>
             {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m
           </Text>
@@ -68,29 +69,29 @@ export default function AnalyticsScreen() {
 
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <Text style={styles.statEmoji}>⏱️</Text>
+            <Ionicons name="time-outline" size={28} color={Colors.PRIMARY} style={styles.statIcon} />
             <Text style={styles.statValue}>-42%</Text>
             <Text style={styles.statLabel}>Screen Time</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statEmoji}>✅</Text>
+            <Ionicons name="checkmark-circle-outline" size={28} color={Colors.PRIMARY} style={styles.statIcon} />
             <Text style={styles.statValue}>87%</Text>
             <Text style={styles.statLabel}>Task Rate</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statEmoji}>🎯</Text>
+            <Ionicons name="locate-outline" size={28} color={Colors.PRIMARY} style={styles.statIcon} />
             <Text style={styles.statValue}>14h</Text>
             <Text style={styles.statLabel}>Focus Time</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statEmoji}>🕌</Text>
+            <Ionicons name="moon-outline" size={28} color={Colors.PRIMARY} style={styles.statIcon} />
             <Text style={styles.statValue}>92%</Text>
             <Text style={styles.statLabel}>Prayers</Text>
           </View>
         </View>
 
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>📊 Top Apps This Week</Text>
+          <Text style={styles.chartTitle}>Top Apps This Week</Text>
           {[
             { name: 'Instagram', minutes: 85, color: INSTAGRAM_COLOR },
             { name: 'TikTok', minutes: 62, color: TIKTOK_COLOR },
@@ -114,7 +115,7 @@ export default function AnalyticsScreen() {
         </View>
 
         <View style={styles.costCard}>
-          <Text style={styles.costTitle}>💸 Usage Cost Calculator</Text>
+          <Text style={styles.costTitle}>Usage Cost Calculator</Text>
           <Text style={styles.costDesc}>
             At ${hourlyRate}/hour, you spent the equivalent of:
           </Text>
@@ -194,8 +195,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.BORDER,
     ...Shadow.sm,
   },
-  statEmoji: {
-    fontSize: 28,
+  statIcon: {
     marginBottom: Spacing.sm,
   },
   statValue: {

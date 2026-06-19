@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius, Shadow, Gradients, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
 import { ProgressBar } from '../../src/components/ui/ProgressBar';
@@ -28,11 +29,11 @@ const QUESTIONS: QuizQuestion[] = [
 ];
 
 function getResult(score: number) {
-  if (score <= 20) return { emoji: '🧘', title: 'Minimal Brain Rot', message: "You're doing great! Minor optimizations will level you up." };
-  if (score <= 40) return { emoji: '😐', title: 'Moderate Brain Rot', message: "Some unhealthy habits forming. Let's catch them early." };
-  if (score <= 60) return { emoji: '😰', title: 'Significant Brain Rot', message: "Your dopamine system is compromised. Serious intervention needed." };
-  if (score <= 80) return { emoji: '🧟', title: 'Severe Brain Rot', message: "Deep in the scroll hole. BrainRot Healer was built for you." };
-  return { emoji: '💀', title: 'Critical Brain Rot', message: "Emergency intervention. Your brain runs on pure dopamine fumes." };
+  if (score <= 20) return { icon: 'leaf-outline' as const, title: 'Minimal Brain Rot', message: "You're doing great! Minor optimizations will level you up." };
+  if (score <= 40) return { icon: 'ellipse-outline' as const, title: 'Moderate Brain Rot', message: "Some unhealthy habits forming. Let's catch them early." };
+  if (score <= 60) return { icon: 'warning-outline' as const, title: 'Significant Brain Rot', message: "Your dopamine system is compromised. Serious intervention needed." };
+  if (score <= 80) return { icon: 'skull-outline' as const, title: 'Severe Brain Rot', message: "Deep in the scroll hole. BrainRot Healer was built for you." };
+  return { icon: 'alert-circle-outline' as const, title: 'Critical Brain Rot', message: "Emergency intervention. Your brain runs on pure dopamine fumes." };
 }
 
 export default function QuizScreen() {
@@ -73,7 +74,7 @@ export default function QuizScreen() {
     return (
       <SafeScreen>
         <Animated.View entering={FadeInDown.duration(500)} style={styles.resultContent}>
-          <Text style={styles.resultEmoji}>{result.emoji}</Text>
+          <Ionicons name={result.icon} size={52} color={Colors.PRIMARY} style={styles.resultIcon} />
           <Text style={styles.resultScore}>{percentage}% Brain Rot</Text>
           <Text style={styles.resultInitial}>Initial Brain Score: {initialBrainScore}</Text>
           <Text style={styles.resultTitle}>{result.title}</Text>
@@ -119,7 +120,7 @@ const styles = StyleSheet.create({
   optionBtn: { padding: Spacing.lg, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, marginBottom: Spacing.md, borderWidth: 1, borderColor: Colors.BORDER, minHeight: 44, ...Shadow.sm },
   optionText: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.normal },
   resultContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.xl },
-  resultEmoji: { fontSize: Typography.sizes['4xl'], marginBottom: Spacing.xl },
+  resultIcon: { marginBottom: Spacing.xl },
   resultScore: { fontSize: Typography.sizes['4xl'], color: Colors.DANGER, fontWeight: 700, marginBottom: Spacing.md, letterSpacing: LetterSpacing.tight },
   resultInitial: { fontSize: Typography.sizes.lg, color: Colors.PRIMARY_LIGHT, fontWeight: 600, marginBottom: Spacing.lg },
   resultTitle: { fontSize: Typography.sizes['2xl'], color: Colors.TEXT_PRIMARY, fontWeight: 700, marginBottom: Spacing.md, textAlign: 'center' },

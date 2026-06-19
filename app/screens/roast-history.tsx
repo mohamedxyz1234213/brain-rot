@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
@@ -8,7 +9,7 @@ const ROAST_HISTORY = [
   {
     id: '1',
     persona: 'David Goggins',
-    emoji: '💪',
+    icon: 'fitness-outline',
     text: "You're soft. Real soft. 3 hours on TikTok? That's not recovery, that's surrender. Stay hard.",
     trigger: 'limit_exceeded',
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
@@ -16,7 +17,7 @@ const ROAST_HISTORY = [
   {
     id: '2',
     persona: 'Egyptian Dad',
-    emoji: '🇪🇬',
+    icon: 'person-outline',
     text: 'يا ابني... ابن خالتك بقى دكتور وانت بتتفرج على تيك توك. أنا فشلت في تربيتك.',
     trigger: 'blocked_attempts',
     createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
@@ -24,7 +25,7 @@ const ROAST_HISTORY = [
   {
     id: '3',
     persona: 'Future Self',
-    emoji: '👻',
+    icon: 'time-outline',
     text: "I'm you at 45. Those 4 hours on Instagram today? They cost us the startup, the book, and honestly... the marriage.",
     trigger: 'daily_review',
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
@@ -32,7 +33,7 @@ const ROAST_HISTORY = [
   {
     id: '4',
     persona: 'Sigmund Freud',
-    emoji: '🧠',
+    icon: 'hardware-chip-outline',
     text: 'Your compulsive phone checking reveals an unresolved attachment disorder. The dopamine hits from notifications are a poor substitute for genuine human connection.',
     trigger: 'morning_shame',
     createdAt: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
@@ -40,7 +41,7 @@ const ROAST_HISTORY = [
   {
     id: '5',
     persona: 'Drill Sergeant',
-    emoji: '🪖',
+    icon: 'shield-outline',
     text: 'YOU OPENED INSTAGRAM 47 TIMES TODAY! 47! A GOLDFISH HAS MORE SELF-CONTROL THAN YOU, MAGGOT!',
     trigger: 'blocked_attempts',
     createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
@@ -50,13 +51,13 @@ const ROAST_HISTORY = [
 export default function RoastHistoryScreen() {
   return (
     <SafeScreen>
-      <ScreenHeader title="Roast History" subtitle="Your Hall of Shame 💀" onBack={() => router.back()} />
+      <ScreenHeader title="Roast History" subtitle="Your Hall of Shame" onBack={() => router.back()} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         {ROAST_HISTORY.map((roast) => (
           <View key={roast.id} style={styles.roastCard}>
             <View style={styles.roastHeader}>
-              <Text style={styles.roastEmoji}>{roast.emoji}</Text>
+              <Ionicons name={roast.icon as React.ComponentProps<typeof Ionicons>['name']} size={24} color={Colors.DANGER} style={styles.roastIcon} />
               <View style={styles.roastMeta}>
                 <Text style={styles.roastPersona}>{roast.persona}</Text>
                 <Text style={styles.roastTrigger}>{roast.trigger.replace('_', ' ')}</Text>
@@ -67,7 +68,7 @@ export default function RoastHistoryScreen() {
             </View>
             <Text style={styles.roastText}>{roast.text}</Text>
             <Pressable style={styles.shareBtn} accessibilityRole="button" accessibilityLabel="Share roast">
-              <Text style={styles.shareBtnText}>Share My Shame 💀</Text>
+              <Text style={styles.shareBtnText}>Share My Shame</Text>
             </Pressable>
           </View>
         ))}
@@ -102,8 +103,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.md,
   },
-  roastEmoji: {
-    fontSize: 24,
+  roastIcon: {
     marginRight: Spacing.md,
   },
   roastMeta: {

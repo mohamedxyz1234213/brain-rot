@@ -2,23 +2,24 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius, ANIMATION } from '../../constants/theme';
 
 type SlotResult = 'unlock_15' | 'blocked_extra' | 'greyscale' | 'quran_first' | 'wait_respin';
 
 interface SlotOutcome {
-  symbols: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   result: SlotResult;
   probability: number;
 }
 
 const OUTCOMES: SlotOutcome[] = [
-  { symbols: '🍋🍋🍋', label: '15 min unlocked!', result: 'unlock_15', probability: 0.08 },
-  { symbols: '❌❌❌', label: 'Blocked + 10min tomorrow', result: 'blocked_extra', probability: 0.40 },
-  { symbols: '😂😂😂', label: 'Greyscale + 0.75x speed', result: 'greyscale', probability: 0.20 },
-  { symbols: '🕌🕌🕌', label: '5 min Quran first', result: 'quran_first', probability: 0.12 },
-  { symbols: '⏰⏰⏰', label: 'Wait 10 min, re-spin', result: 'wait_respin', probability: 0.20 },
+  { icon: 'nutrition-outline', label: '15 min unlocked!', result: 'unlock_15', probability: 0.08 },
+  { icon: 'close-outline', label: 'Blocked + 10min tomorrow', result: 'blocked_extra', probability: 0.40 },
+  { icon: 'happy-outline', label: 'Greyscale + 0.75x speed', result: 'greyscale', probability: 0.20 },
+  { icon: 'moon-outline', label: '5 min Quran first', result: 'quran_first', probability: 0.12 },
+  { icon: 'time-outline', label: 'Wait 10 min, re-spin', result: 'wait_respin', probability: 0.20 },
 ];
 
 interface SlotMachineProps {
@@ -78,14 +79,14 @@ export function SlotMachine({ islamicMode = true, onResult }: SlotMachineProps) 
 
   return (
     <Animated.View entering={FadeIn.duration(400)} style={[styles.container, animatedStyle]}>
-      <Text style={styles.title}>🎰 Doom Scroll Slot Machine</Text>
+      <Text style={styles.title}>Doom Scroll Slot Machine</Text>
       <Text style={styles.subtitle}>Feeling lucky? Spin for a chance to unlock...</Text>
 
       <View style={styles.slotFrame}>
         {spinning ? (
-          <Text style={styles.spinningSymbols}>🎰 🎰 🎰</Text>
+          <View style={styles.symbolRow}>{[0, 1, 2].map((slot) => <Ionicons key={slot} name="help-outline" size={34} color={Colors.PRIMARY} />)}</View>
         ) : result ? (
-          <Text style={styles.symbols}>{result.symbols}</Text>
+          <View style={styles.symbolRow}>{[0, 1, 2].map((slot) => <Ionicons key={slot} name={result.icon} size={34} color={Colors.PRIMARY} />)}</View>
         ) : (
           <Text style={styles.symbols}>? ? ?</Text>
         )}
@@ -109,7 +110,7 @@ export function SlotMachine({ islamicMode = true, onResult }: SlotMachineProps) 
         disabled={spinning}
       >
         <Text style={styles.spinBtnText}>
-          {spinning ? 'Spinning...' : '🎲 SPIN'}
+          {spinning ? 'Spinning...' : 'SPIN'}
         </Text>
       </Pressable>
 
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderColor: Colors.PRIMARY, marginBottom: Spacing.xl,
   },
-  spinningSymbols: { fontSize: 36, letterSpacing: 8 },
+  symbolRow: { flexDirection: 'row', gap: Spacing.md },
   symbols: { fontSize: 36, letterSpacing: 8 },
   resultBox: {
     paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,

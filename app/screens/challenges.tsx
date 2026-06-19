@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius, Shadow, Layout } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
@@ -11,7 +12,7 @@ const CHALLENGES = [
   {
     id: '1',
     title: 'No TikTok Week',
-    emoji: '🎵',
+    icon: 'musical-notes-outline',
     description: 'Survive 7 days without TikTok.',
     duration: '7 days',
     participants: 2341,
@@ -20,7 +21,7 @@ const CHALLENGES = [
   {
     id: '2',
     title: '30-Day Brain Detox',
-    emoji: '🧠',
+    icon: 'hardware-chip-outline',
     description: 'Full month. Max 1 hour social media per day.',
     duration: '30 days',
     participants: 891,
@@ -29,7 +30,7 @@ const CHALLENGES = [
   {
     id: '3',
     title: 'Ramadan Focus',
-    emoji: '🌙',
+    icon: 'moon-outline',
     description: 'Zero social media between Fajr and Maghrib.',
     duration: '30 days',
     participants: 1567,
@@ -38,7 +39,7 @@ const CHALLENGES = [
   {
     id: '4',
     title: 'Exam Mode',
-    emoji: '📚',
+    icon: 'book-outline',
     description: '14 days. Only productivity apps allowed.',
     duration: '14 days',
     participants: 3214,
@@ -47,7 +48,7 @@ const CHALLENGES = [
   {
     id: '5',
     title: 'Digital Minimalist',
-    emoji: '🪷',
+    icon: 'leaf-outline',
     description: '90 days. Rebuild your relationship with technology.',
     duration: '90 days',
     participants: 445,
@@ -65,12 +66,12 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 export default function ChallengesScreen() {
   return (
     <SafeScreen>
-      <ScreenHeader title="🏆 Challenges" subtitle="Push yourself. Compete with others." onBack={() => router.back()} />
+      <ScreenHeader title="Challenges" subtitle="Push yourself. Compete with others." onBack={() => router.back()} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         {CHALLENGES.map((challenge) => (
           <View key={challenge.id} style={styles.challengeCard}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardEmoji}>{challenge.emoji}</Text>
+              <Ionicons name={challenge.icon as React.ComponentProps<typeof Ionicons>['name']} size={34} color={Colors.PRIMARY} style={styles.cardIcon} />
               <View style={styles.cardInfo}>
                 <Text style={styles.cardTitle}>{challenge.title}</Text>
                 <Text style={styles.cardDesc}>{challenge.description}</Text>
@@ -127,8 +128,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: Spacing.md,
   },
-  cardEmoji: {
-    fontSize: 36,
+  cardIcon: {
     marginRight: Spacing.md,
   },
   cardInfo: {

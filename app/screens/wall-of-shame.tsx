@@ -1,38 +1,39 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 const WALL_OF_SHAME = [
-  { rank: 1, name: 'Anonymous', score: 8, emoji: '💀', reaction: '😂 143' },
-  { rank: 2, name: 'ScreenZombie', score: 12, emoji: '🧟', reaction: '💀 98' },
-  { rank: 3, name: 'Anonymous', score: 15, emoji: '📱', reaction: '🫡 76' },
-  { rank: 4, name: 'TikTokAddict', score: 18, emoji: '😵', reaction: '🙏 54' },
-  { rank: 5, name: 'Anonymous', score: 22, emoji: '🫠', reaction: '😂 41' },
-  { rank: 6, name: 'DoomScroller', score: 23, emoji: '📵', reaction: '💀 39' },
-  { rank: 7, name: 'Anonymous', score: 25, emoji: '🥴', reaction: '🫡 28' },
-  { rank: 8, name: 'ReelsReaper', score: 27, emoji: '☠️', reaction: '😂 22' },
-  { rank: 9, name: 'Anonymous', score: 28, emoji: '🫣', reaction: '🙏 19' },
-  { rank: 10, name: 'InstaGhost', score: 30, emoji: '👻', reaction: '💀 15' },
+  { rank: 1, name: 'Anonymous', score: 8, icon: 'skull-outline', reaction: 'Laugh 143' },
+  { rank: 2, name: 'ScreenZombie', score: 12, icon: 'sad-outline', reaction: 'Skull 98' },
+  { rank: 3, name: 'Anonymous', score: 15, icon: 'phone-portrait-outline', reaction: 'Salute 76' },
+  { rank: 4, name: 'TikTokAddict', score: 18, icon: 'alert-circle-outline', reaction: 'Prayer 54' },
+  { rank: 5, name: 'Anonymous', score: 22, icon: 'remove-circle-outline', reaction: 'Laugh 41' },
+  { rank: 6, name: 'DoomScroller', score: 23, icon: 'ban-outline', reaction: 'Skull 39' },
+  { rank: 7, name: 'Anonymous', score: 25, icon: 'warning-outline', reaction: 'Salute 28' },
+  { rank: 8, name: 'ReelsReaper', score: 27, icon: 'skull-outline', reaction: 'Laugh 22' },
+  { rank: 9, name: 'Anonymous', score: 28, icon: 'eye-off-outline', reaction: 'Prayer 19' },
+  { rank: 10, name: 'InstaGhost', score: 30, icon: 'person-outline', reaction: 'Skull 15' },
 ];
 
 export default function WallOfShameScreen() {
   return (
     <SafeScreen>
-      <ScreenHeader title="Wall of Shame 💀" subtitle="The most brain-rotted among us" onBack={() => router.back()} />
+      <ScreenHeader title="Wall of Shame" subtitle="The most brain-rotted among us" onBack={() => router.back()} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         <View style={styles.disclaimer}>
           <Text style={styles.disclaimerText}>
-            🔒 Opt-in only. Names can be anonymized. We're all here to grow.
+            Opt-in only. Names can be anonymized. We're all here to grow.
           </Text>
         </View>
 
         {WALL_OF_SHAME.map((entry) => (
           <View key={entry.rank} style={styles.shameCard}>
             <Text style={styles.rank}>#{entry.rank}</Text>
-            <Text style={styles.emoji}>{entry.emoji}</Text>
+            <Ionicons name={entry.icon as React.ComponentProps<typeof Ionicons>['name']} size={28} color={Colors.DANGER} style={styles.entryIcon} />
             <View style={styles.info}>
               <Text style={styles.name}>{entry.name}</Text>
               <Text style={styles.score}>Brain Score: {entry.score}/100</Text>
@@ -44,7 +45,7 @@ export default function WallOfShameScreen() {
         ))}
 
         <Pressable style={styles.optInBtn} accessibilityRole="button" accessibilityLabel="Add me to wall">
-          <Text style={styles.optInBtnText}>Add Me to the Wall 🫡</Text>
+          <Text style={styles.optInBtnText}>Add Me to the Wall</Text>
         </Pressable>
       </ScrollView>
     </SafeScreen>
@@ -83,8 +84,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.bold,
     width: 36,
   },
-  emoji: {
-    fontSize: 28,
+  entryIcon: {
     marginRight: Spacing.md,
   },
   info: {

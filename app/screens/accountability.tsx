@@ -29,7 +29,7 @@ export default function AccountabilityScreen() {
 
           {circles.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyEmoji}>👥</Text>
+              <Ionicons name="people-outline" size={40} color={Colors.PRIMARY} style={styles.emptyIcon} />
               <Text style={styles.emptyText}>
                 Create or join a circle to share your progress with friends.
               </Text>
@@ -78,14 +78,14 @@ export default function AccountabilityScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🏆 Leaderboard</Text>
+          <Text style={styles.sectionTitle}>Leaderboard</Text>
           {leaderboard.map((entry) => (
             <View key={entry.userId} style={styles.leaderRow}>
               <Text style={styles.rank}>#{entry.rank}</Text>
               <View style={styles.leaderInfo}>
                 <Text style={styles.leaderName}>{entry.name}</Text>
                 <Text style={styles.leaderMeta}>
-                  🔥 {entry.streak} days • Score: {entry.score}
+                  Streak: {entry.streak} days - Score: {entry.score}
                 </Text>
               </View>
               <Text style={styles.leaderScore}>{entry.score}</Text>
@@ -131,8 +131,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
-  emptyEmoji: {
-    fontSize: 40,
+  emptyIcon: {
     marginBottom: Spacing.md,
   },
   emptyText: {

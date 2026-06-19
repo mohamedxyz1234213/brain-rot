@@ -44,7 +44,7 @@ export function RoastCard({
         <Text style={styles.time}>{timeAgo}</Text>
         {onShare && (
           <Pressable style={styles.shareBtn} onPress={onShare}>
-            <Text style={styles.shareBtnText}>Share My Shame 💀</Text>
+            <Text style={styles.shareBtnText}>Share My Shame</Text>
           </Pressable>
         )}
       </View>

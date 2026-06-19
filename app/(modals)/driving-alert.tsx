@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Sizing, Radius, Shadow, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
 import { Button } from '../../src/components/ui/Button';
@@ -8,7 +9,7 @@ export default function DrivingAlertModal() {
   return (
     <SafeScreen>
       <View style={styles.content}>
-        <Text style={styles.icon}>🚗</Text>
+        <Ionicons name="car-outline" size={Sizing.avatarLg} color={Colors.DANGER} style={styles.icon} />
         <Text style={styles.title}>YOU ARE DRIVING</Text>
         <Text style={styles.subtitle}>
           Put your phone down. Your life and others' lives depend on it.
@@ -34,7 +35,7 @@ export default function DrivingAlertModal() {
 
 const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
-  icon: { fontSize: Sizing.avatarLg, marginBottom: Spacing.xl },
+  icon: { marginBottom: Spacing.xl },
   title: { fontSize: Typography.sizes['4xl'], fontWeight: '900', color: Colors.DANGER, textAlign: 'center', marginBottom: Spacing.lg, letterSpacing: LetterSpacing.tight },
   subtitle: { fontSize: Typography.sizes.lg, color: Colors.TEXT_PRIMARY, textAlign: 'center', lineHeight: Typography.lineHeight.relaxed },
   divider: { width: '80%', height: 1, backgroundColor: Colors.BORDER, marginVertical: Spacing['2xl'] },

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius, Shadow, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
 import { useRoastStore, RoastPersona } from '../../src/stores/roastStore';
@@ -15,7 +16,7 @@ import { useAuthStore } from '../../src/stores/authStore';
 import { roastPersonas } from '../../src/data/roastPersonas';
 import { generateRoast } from '../../src/services/aiService';
 
-const PERSONA_EMOJIS: Record<string, string> = { egyptian_dad: '🇪🇬', egyptian_mom: '🇪🇬', future_self: '👻', drill_sergeant: '🪖', sigmund_freud: '🧠', david_goggins: '💪' };
+const PERSONA_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['name']> = { egyptian_dad: 'person-outline', egyptian_mom: 'heart-outline', future_self: 'time-outline', drill_sergeant: 'shield-outline', sigmund_freud: 'hardware-chip-outline', david_goggins: 'fitness-outline' };
 
 const EVIDENCE_LABELS: Record<string, string> = { app_limit: 'App Limit Exceeded', task_missed: 'Task Missed', daily_review: 'Daily Review', morning: 'Morning Shame', intervention: 'Intervention Mode', driving: 'Driving + Phone' };
 
@@ -93,13 +94,13 @@ export default function RoastModal() {
   };
 
   const personaConfig = roastPersonas.find((p) => p.id === (activeRoast?.persona || selectedPersona));
-  const emoji = PERSONA_EMOJIS[activeRoast?.persona || selectedPersona] || '🪖';
+  const icon = PERSONA_ICONS[activeRoast?.persona || selectedPersona] || 'shield-outline';
 
   return (
     <SafeScreen>
       <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
         <View style={styles.personaHeader}>
-          <Text style={styles.personaEmoji}>{emoji}</Text>
+          <Ionicons name={icon} size={48} color={Colors.DANGER} />
           <Text style={styles.personaName}>{personaConfig?.name ?? 'Drill Sergeant'}</Text>
           {activeRoast?.isOffline && <Text style={styles.offlineBadge}>offline mode</Text>}
         </View>
@@ -119,7 +120,7 @@ export default function RoastModal() {
 
         <View style={styles.actions}>
           <Pressable style={styles.deservedBtn} onPress={handleDeserved} accessibilityRole="button" accessibilityLabel="I deserved this">
-            <Text style={styles.deservedBtnText}>I Deserved This 💀</Text>
+            <Text style={styles.deservedBtnText}>I Deserved This</Text>
           </Pressable>
           <Pressable style={styles.proveBtn} onPress={handleProveThemWrong} accessibilityRole="button" accessibilityLabel="Prove them wrong">
             <Text style={styles.proveBtnText}>Prove Them Wrong →</Text>
@@ -133,7 +134,6 @@ export default function RoastModal() {
 const styles = StyleSheet.create({
   content: { flex: 1, padding: Spacing.xl, justifyContent: 'center' },
   personaHeader: { alignItems: 'center', marginBottom: Spacing.lg },
-  personaEmoji: { fontSize: 48 },
   personaName: { fontSize: Typography.sizes.lg, fontWeight: Typography.weights.bold, color: Colors.TEXT_PRIMARY, marginTop: Spacing.sm, letterSpacing: LetterSpacing.tight },
   offlineBadge: { fontSize: Typography.sizes.xs, color: Colors.WARNING, backgroundColor: Colors.WARNING_LIGHT, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs, borderRadius: Radius.full, marginTop: Spacing.xs },
   evidence: { marginBottom: Spacing.xl, padding: Spacing.md, backgroundColor: Colors.PRIMARY_DARK, borderRadius: Radius.xl, borderWidth: 1, borderColor: Colors.PRIMARY_LIGHT },

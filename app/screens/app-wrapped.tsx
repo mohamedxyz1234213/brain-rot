@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Dimensions, FlatList } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
@@ -10,7 +11,7 @@ const INSTAGRAM_COLOR = '#E1306C';
 
 interface WrappedCard {
   id: string;
-  emoji: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   title: string;
   value: string;
   description: string;
@@ -20,7 +21,7 @@ interface WrappedCard {
 const WRAPPED_CARDS: WrappedCard[] = [
   {
     id: '1',
-    emoji: '📱',
+    icon: 'phone-portrait-outline',
     title: 'Total Screen Time',
     value: '147 hours',
     description: "That's 6 days and 3 hours of your life this month.",
@@ -28,7 +29,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
   },
   {
     id: '2',
-    emoji: '🏆',
+    icon: 'trophy-outline',
     title: 'Most Used App',
     value: 'Instagram',
     description: 'You opened it 1,247 times. The app knows you better than you know yourself.',
@@ -36,7 +37,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
   },
   {
     id: '3',
-    emoji: '📏',
+    icon: 'resize-outline',
     title: 'Scrolling Distance',
     value: '12.4 km',
     description: "If you walked that distance instead, you'd have burned 900 calories.",
@@ -44,7 +45,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
   },
   {
     id: '4',
-    emoji: '📈',
+    icon: 'trending-up-outline',
     title: 'Best Day',
     value: 'March 15',
     description: 'Brain Score: 94. Only 28 minutes of social media. A legend was born.',
@@ -52,7 +53,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
   },
   {
     id: '5',
-    emoji: '📉',
+    icon: 'trending-down-outline',
     title: 'Worst Day',
     value: 'March 3',
     description: 'Brain Score: 12. 6 hours on TikTok. We don\'t talk about that day.',
@@ -60,7 +61,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
   },
   {
     id: '6',
-    emoji: '🔥',
+    icon: 'flame-outline',
     title: 'Longest Streak',
     value: '14 days',
     description: 'You kept under your limits for 2 weeks straight. Then... well.',
@@ -68,7 +69,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
   },
   {
     id: '7',
-    emoji: '🧠',
+    icon: 'hardware-chip-outline',
     title: 'Brain Score Change',
     value: '+34 points',
     description: 'From Zombie (38) to Recovering (72). Real progress.',
@@ -76,7 +77,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
   },
   {
     id: '8',
-    emoji: '⏰',
+    icon: 'time-outline',
     title: 'Time Saved',
     value: '23 hours',
     description: 'Compared to last month, you spent 23 fewer hours on social media.',
@@ -84,7 +85,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
   },
   {
     id: '9',
-    emoji: '💪',
+    icon: 'fitness-outline',
     title: 'Tasks Completed',
     value: '87/104',
     description: '84% completion rate. Better than 78% of users.',
@@ -92,7 +93,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
   },
   {
     id: '10',
-    emoji: '🎉',
+    icon: 'sparkles-outline',
     title: 'Your Summary',
     value: 'Recovering',
     description: "You're healing. Keep going. Next month will be even better.",
@@ -105,7 +106,7 @@ export default function AppWrappedScreen() {
 
   const renderCard = ({ item }: { item: WrappedCard }) => (
     <View style={[styles.card, { width: width - Spacing.xl * 2 }]}>
-      <Text style={styles.cardEmoji}>{item.emoji}</Text>
+      <Ionicons name={item.icon} size={62} color={item.color} style={styles.cardIcon} />
       <Text style={styles.cardTitle}>{item.title}</Text>
       <Text style={[styles.cardValue, { color: item.color }]}>{item.value}</Text>
       <Text style={styles.cardDescription}>{item.description}</Text>
@@ -114,7 +115,7 @@ export default function AppWrappedScreen() {
 
   return (
     <SafeScreen>
-      <ScreenHeader title="🎬 App Wrapped" subtitle="Your month in review" onClose={() => router.back()} align="center" />
+      <ScreenHeader title="App Wrapped" subtitle="Your month in review" onClose={() => router.back()} align="center" />
 
       <FlatList
         data={WRAPPED_CARDS}
@@ -144,7 +145,7 @@ export default function AppWrappedScreen() {
           ))}
         </View>
         <Pressable style={styles.shareBtn} accessibilityRole="button" accessibilityLabel="Share summary">
-          <Text style={styles.shareBtnText}>Share Summary Card 📤</Text>
+          <Text style={styles.shareBtnText}>Share Summary Card</Text>
         </Pressable>
       </View>
     </SafeScreen>
@@ -164,8 +165,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  cardEmoji: {
-    fontSize: 64,
+  cardIcon: {
     marginBottom: Spacing.xl,
   },
   cardTitle: {

@@ -8,9 +8,9 @@ export const Colors = {
   BACKGROUND: '#F2E6DA', // warm cream canvas (signature)
   SURFACE: '#FFFFFF', // white cards / elevated surfaces
   SURFACE_RAISED: '#E8E2D9', // inputs, nested containers (warm off-white)
-  PRIMARY: '#43686F', // teal — primary CTAs, highlights, active states (signature)
+  PRIMARY: '#4b686e', // teal — primary CTAs, highlights, active states (signature)
   PRIMARY_LIGHT: '#577E86', // lighter teal — hover / active tint
-  PRIMARY_DARK: '#324E54', // deep teal — pressed, borders
+  PRIMARY_DARK: '#465e63', // deep teal — pressed, borders
   SECONDARY: '#B0B1B0', // neutral gray — secondary / chips / muted accents (signature)
   SECONDARY_LIGHT: '#C7C8C7',
   SECONDARY_DARK: '#8E8F8E',

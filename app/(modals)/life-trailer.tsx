@@ -48,7 +48,7 @@ export default function LifeTrailerScreen() {
         </Pressable>
 
         <View style={styles.content}>
-          <Text style={styles.badge}>🎬 LIFE TRAILER</Text>
+          <Text style={styles.badge}>LIFE TRAILER</Text>
           <Text style={styles.month}>Monthly Recap</Text>
 
           <View style={styles.textContainer}>
@@ -63,7 +63,7 @@ export default function LifeTrailerScreen() {
           {charIndex >= TRAILER_TEXT.length && (
             <>
               <Pressable style={styles.shareBtn} accessibilityRole="button" accessibilityLabel="Share trailer">
-                <Text style={styles.shareBtnText}>Share Trailer 📤</Text>
+                <Text style={styles.shareBtnText}>Share Trailer</Text>
               </Pressable>
               <Pressable style={styles.dismissBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Continue my story">
                 <Text style={styles.dismissText}>Continue My Story →</Text>

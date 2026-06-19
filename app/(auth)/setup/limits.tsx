@@ -11,14 +11,14 @@ import { Button } from '../../../src/components/ui/Button';
 import { useScreenTimeStore } from '../../../src/stores/screenTimeStore';
 
 const POPULAR_APPS = [
-  { bundleId: 'com.zhiliaoapp.musically', name: 'TikTok', icon: '🎵' },
-  { bundleId: 'com.instagram.android', name: 'Instagram', icon: '📸' },
-  { bundleId: 'com.twitter.android', name: 'X/Twitter', icon: '𝕏' },
-  { bundleId: 'com.snapchat.android', name: 'Snapchat', icon: '👻' },
-  { bundleId: 'com.google.android.youtube', name: 'YouTube', icon: '▶️' },
-  { bundleId: 'com.facebook.katana', name: 'Facebook', icon: '👤' },
-  { bundleId: 'com.netflix.mediaclient', name: 'Netflix', icon: '🎬' },
-  { bundleId: 'com.whatsapp', name: 'WhatsApp', icon: '💬' },
+  { bundleId: 'com.zhiliaoapp.musically', name: 'TikTok', icon: 'musical-notes-outline' },
+  { bundleId: 'com.instagram.android', name: 'Instagram', icon: 'camera-outline' },
+  { bundleId: 'com.twitter.android', name: 'X/Twitter', icon: 'at-outline' },
+  { bundleId: 'com.snapchat.android', name: 'Snapchat', icon: 'chatbubble-ellipses-outline' },
+  { bundleId: 'com.google.android.youtube', name: 'YouTube', icon: 'play-outline' },
+  { bundleId: 'com.facebook.katana', name: 'Facebook', icon: 'person-outline' },
+  { bundleId: 'com.netflix.mediaclient', name: 'Netflix', icon: 'film-outline' },
+  { bundleId: 'com.whatsapp', name: 'WhatsApp', icon: 'chatbubble-outline' },
 ];
 
 export default function SetupLimitsScreen() {
@@ -66,7 +66,7 @@ export default function SetupLimitsScreen() {
                   <View style={[styles.checkbox, selectedApps.has(app.bundleId) && styles.checkboxActive]}>
                     {selectedApps.has(app.bundleId) && <Ionicons name="checkmark" size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} />}
                   </View>
-                  <Text style={styles.appIcon}>{app.icon}</Text>
+                  <Ionicons name={app.icon as React.ComponentProps<typeof Ionicons>['name']} size={22} color={Colors.PRIMARY} style={styles.appIcon} />
                   <Text style={styles.appName}>{app.name}</Text>
                 </Pressable>
                 {selectedApps.has(app.bundleId) && (
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   appSelect: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   checkbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
   checkboxActive: { backgroundColor: Colors.SUCCESS, borderColor: Colors.SUCCESS },
-  appIcon: { fontSize: 24, marginRight: Spacing.sm },
+  appIcon: { marginRight: Spacing.sm },
   appName: { fontSize: Typography.sizes.md, color: Colors.TEXT_ON_SURFACE, fontWeight: '500' },
   limitControls: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   limitBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.SURFACE_RAISED, alignItems: 'center', justifyContent: 'center' },

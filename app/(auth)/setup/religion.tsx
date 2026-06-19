@@ -14,12 +14,12 @@ import { useSettingsStore } from '../../../src/stores/settingsStore';
 const METHODS = ['MWL', 'ISNA', 'Egypt', 'Makkah', 'Tehran'] as const;
 
 const FEATURES = [
-  { key: 'prayerTracker', label: 'Prayer Tracker', icon: '🕌', description: 'Track 5 daily prayers' },
-  { key: 'quranProgress', label: 'Quran Progress', icon: '📖', description: 'Track your Quran reading' },
-  { key: 'dhikrCounter', label: 'Dhikr Counter', icon: '📿', description: 'Morning & evening adhkar' },
-  { key: 'fastingTracker', label: 'Fasting Tracker', icon: '🌙', description: 'Voluntary fasts + Ramadan' },
-  { key: 'morningAffirmation', label: 'Daily Affirmation', icon: '✨', description: 'Islamic ayah/hadith card' },
-  { key: 'istighfarPrompt', label: 'Istighfar Prompt', icon: '🤲', description: 'Remind when goals failed' },
+  { key: 'prayerTracker', label: 'Prayer Tracker', icon: 'moon-outline', description: 'Track 5 daily prayers' },
+  { key: 'quranProgress', label: 'Quran Progress', icon: 'book-outline', description: 'Track your Quran reading' },
+  { key: 'dhikrCounter', label: 'Dhikr Counter', icon: 'repeat-outline', description: 'Morning & evening adhkar' },
+  { key: 'fastingTracker', label: 'Fasting Tracker', icon: 'moon-outline', description: 'Voluntary fasts + Ramadan' },
+  { key: 'morningAffirmation', label: 'Daily Affirmation', icon: 'sparkles-outline', description: 'Islamic ayah/hadith card' },
+  { key: 'istighfarPrompt', label: 'Istighfar Prompt', icon: 'hand-left-outline', description: 'Remind when goals failed' },
 ] as const;
 
 export default function SetupReligionScreen() {
@@ -68,7 +68,7 @@ export default function SetupReligionScreen() {
                   {enabledFeatures.has(feature.key) && <Ionicons name="checkmark" size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} />}
                 </View>
                 <View style={styles.featureInfo}>
-                  <Text style={styles.featureIcon}>{feature.icon}</Text>
+                  <Ionicons name={feature.icon} size={24} color={Colors.PRIMARY} style={styles.featureIcon} />
                   <View>
                     <Text style={styles.featureLabel}>{feature.label}</Text>
                     <Text style={styles.featureDesc}>{feature.description}</Text>
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   featureCheckbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
   featureCheckboxActive: { backgroundColor: Colors.SUCCESS, borderColor: Colors.SUCCESS },
   featureInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  featureIcon: { fontSize: 24, marginRight: Spacing.md },
+  featureIcon: { marginRight: Spacing.md },
   featureLabel: { fontSize: Typography.sizes.md, color: Colors.TEXT_ON_SURFACE, fontWeight: '500' },
   featureDesc: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
   actions: { marginTop: Spacing.xl, gap: Spacing.md },

@@ -24,7 +24,7 @@ So this is goodbye. Unless...
 Unless you can prove me wrong. Right now.
 
 With love (and disappointment),
-Your Abandoned Goal 💔`;
+Your Abandoned Goal`;
 
 export default function BreakupLetterScreen() {
   const [displayedText, setDisplayedText] = useState('');
@@ -53,7 +53,7 @@ export default function BreakupLetterScreen() {
         </Pressable>
 
         <View style={styles.letterContainer}>
-          <Text style={styles.letterEmoji}>💔</Text>
+          <Ionicons name="heart-dislike-outline" size={Sizing.avatarSm} color={Colors.DANGER} style={styles.letterIcon} />
           <Text style={styles.letterTitle}>A Letter From Your Goal</Text>
 
           <View style={styles.paper}>
@@ -67,11 +67,11 @@ export default function BreakupLetterScreen() {
         {showActions && (
           <View style={styles.actions}>
             <Pressable style={styles.winBackBtn} accessibilityRole="button" accessibilityLabel="Win it back">
-              <Text style={styles.winBackText}>Win It Back 💪</Text>
+              <Text style={styles.winBackText}>Win It Back</Text>
               <Text style={styles.winBackSubtext}>3 micro-tasks to restart</Text>
             </Pressable>
             <Pressable style={styles.letGoBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Let it go">
-              <Text style={styles.letGoText}>Let It Go 🕊️</Text>
+              <Text style={styles.letGoText}>Let It Go</Text>
             </Pressable>
           </View>
         )}
@@ -105,9 +105,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing['2xl'],
   },
-  letterEmoji: {
-    fontSize: Sizing.avatarSm,
-    textAlign: 'center',
+  letterIcon: {
+    alignSelf: 'center',
     marginBottom: Spacing.md,
   },
   letterTitle: {

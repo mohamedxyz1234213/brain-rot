@@ -17,7 +17,7 @@ export default function VillainArcScreen() {
         </Pressable>
 
         <View style={styles.content}>
-          <Text style={styles.emoji}>😈</Text>
+          <Ionicons name="flame-outline" size={Sizing.avatarMd} color={Colors.DANGER} style={styles.modeIcon} />
           <Text style={styles.title}>VILLAIN ARC MODE</Text>
           <Text style={styles.subtitle}>3 days of chaos. Then redemption.</Text>
 
@@ -79,8 +79,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
   },
-  emoji: {
-    fontSize: Sizing.avatarMd,
+  modeIcon: {
     marginBottom: Spacing.md,
   },
   title: {
