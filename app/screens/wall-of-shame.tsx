@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   reactionBadge: {
     paddingHorizontal: 10,
     paddingVertical: Spacing.xs,
-    backgroundColor: `${Colors.TEXT_SECONDARY}22`,
+    backgroundColor: Colors.SURFACE_RAISED,
     borderRadius: 12,
   },
   reactionText: {

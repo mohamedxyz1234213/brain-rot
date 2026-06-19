@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
@@ -48,7 +49,7 @@ export default function BreakupLetterScreen() {
     <SafeScreen>
       <View style={{ flex: 1 }}>
         <Pressable style={styles.closeBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close">
-          <Text style={styles.closeText}>✕</Text>
+          <Ionicons name="close" size={Sizing.iconLg} color={Colors.TEXT_SECONDARY} />
         </Pressable>
 
         <View style={styles.letterContainer}>
@@ -97,10 +98,6 @@ const styles = StyleSheet.create({
     right: Spacing.xl,
     zIndex: 10,
     padding: Spacing.sm,
-  },
-  closeText: {
-    fontSize: Typography.sizes.xl,
-    color: Colors.TEXT_SECONDARY,
   },
   letterContainer: {
     flex: 1,

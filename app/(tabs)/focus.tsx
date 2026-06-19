@@ -2,20 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Colors, Typography, Spacing, Radius, Sizing, Shadow, Gradients, LetterSpacing, ANIMATION } from '../../src/constants/theme';
 import { Button } from '../../src/components/ui/Button';
 import { CircularProgress } from '../../src/components/ui/CircularProgress';
-import { SafeScreen } from '../../src/components/ui/SafeScreen';
+import { SafeScreen, TabHeader } from '../../src/components/ui/SafeScreen';
 import { useFocusStore, FocusMode } from '../../src/stores/focusStore';
 import { useXPStore } from '../../src/stores/xpStore';
 import { useStreakStore } from '../../src/stores/streakStore';
 
-const MODES: { id: FocusMode; name: string; duration: number; emoji: string }[] = [
-  { id: 'pomodoro', name: 'Pomodoro', duration: 25, emoji: '🍅' },
-  { id: 'deep_work', name: 'Deep Work', duration: 90, emoji: '🧠' },
-  { id: 'flow', name: 'Flow', duration: 60, emoji: '🌊' },
-  { id: 'quick_sprint', name: 'Quick Sprint', duration: 15, emoji: '⚡' },
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+const MODES: { id: FocusMode; name: string; duration: number; icon: IoniconName }[] = [
+  { id: 'pomodoro', name: 'Pomodoro', duration: 25, icon: 'timer-outline' },
+  { id: 'deep_work', name: 'Deep Work', duration: 90, icon: 'bulb-outline' },
+  { id: 'flow', name: 'Flow', duration: 60, icon: 'water-outline' },
+  { id: 'quick_sprint', name: 'Quick Sprint', duration: 15, icon: 'flash-outline' },
 ];
 
 export default function FocusScreen() {
@@ -89,7 +91,7 @@ export default function FocusScreen() {
   if (activeSession) {
     const progress = 1 - remainingSeconds / (activeSession.targetMinutes * 60);
     return (
-      <SafeScreen>
+      <SafeScreen tabBarSpacing>
         <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.timerContainer}>
           <Text style={styles.modeLabel}>{MODES.find((m) => m.id === activeSession.mode)?.name ?? activeSession.mode}</Text>
           <View style={[styles.timerCircle, isActive && !isPaused && styles.timerCircleActive]}>
@@ -122,9 +124,9 @@ export default function FocusScreen() {
 
   if (completed) {
     return (
-      <SafeScreen>
+      <SafeScreen tabBarSpacing>
         <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.timerContainer}>
-          <Text style={styles.celebrateEmoji}>🎉</Text>
+          <Ionicons name="sparkles" size={Sizing.avatarLg} color={Colors.PRIMARY_LIGHT} style={styles.celebrateEmoji} />
           <Text style={styles.celebrateTitle}>Session Complete</Text>
           <Text style={styles.celebrateSub}>
             {completed.minutes} min of {MODES.find((m) => m.id === completed.mode)?.name ?? completed.mode}
@@ -140,11 +142,17 @@ export default function FocusScreen() {
   }
 
   return (
-    <SafeScreen>
-      <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.header}>
-        <Text style={styles.title}>Focus Session</Text>
-        <Text style={styles.subtitle}>Total today: {totalFocusMinutes} min</Text>
-      </Animated.View>
+    <SafeScreen tabBarSpacing>
+      <TabHeader
+        eyebrow={`${totalFocusMinutes} min today`}
+        title="Focus Session"
+        rightAction={
+          <View style={styles.livePill}>
+            <Ionicons name="leaf-outline" size={Sizing.iconSm} color={Colors.SUCCESS} />
+            <Text style={styles.liveText}>Deep work</Text>
+          </View>
+        }
+      />
       <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration).delay(ANIMATION.stagger)} style={styles.modes}>
         {MODES.map((mode, index) => (
           <Animated.View key={mode.id} entering={FadeInDown.duration(300).delay(index * ANIMATION.stagger)} style={styles.modeCardWrap}>
@@ -154,7 +162,7 @@ export default function FocusScreen() {
             accessibilityRole="button"
             accessibilityLabel={mode.name}
           >
-            <Text style={styles.modeEmoji}>{mode.emoji}</Text>
+            <Ionicons name={mode.icon} size={Typography.sizes['3xl']} color={selectedMode === mode.id ? Colors.TEXT_ON_PRIMARY : Colors.PRIMARY_LIGHT} style={styles.modeEmoji} />
             <Text style={styles.modeName}>{mode.name}</Text>
             <Text style={styles.modeDuration}>{mode.duration} min</Text>
           </Pressable>
@@ -167,34 +175,33 @@ export default function FocusScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { padding: Spacing.xl, paddingTop: Spacing.lg },
-  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
-  subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginTop: Spacing.sm },
+  livePill: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, paddingHorizontal: Spacing.md, paddingVertical: 6, borderRadius: Radius.full, backgroundColor: Colors.SUCCESS_LIGHT, borderWidth: 1, borderColor: 'rgba(90,143,123,0.25)' },
+  liveText: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureSemi, color: Colors.SUCCESS, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase' },
   modes: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md, marginBottom: Spacing['2xl'], paddingHorizontal: Spacing.xl },
-  modeCardWrap: { width: '47%' },
+  modeCardWrap: { width: '47%', flexGrow: 1 },
   modeCard: { alignItems: 'center', padding: Spacing.xl, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, borderWidth: 1, borderColor: Colors.BORDER, minHeight: 150, ...Shadow.sm },
   modeCardActive: { borderColor: Colors.PRIMARY_LIGHT, borderWidth: 2, backgroundColor: Colors.PRIMARY_DARK, ...Shadow.glow },
-  modeEmoji: { fontSize: Typography.sizes['3xl'], marginBottom: Spacing.sm },
-  modeName: { fontSize: Typography.sizes.lg, fontWeight: 600, color: Colors.TEXT_PRIMARY },
-  modeDuration: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
+  modeEmoji: { marginBottom: Spacing.sm },
+  modeName: { fontSize: Typography.sizes.lg, fontFamily: Typography.families.featureSemi, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
+  modeDuration: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.numeric, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs, letterSpacing: LetterSpacing.tight },
   timerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl },
-  modeLabel: { fontSize: Typography.sizes.md, color: Colors.PRIMARY_LIGHT, fontWeight: 600, marginBottom: Spacing.lg, textTransform: 'uppercase', letterSpacing: LetterSpacing.wide },
+  modeLabel: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureSemi, color: Colors.PRIMARY, marginBottom: Spacing.lg, textTransform: 'uppercase', letterSpacing: LetterSpacing.wide },
   timerCircle: { width: 240, height: 240, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing['2xl'] },
   timerCircleActive: { ...Shadow.glow },
-  timerText: { fontSize: Typography.sizes['4xl'], color: Colors.TEXT_PRIMARY, fontWeight: 300, letterSpacing: LetterSpacing.tight },
-  progressText: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
-  distractionText: { fontSize: Typography.sizes.sm, color: Colors.WARNING, marginBottom: Spacing.lg },
+  timerText: { fontSize: Typography.sizes['4xl'], fontFamily: Typography.families.numeric, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
+  progressText: { fontSize: Typography.sizes.md, fontFamily: Typography.families.featureMedium, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs, letterSpacing: LetterSpacing.wide },
+  distractionText: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureMedium, color: Colors.WARNING, marginBottom: Spacing.lg, letterSpacing: 0.3 },
   controls: { flexDirection: 'row', gap: Spacing.md },
   primaryBtn: { paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md, backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center', ...Shadow.sm },
   resumeBtn: { backgroundColor: Colors.SUCCESS },
-  primaryBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.md, fontWeight: 600 },
+  primaryBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.md, fontFamily: Typography.families.featureSemi, letterSpacing: 0.2 },
   secondaryBtn: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, backgroundColor: Colors.SURFACE, borderRadius: Radius.lg, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center' },
-  secondaryBtnText: { color: Colors.TEXT_PRIMARY, fontSize: Typography.sizes.md },
+  secondaryBtnText: { color: Colors.TEXT_PRIMARY, fontSize: Typography.sizes.md, fontFamily: Typography.families.featureMedium },
   dangerBtn: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, backgroundColor: Colors.DANGER_LIGHT, borderRadius: Radius.lg, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center' },
-  dangerBtnText: { color: Colors.DANGER, fontSize: Typography.sizes.md, fontWeight: 600 },
-  celebrateEmoji: { fontSize: Sizing.avatarLg, marginBottom: Spacing.lg },
-  celebrateTitle: { fontSize: Typography.sizes['3xl'], fontWeight: 800, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.sm },
-  celebrateSub: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.xl },
+  dangerBtnText: { color: Colors.DANGER, fontSize: Typography.sizes.md, fontFamily: Typography.families.featureSemi, letterSpacing: 0.2 },
+  celebrateEmoji: { marginBottom: Spacing.lg },
+  celebrateTitle: { fontSize: Typography.sizes['3xl'], fontFamily: Typography.families.display, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.sm, letterSpacing: LetterSpacing.tight },
+  celebrateSub: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.xl },
   xpPill: { backgroundColor: `${Colors.SUCCESS}22`, borderRadius: Radius.full, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm, borderWidth: 1, borderColor: Colors.SUCCESS },
-  xpPillText: { color: Colors.SUCCESS, fontSize: Typography.sizes.lg, fontWeight: 700 },
+  xpPillText: { color: Colors.SUCCESS, fontSize: Typography.sizes.lg, fontFamily: Typography.families.numeric, letterSpacing: LetterSpacing.tight },
 });

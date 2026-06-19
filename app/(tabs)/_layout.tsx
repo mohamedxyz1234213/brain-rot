@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, Redirect } from 'expo-router';
-import { Colors, Typography, Radius, Shadow, Layout, Spacing } from '../../src/constants/theme';
+import { Colors } from '../../src/constants/theme';
+import { FloatingTabBar } from '../../src/components/ui';
 import { useAuthStore } from '../../src/stores/authStore';
 
 export default function TabLayout() {
@@ -13,25 +14,11 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Colors.PRIMARY_LIGHT,
         tabBarInactiveTintColor: Colors.TEXT_SECONDARY,
-        tabBarStyle: {
-          backgroundColor: Colors.SURFACE,
-          borderTopColor: Colors.BORDER,
-          borderTopWidth: Layout.hairline,
-          height: 64,
-          paddingBottom: Spacing.sm,
-          paddingTop: Spacing.xs,
-          borderTopLeftRadius: Radius.xl,
-          borderTopRightRadius: Radius.xl,
-          ...Shadow.lg,
-        },
-        tabBarLabelStyle: {
-          fontSize: Typography.sizes.sm,
-          fontWeight: 500,
-        },
       }}
     >
       <Tabs.Screen

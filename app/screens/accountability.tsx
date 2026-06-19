@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing } from '../../src/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors, Typography, Spacing, Sizing } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 import { useAccountabilityStore } from '../../src/stores/accountabilityStore';
 
@@ -65,8 +66,11 @@ export default function AccountabilityScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={challenge.isJoined ? 'Already joined' : 'Join challenge'}
               >
+                {challenge.isJoined && (
+                  <Ionicons name="checkmark" size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} style={styles.joinBtnIcon} />
+                )}
                 <Text style={styles.joinBtnText}>
-                  {challenge.isJoined ? 'Joined ✓' : 'Join'}
+                  {challenge.isJoined ? 'Joined' : 'Join'}
                 </Text>
               </Pressable>
             </View>
@@ -179,11 +183,16 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   joinBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     backgroundColor: Colors.PRIMARY,
     borderRadius: 8,
     marginLeft: Spacing.md,
+  },
+  joinBtnIcon: {
+    marginRight: Spacing.xs,
   },
   joinBtnJoined: {
     backgroundColor: Colors.SUCCESS,
@@ -198,7 +207,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 0.5,
-    borderBottomColor: `${Colors.BORDER}33`,
+    borderBottomColor: Colors.BORDER,
   },
   rank: {
     fontSize: Typography.sizes.lg,

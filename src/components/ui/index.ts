@@ -4,4 +4,6 @@ export { ProgressBar } from './ProgressBar';
 export { CircularProgress } from './CircularProgress';
 export { SkeletonLoader, SkeletonCard } from './SkeletonLoader';
 export { EmptyState } from './EmptyState';
-export { SafeScreen, ScreenHeader } from './SafeScreen';
+export { SafeScreen, ScreenHeader, TabHeader } from './SafeScreen';
+export { HeroPanel } from './HeroPanel';
+export { FloatingTabBar } from './FloatingTabBar';

@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   optionText: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.normal },
   resultContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.xl },
   resultEmoji: { fontSize: Typography.sizes['4xl'], marginBottom: Spacing.xl },
-  resultScore: { fontSize: Typography.sizes['4xl'], color: Colors.DANGER, fontWeight: 800, marginBottom: Spacing.md, letterSpacing: LetterSpacing.tight },
+  resultScore: { fontSize: Typography.sizes['4xl'], color: Colors.DANGER, fontWeight: 700, marginBottom: Spacing.md, letterSpacing: LetterSpacing.tight },
   resultInitial: { fontSize: Typography.sizes.lg, color: Colors.PRIMARY_LIGHT, fontWeight: 600, marginBottom: Spacing.lg },
   resultTitle: { fontSize: Typography.sizes['2xl'], color: Colors.TEXT_PRIMARY, fontWeight: 700, marginBottom: Spacing.md, textAlign: 'center' },
   resultMessage: { fontSize: Typography.sizes.lg, color: Colors.TEXT_SECONDARY, textAlign: 'center', lineHeight: Typography.lineHeight.relaxed },

@@ -96,7 +96,7 @@ export default function RoastModal() {
   const emoji = PERSONA_EMOJIS[activeRoast?.persona || selectedPersona] || '🪖';
 
   return (
-    <SafeScreen style={{ backgroundColor: Colors.BACKGROUND }}>
+    <SafeScreen>
       <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
         <View style={styles.personaHeader}>
           <Text style={styles.personaEmoji}>{emoji}</Text>

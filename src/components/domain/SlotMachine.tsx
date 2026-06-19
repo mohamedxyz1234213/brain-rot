@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.PRIMARY, borderRadius: Radius.lg, marginBottom: Spacing.md,
   },
   spinBtnDisabled: { opacity: 0.5 },
-  spinBtnText: { color: '#fff', fontSize: Typography.sizes.xl, fontWeight: '700' },
+  spinBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.xl, fontWeight: '700' },
   odds: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
 });
 

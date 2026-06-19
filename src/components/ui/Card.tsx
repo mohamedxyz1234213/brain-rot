@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react';
 import { View, StyleSheet, ViewStyle, Pressable } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Colors, Radius, Spacing, Shadow, Layout, Gradients, ANIMATION } from '../../constants/theme';
+import { Colors, Radius, Spacing, Shadow, Layout, Glass, ANIMATION } from '../../constants/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -38,16 +38,14 @@ export function Card({ children, variant = 'surface', onPress, dense = false, gl
 
   const borderRadius = dense ? Radius.lg : Radius.xl;
 
-  const inner = (
+  const inner = glass ? (
+    <View style={[styles.glassBase, { borderRadius }, style]}>
+      <BlurView intensity={24} tint="light" style={[StyleSheet.absoluteFill, { borderRadius }]} />
+      <View style={[StyleSheet.absoluteFill, { borderRadius, backgroundColor: Glass.fillStrong }]} />
+      <View style={styles.childrenContainer}>{children}</View>
+    </View>
+  ) : (
     <View style={[styles.base, { borderRadius }, styles[variant], style]}>
-      {glass && (
-        <LinearGradient
-          colors={[...Gradients.surface] as unknown as [string, string]}
-          style={[StyleSheet.absoluteFill, { borderRadius }]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        />
-      )}
       <View style={styles.childrenContainer}>{children}</View>
     </View>
   );
@@ -70,6 +68,13 @@ export function Card({ children, variant = 'surface', onPress, dense = false, gl
 }
 
 const styles = StyleSheet.create({
+  glassBase: {
+    padding: Spacing.lg,
+    overflow: 'hidden',
+    borderWidth: Layout.hairline,
+    borderColor: Glass.border,
+    ...Shadow.md,
+  },
   base: {
     backgroundColor: Colors.SURFACE,
     padding: Spacing.lg,

@@ -35,7 +35,7 @@ export default function AppBlockedScreen() {
   };
 
   return (
-    <SafeScreen style={{ backgroundColor: Colors.BACKGROUND }}>
+    <SafeScreen>
       <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
         <Text style={styles.blockEmoji}>🔒</Text>
         <Text style={styles.blockTitle}>{appName} is Blocked</Text>

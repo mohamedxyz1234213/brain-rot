@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Colors, Typography, Spacing, Radius } from '../../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors, Typography, Spacing, Radius, Sizing } from '../../constants/theme';
 
 interface DhikrCounterProps {
   arabicText: string;
@@ -50,8 +51,11 @@ export function DhikrCounter({
       </Text>
 
       <Pressable style={styles.tapButton} onPress={handleTap}>
+        {isCompleted && (
+          <Ionicons name="checkmark" size={Sizing.iconMd} color={Colors.TEXT_ON_PRIMARY} style={styles.tapButtonIcon} />
+        )}
         <Text style={styles.tapButtonText}>
-          {isCompleted ? '✓ Complete' : 'Tap'}
+          {isCompleted ? 'Complete' : 'Tap'}
         </Text>
       </Pressable>
     </Animated.View>
@@ -105,13 +109,18 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   tapButton: {
+    flexDirection: 'row',
     backgroundColor: Colors.PRIMARY,
     borderRadius: Radius.lg,
     paddingVertical: Spacing.xl,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tapButtonIcon: {
+    marginRight: Spacing.xs,
   },
   tapButtonText: {
-    color: '#fff',
+    color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.lg,
     fontWeight: '700',
   },

@@ -1,19 +1,20 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Colors, Typography, Spacing } from '../../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors, Typography, Spacing, Sizing } from '../../constants/theme';
 
 interface EmptyStateProps {
-  emoji: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
 }
 
-export function EmptyState({ emoji, title, subtitle, action }: EmptyStateProps) {
+export function EmptyState({ icon, title, subtitle, action }: EmptyStateProps) {
   return (
     <Animated.View entering={FadeInDown.duration(500)} style={styles.container}>
-      <Text style={styles.emoji}>{emoji}</Text>
+      <Ionicons name={icon} size={Sizing.avatarLg} color={Colors.TEXT_SECONDARY} style={styles.icon} />
       <Text style={styles.title}>{title}</Text>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       {action && <View style={styles.action}>{action}</View>}
@@ -28,8 +29,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: Spacing['2xl'],
   },
-  emoji: {
-    fontSize: 48,
+  icon: {
     marginBottom: Spacing.lg,
   },
   title: {

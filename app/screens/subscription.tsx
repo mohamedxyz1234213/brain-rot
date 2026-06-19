@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius, Shadow, Layout, LetterSpacing } from '../../src/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors, Typography, Spacing, Radius, Shadow, Layout, LetterSpacing, Sizing } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 
 const TIERS = [
@@ -116,7 +117,7 @@ export default function SubscriptionScreen() {
             <View style={styles.featureList}>
               {tier.features.map((feature) => (
                 <View key={feature} style={styles.featureRow}>
-                  <Text style={styles.featureCheck}>✓</Text>
+                  <Ionicons name="checkmark" size={Sizing.iconSm} color={Colors.SUCCESS} style={styles.featureCheck} />
                   <Text style={styles.featureText}>{feature}</Text>
                 </View>
               ))}
@@ -220,10 +221,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   featureCheck: {
-    color: Colors.SUCCESS,
-    fontSize: Typography.sizes.md,
     marginRight: Spacing.sm,
-    fontWeight: Typography.weights.bold,
   },
   featureText: {
     fontSize: Typography.sizes.md,

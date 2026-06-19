@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Colors, Typography, Spacing, Radius, Sizing, Shadow, LetterSpacing, ANIMATION } from '../../src/constants/theme';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
-import { SafeScreen } from '../../src/components/ui/SafeScreen';
+import { SafeScreen, TabHeader } from '../../src/components/ui/SafeScreen';
 import { useReligionStore, PrayerName, PrayerStatus } from '../../src/stores/religionStore';
 import { useStreakStore } from '../../src/stores/streakStore';
 import { useXPStore } from '../../src/stores/xpStore';
@@ -86,11 +87,9 @@ export default function ReligionScreen() {
   };
 
   return (
-    <SafeScreen>
+    <SafeScreen tabBarSpacing>
+      <TabHeader eyebrow={`Method · ${method}`} title="Prayers & Worship" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <Animated.Text entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.title}>Prayers & Worship</Animated.Text>
-        <Text style={styles.methodText}>Method: {method}</Text>
-
         <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)}>
           {prayers.map((prayer, index) => (
             <Animated.View key={prayer} entering={FadeInDown.duration(300).delay(index * ANIMATION.stagger)}>
@@ -107,18 +106,18 @@ export default function ReligionScreen() {
                   {todayStatuses[prayer] === 'pending' ? (
                     <View style={styles.prayerActions}>
                       <Pressable style={[styles.statusBtn, { backgroundColor: Colors.SUCCESS }]} onPress={() => handleLogPrayer(prayer, 'on_time')} accessibilityRole="button" accessibilityLabel={`Prayed ${PRAYER_LABELS[prayer]} on time`}>
-                        <Text style={styles.statusBtnText}>✓</Text>
+                        <Ionicons name="checkmark" size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} />
                       </Pressable>
                       <Pressable style={[styles.statusBtn, { backgroundColor: Colors.WARNING }]} onPress={() => handleLogPrayer(prayer, 'late')} accessibilityRole="button" accessibilityLabel={`Prayed ${PRAYER_LABELS[prayer]} late`}>
-                        <Text style={styles.statusBtnText}>⏰</Text>
+                        <Ionicons name="time-outline" size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} />
                       </Pressable>
                       <Pressable style={[styles.statusBtn, { backgroundColor: Colors.DANGER }]} onPress={() => handleLogPrayer(prayer, 'missed')} accessibilityRole="button" accessibilityLabel={`Missed ${PRAYER_LABELS[prayer]}`}>
-                        <Text style={styles.statusBtnText}>✗</Text>
+                        <Ionicons name="close" size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} />
                       </Pressable>
                     </View>
                   ) : (
                     <View style={[styles.statusIndicator, { backgroundColor: PRAYER_STATUS_COLORS[todayStatuses[prayer]] }]}>
-                      <Text style={styles.statusText}>{todayStatuses[prayer] === 'on_time' ? '✓' : todayStatuses[prayer] === 'late' ? '⏰' : '✗'}</Text>
+                      <Ionicons name={todayStatuses[prayer] === 'on_time' ? 'checkmark' : todayStatuses[prayer] === 'late' ? 'time-outline' : 'close'} size={Sizing.iconMd} color={Colors.TEXT_ON_PRIMARY} />
                     </View>
                   )}
                 </View>
@@ -163,27 +162,23 @@ export default function ReligionScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: Spacing.lg, paddingBottom: Spacing['3xl'] },
-  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
-  methodText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs, marginBottom: Spacing.xl },
   prayerCard: { marginBottom: Spacing.md },
   prayerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   prayerLeft: { flexDirection: 'row', alignItems: 'center' },
   statusDot: { width: Spacing.sm, height: Spacing.sm, borderRadius: Radius.full, marginRight: Spacing.md },
-  prayerName: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, fontWeight: 600 },
-  prayerTime: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
+  prayerName: { fontSize: Typography.sizes.md, fontFamily: Typography.families.featureSemi, color: Colors.TEXT_PRIMARY },
+  prayerTime: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.numeric, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs },
   prayerRight: { flexDirection: 'row' },
   prayerActions: { flexDirection: 'row', gap: Spacing.sm },
   statusBtn: { width: Sizing.touchTarget, height: Sizing.touchTarget, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center', ...Shadow.sm },
-  statusBtnText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.sm, fontWeight: 700 },
   statusIndicator: { width: Sizing.iconLg + Spacing.sm, height: Sizing.iconLg + Spacing.sm, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center' },
-  statusText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.lg, fontWeight: 700 },
   sectionCard: { marginBottom: Spacing.lg },
-  sectionTitle: { fontSize: Typography.sizes.lg, fontWeight: 600, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.md },
-  quranText: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, lineHeight: Typography.lineHeight.normal },
+  sectionTitle: { fontSize: Typography.sizes.xl, fontFamily: Typography.families.displaySemi, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.md, letterSpacing: LetterSpacing.tight },
+  quranText: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, lineHeight: Typography.lineHeight.normal },
   quranActions: { marginTop: Spacing.md },
   dhikrText: { fontSize: Typography.sizes['2xl'], color: Colors.TEXT_PRIMARY, textAlign: 'center', lineHeight: Typography.lineHeight.loose, marginBottom: Spacing.sm, fontFamily: Typography.families.arabicQuran },
-  dhikrTrans: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.lg },
+  dhikrTrans: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.lg, fontStyle: 'italic' },
   dhikrButton: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.xl, paddingVertical: Spacing.xl, alignItems: 'center', minHeight: Sizing.touchTarget, ...Shadow.glow },
-  dhikrButtonText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.xl, fontWeight: 700 },
-  fastingText: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.md, lineHeight: Typography.lineHeight.normal },
+  dhikrButtonText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes['2xl'], fontFamily: Typography.families.numeric, letterSpacing: LetterSpacing.tight },
+  fastingText: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.md, lineHeight: Typography.lineHeight.normal },
 });

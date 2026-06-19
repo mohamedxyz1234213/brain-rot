@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: 'center', padding: Spacing.xl },
   heroOrb: { width: 112, height: 112, borderRadius: Radius.full, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.lg, ...Shadow.glow },
   emoji: { fontSize: Typography.sizes['4xl'], textAlign: 'center' },
-  title: { fontSize: Typography.sizes['3xl'], fontWeight: 800, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm, letterSpacing: LetterSpacing.tight },
+  title: { fontSize: Typography.sizes['3xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm, letterSpacing: LetterSpacing.tight },
   subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center', lineHeight: Typography.lineHeight.normal, marginBottom: Spacing['2xl'] },
   features: { marginBottom: Spacing['2xl'] },
   featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.BORDER },

@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   appBarBg: {
     flex: 1,
     height: 8,
-    backgroundColor: `${Colors.TEXT_SECONDARY}33`,
+    backgroundColor: Colors.SURFACE_RAISED,
     borderRadius: Radius.full,
     overflow: 'hidden',
     marginHorizontal: Spacing.sm,

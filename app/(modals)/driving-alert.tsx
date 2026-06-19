@@ -6,7 +6,7 @@ import { Button } from '../../src/components/ui/Button';
 
 export default function DrivingAlertModal() {
   return (
-    <SafeScreen style={{ backgroundColor: Colors.BLACK }}>
+    <SafeScreen>
       <View style={styles.content}>
         <Text style={styles.icon}>🚗</Text>
         <Text style={styles.title}>YOU ARE DRIVING</Text>
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   icon: { fontSize: Sizing.avatarLg, marginBottom: Spacing.xl },
   title: { fontSize: Typography.sizes['4xl'], fontWeight: '900', color: Colors.DANGER, textAlign: 'center', marginBottom: Spacing.lg, letterSpacing: LetterSpacing.tight },
   subtitle: { fontSize: Typography.sizes.lg, color: Colors.TEXT_PRIMARY, textAlign: 'center', lineHeight: Typography.lineHeight.relaxed },
-  divider: { width: '80%', height: 1, backgroundColor: Colors.SURFACE, marginVertical: Spacing['2xl'] },
+  divider: { width: '80%', height: 1, backgroundColor: Colors.BORDER, marginVertical: Spacing['2xl'] },
   info: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing['2xl'] },
   emergencyButton: { width: '100%', borderRadius: Radius.xl, ...Shadow.glow },
 });

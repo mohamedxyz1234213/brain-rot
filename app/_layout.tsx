@@ -2,7 +2,17 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { Text as RNText, TextInput as RNTextInput } from 'react-native';
 import 'react-native-reanimated';
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
+import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
+import { PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display/600SemiBold';
+import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display/700Bold';
+import { SpaceGrotesk_500Medium } from '@expo-google-fonts/space-grotesk/500Medium';
+import { SpaceGrotesk_600SemiBold } from '@expo-google-fonts/space-grotesk/600SemiBold';
+import { SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk/700Bold';
 import { Colors } from '../src/constants/theme';
 
 import '../src/i18n';
@@ -15,10 +25,35 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync();
 
+// Make Inter the default body font app-wide, without editing every Text style.
+// Per-component styles that set their own fontFamily still win.
+let defaultFontApplied = false;
+function applyDefaultFont() {
+  if (defaultFontApplied) return;
+  const setDefault = (Comp: any) => {
+    Comp.defaultProps = Comp.defaultProps || {};
+    Comp.defaultProps.style = [{ fontFamily: 'Inter_400Regular' }, Comp.defaultProps.style];
+  };
+  setDefault(RNText);
+  setDefault(RNTextInput);
+  defaultFontApplied = true;
+}
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    PlayfairDisplay_600SemiBold,
+    PlayfairDisplay_700Bold,
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold,
   });
+
+  if (loaded) applyDefaultFont();
 
   useEffect(() => {
     if (error) throw error;

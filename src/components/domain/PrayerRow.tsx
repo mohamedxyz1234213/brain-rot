@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Colors, Typography, Spacing, Radius } from '../../constants/theme';
@@ -22,12 +23,12 @@ const PRAYER_LABELS: Record<PrayerName, string> = {
   isha: 'Isha',
 };
 
-const PRAYER_EMOJIS: Record<PrayerName, string> = {
-  fajr: '🌅',
-  dhuhr: '☀️',
-  asr: '🌤️',
-  maghrib: '🌆',
-  isha: '🌙',
+const PRAYER_ICONS: Record<PrayerName, React.ComponentProps<typeof Ionicons>['name']> = {
+  fajr: 'cloudy-night-outline',
+  dhuhr: 'sunny-outline',
+  asr: 'partly-sunny-outline',
+  maghrib: 'cloudy-outline',
+  isha: 'moon-outline',
 };
 
 const STATUS_COLORS: Record<PrayerStatus, string> = {
@@ -42,7 +43,7 @@ export function PrayerRow({ name, time, status, onLog }: PrayerRowProps) {
     <Animated.View entering={FadeIn.duration(300)}>
       <View style={styles.container}>
         <View style={styles.left}>
-          <Text style={styles.emoji}>{PRAYER_EMOJIS[name]}</Text>
+          <Ionicons name={PRAYER_ICONS[name]} size={24} color={Colors.PRIMARY_LIGHT} style={styles.icon} />
           <View>
             <Text style={styles.name}>{PRAYER_LABELS[name]}</Text>
             <Text style={styles.time}>{time}</Text>
@@ -59,28 +60,30 @@ export function PrayerRow({ name, time, status, onLog }: PrayerRowProps) {
                   onLog(name, 'on_time');
                 }}
               >
-                <Text style={styles.statusBtnText}>✓</Text>
+                <Ionicons name="checkmark" size={18} color={Colors.TEXT_ON_PRIMARY} />
               </Pressable>
               <Pressable
                 style={[styles.statusBtn, { backgroundColor: Colors.WARNING }]}
                 onPress={() => onLog(name, 'late')}
               >
-                <Text style={styles.statusBtnText}>⏰</Text>
+                <Ionicons name="time-outline" size={18} color={Colors.TEXT_ON_PRIMARY} />
               </Pressable>
               <Pressable
                 style={[styles.statusBtn, { backgroundColor: Colors.DANGER }]}
                 onPress={() => onLog(name, 'missed')}
               >
-                <Text style={styles.statusBtnText}>✗</Text>
+                <Ionicons name="close" size={18} color={Colors.TEXT_ON_PRIMARY} />
               </Pressable>
             </View>
           ) : (
             <View
               style={[styles.statusIndicator, { backgroundColor: STATUS_COLORS[status] }]}
             >
-              <Text style={styles.statusText}>
-                {status === 'on_time' ? '✓' : status === 'late' ? '⏰' : '✗'}
-              </Text>
+              <Ionicons
+                name={status === 'on_time' ? 'checkmark' : status === 'late' ? 'time-outline' : 'close'}
+                size={20}
+                color={Colors.TEXT_ON_PRIMARY}
+              />
             </View>
           )}
         </View>
@@ -106,8 +109,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  emoji: {
-    fontSize: 24,
+  icon: {
     marginRight: Spacing.md,
   },
   name: {
@@ -132,21 +134,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  statusBtnText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
   statusIndicator: {
     width: 36,
     height: 36,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });

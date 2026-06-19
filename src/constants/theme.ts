@@ -1,26 +1,32 @@
+// AURA Design System — calm warm-light palette built on three signature tones:
+//   teal  #43686F  (primary accent / actions / active states)
+//   gray  #B0B1B0  (neutral secondary / chips / dividers)
+//   cream #F2E6DA  (canvas)
+// Text is a warm deep-slate that harmonizes with the teal. Token names are
+// preserved so every screen inherits the re-skin from this single source.
 export const Colors = {
-  BACKGROUND: '#0F1419',
-  SURFACE: '#1A2332',
-  SURFACE_RAISED: '#243447',
-  PRIMARY: '#43686F',
-  PRIMARY_LIGHT: '#6A9099',
-  PRIMARY_DARK: '#2C4A50',
-  SECONDARY: '#8B949E',
-  SECONDARY_LIGHT: '#B0B1B0',
-  SECONDARY_DARK: '#6E7681',
-  DANGER: '#F85149',
-  DANGER_LIGHT: '#F8514933',
-  WARNING: '#D29922',
-  WARNING_LIGHT: '#D2992233',
-  SUCCESS: '#2EA043',
-  SUCCESS_LIGHT: '#2EA04333',
-  TEXT_PRIMARY: '#E6EDF3',
-  TEXT_SECONDARY: '#8B949E',
-  TEXT_ON_PRIMARY: '#FFFFFF',
-  TEXT_ON_SURFACE: '#E6EDF3',
-  BORDER: '#30363D',
-  BORDER_LIGHT: '#21262D',
-  OVERLAY: '#0F1419CC',
+  BACKGROUND: '#F2E6DA', // warm cream canvas (signature)
+  SURFACE: '#FFFFFF', // white cards / elevated surfaces
+  SURFACE_RAISED: '#E8E2D9', // inputs, nested containers (warm off-white)
+  PRIMARY: '#43686F', // teal — primary CTAs, highlights, active states (signature)
+  PRIMARY_LIGHT: '#577E86', // lighter teal — hover / active tint
+  PRIMARY_DARK: '#324E54', // deep teal — pressed, borders
+  SECONDARY: '#B0B1B0', // neutral gray — secondary / chips / muted accents (signature)
+  SECONDARY_LIGHT: '#C7C8C7',
+  SECONDARY_DARK: '#8E8F8E',
+  DANGER: '#B85C5C', // muted brick red for errors / negative trends
+  DANGER_LIGHT: 'rgba(184,92,92,0.12)',
+  WARNING: '#C2914E', // muted clay — semantic warnings only
+  WARNING_LIGHT: 'rgba(194,145,78,0.14)',
+  SUCCESS: '#5A8F7B', // deep sage — success / positive trends
+  SUCCESS_LIGHT: 'rgba(90,143,123,0.14)',
+  TEXT_PRIMARY: '#283133', // deep warm slate (never pure #000)
+  TEXT_SECONDARY: 'rgba(40,49,51,0.55)', // muted meta text
+  TEXT_ON_PRIMARY: '#F2E6DA', // CREAM text on teal / accent surfaces
+  TEXT_ON_SURFACE: '#283133',
+  BORDER: 'rgba(40,49,51,0.10)', // subtle slate hairline
+  BORDER_LIGHT: 'rgba(40,49,51,0.05)',
+  OVERLAY: 'rgba(40,49,51,0.45)',
   BLACK: '#000000',
 };
 
@@ -36,19 +42,31 @@ export const Typography = {
     '4xl': 38,
   },
   families: {
-    display: 'System',
-    body: 'System',
+    display: 'PlayfairDisplay_700Bold', // editorial serif — big headlines only
+    displaySemi: 'PlayfairDisplay_600SemiBold',
+    // Space Grotesk — cool geometric bold. Numbers, tab labels, eyebrows, stats.
+    feature: 'SpaceGrotesk_700Bold',
+    featureSemi: 'SpaceGrotesk_600SemiBold',
+    featureMedium: 'SpaceGrotesk_500Medium',
+    numeric: 'SpaceGrotesk_700Bold', // tabular-feel big numbers
+    body: 'Inter_400Regular',
+    bodyMedium: 'Inter_500Medium',
+    bodySemibold: 'Inter_600SemiBold',
+    bodyBold: 'Inter_700Bold',
     arabicUI: 'Cairo',
     arabicQuran: 'Amiri',
     mono: 'SpaceMono',
   },
+  // Premium system uses 400/500/600/700 only — no thin 300, no heavy 800/900.
+  // `light` and `extrabold` are kept as aliases (clamped into range) so existing
+  // callers compile while honoring the weight discipline.
   weights: {
-    light: '300' as const,
+    light: '400' as const,
     regular: '400' as const,
     medium: '500' as const,
     semibold: '600' as const,
     bold: '700' as const,
-    extrabold: '800' as const,
+    extrabold: '700' as const,
   },
   lineHeight: {
     tight: 18,
@@ -90,49 +108,70 @@ export const Sizing = {
 };
 
 export const Gradients = {
-  brand: ['#6A9099', '#43686F'] as const,
-  brandDark: ['#43686F', '#2C4A50'] as const,
-  surface: ['#1A2332', '#141B27'] as const,
-  success: ['#2EA043', '#1F7A33'] as const,
-  danger: ['#F85149', '#C23A33'] as const,
-  score: ['#F85149', '#D29922', '#2EA043'] as const,
+  brand: ['#577E86', '#43686F'] as const, // teal sheen for primary CTAs (signature)
+  brandDark: ['#43686F', '#324E54'] as const,
+  surface: ['#FFFFFF', '#FBF8F4'] as const, // subtle top-down warmth on cards
+  success: ['#7DB9A8', '#5A8F7B'] as const,
+  danger: ['#C97B7B', '#B85C5C'] as const,
+  score: ['#B85C5C', '#C2914E', '#5A8F7B'] as const, // low->mid->high brain score
+  // App canvas — warm cream up top descending into a cool teal-tinted base.
+  // A true two-color blend (cream -> pale teal) that the AuroraBackground
+  // layers drifting blurred orbs over. Single source of the app background.
+  canvas: ['#F6ECE0', '#E7EAE2', '#D6E2DE'] as const,
+  // Teal hero panels / feature spotlights.
+  hero: ['#577E86', '#43686F', '#324E54'] as const,
+  // Soft tonal wash for decorative blobs over the canvas (very low opacity).
+  glow: ['rgba(67,104,111,0.18)', 'rgba(67,104,111,0)'] as const,
+};
+
+// Glassmorphism base layers — translucent warm white that lets the canvas
+// gradient read through the card, finished with a bright top-light rim.
+export const Glass = {
+  fill: 'rgba(255,255,255,0.58)',
+  fillStrong: 'rgba(255,255,255,0.72)',
+  border: 'rgba(255,255,255,0.65)', // bright glass rim highlight
+  borderSlate: 'rgba(40,49,51,0.08)', // subtle slate hairline alt
 };
 
 export const Layout = {
   hairline: 1,
   maxContentWidth: 520,
+  // Vertical space a tab screen must leave clear for the floating tab bar
+  // (bar height + gap above the home indicator).
+  tabBarClearance: 84,
 };
 
 export const LetterSpacing = { tight: -0.4, normal: 0, wide: 1.5 };
 
+// Slate-tinted shadows (rgb 40,49,51) — natural soft depth on the warm surface.
 export const Shadow = {
   sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    shadowColor: '#283133',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 2,
   },
   md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowColor: '#283133',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 4,
   },
   lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowColor: '#283133',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
     elevation: 8,
   },
   glow: {
-    shadowColor: '#6A9099',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowColor: '#43686F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    elevation: 8,
   },
 };
 
@@ -162,6 +201,7 @@ export const theme = {
   shadow: Shadow,
   animation: ANIMATION,
   gradients: Gradients,
+  glass: Glass,
   layout: Layout,
   letterSpacing: LetterSpacing,
 };

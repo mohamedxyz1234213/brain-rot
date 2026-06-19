@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0D1117",
+        "backgroundColor": "#0E0B04",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
       "permissions": [
@@ -41,7 +41,7 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#0D1117"
+          "backgroundColor": "#0E0B04"
         }
       ],
       "expo-secure-store"

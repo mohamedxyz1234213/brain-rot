@@ -38,7 +38,7 @@ export default function InterventionModal() {
   if (step < INTERVENTIONISTS.length) {
     const person = INTERVENTIONISTS[step];
     return (
-      <SafeScreen style={{ backgroundColor: Colors.BACKGROUND }}>
+      <SafeScreen>
         <Animated.View entering={FadeIn.duration(400)} style={styles.content}>
           <Text style={styles.stepIndicator}>Intervention #{step + 1} of {INTERVENTIONISTS.length}</Text>
           <Text style={styles.avatar}>{person.avatar}</Text>
@@ -54,7 +54,7 @@ export default function InterventionModal() {
   }
 
   return (
-      <SafeScreen style={{ backgroundColor: Colors.BACKGROUND }}>
+      <SafeScreen>
       <Animated.View entering={FadeIn.duration(400)} style={styles.content}>
         <Text style={styles.finalEmoji}>⚠️</Text>
         <Text style={styles.finalTitle}>Choose Your Path</Text>

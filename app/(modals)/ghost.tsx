@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
@@ -57,7 +58,7 @@ export default function GhostScreen() {
     <SafeScreen>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
-          <Text style={styles.closeText}>✕</Text>
+          <Ionicons name="close" size={Sizing.iconLg} color={Colors.TEXT_SECONDARY} />
         </Pressable>
         <Text style={styles.title}>👻 Ghost of Productivity Past</Text>
         <Text style={styles.subtitle}>What if you had followed through?</Text>
@@ -108,10 +109,6 @@ const styles = StyleSheet.create({
     top: Spacing.sm,
     right: Spacing.xl,
     padding: Spacing.sm,
-  },
-  closeText: {
-    fontSize: Typography.sizes.xl,
-    color: Colors.TEXT_SECONDARY,
   },
   title: {
     fontSize: Typography.sizes.xl,

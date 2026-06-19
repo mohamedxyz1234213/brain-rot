@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInLeft, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Task } from '../../services/backend/interface';
-import { Colors, Typography, Spacing, Radius, ANIMATION } from '../../constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing, ANIMATION } from '../../constants/theme';
 
 interface TaskRowProps {
   task: Task;
@@ -50,7 +51,7 @@ export function TaskRow({ task, onComplete, onPress }: TaskRowProps) {
           style={[styles.checkbox, task.status === 'completed' && styles.checkboxCompleted]}
           onPress={handleComplete}
         >
-          {task.status === 'completed' && <Text style={styles.checkmark}>✓</Text>}
+          {task.status === 'completed' && <Ionicons name="checkmark" size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} />}
         </Pressable>
 
         <View style={styles.content}>
@@ -58,15 +59,20 @@ export function TaskRow({ task, onComplete, onPress }: TaskRowProps) {
             <Text style={[styles.title, task.status === 'completed' && styles.titleCompleted]} numberOfLines={1}>
               {task.title}
             </Text>
-            {task.isEatTheFrog && <Text style={styles.frogBadge}>🐸</Text>}
-            {task.isAppUnlocker && <Text style={styles.unlockBadge}>🔓</Text>}
+            {task.isEatTheFrog && <Ionicons name="flame" size={Sizing.iconSm} color={Colors.WARNING} style={styles.frogBadge} />}
+            {task.isAppUnlocker && <Ionicons name="lock-open-outline" size={Sizing.iconSm} color={Colors.PRIMARY_LIGHT} style={styles.unlockBadge} />}
           </View>
 
           <View style={styles.metaRow}>
             <View style={[styles.priorityDot, { backgroundColor: PRIORITY_COLORS[task.priority] }]} />
             <Text style={styles.meta}>{task.priority}</Text>
             {task.estimatedMinutes && <Text style={styles.meta}> • {task.estimatedMinutes}min</Text>}
-            {task.postponeCount >= 3 && <Text style={styles.avoiderBadge}>⚡ Chronic Avoider</Text>}
+            {task.postponeCount >= 3 && (
+              <View style={styles.avoiderBadge}>
+                <Ionicons name="warning-outline" size={Typography.sizes.sm} color={Colors.WARNING} />
+                <Text style={styles.avoiderText}>Chronic Avoider</Text>
+              </View>
+            )}
           </View>
         </View>
       </Pressable>
@@ -100,15 +106,15 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.SUCCESS,
     borderColor: Colors.SUCCESS,
   },
-  checkmark: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
   content: { flex: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'center' },
   title: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, flex: 1 },
   titleCompleted: { textDecorationLine: 'line-through', color: Colors.TEXT_SECONDARY },
-  frogBadge: { fontSize: 16, marginLeft: Spacing.sm },
-  unlockBadge: { fontSize: 16, marginLeft: Spacing.xs },
+  frogBadge: { marginLeft: Spacing.sm },
+  unlockBadge: { marginLeft: Spacing.xs },
   metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: Spacing.xs },
   priorityDot: { width: 8, height: 8, borderRadius: 4, marginRight: Spacing.xs },
   meta: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
-  avoiderBadge: { fontSize: Typography.sizes.sm, color: Colors.WARNING, marginLeft: Spacing.sm },
+  avoiderBadge: { flexDirection: 'row', alignItems: 'center', marginLeft: Spacing.sm, gap: Spacing.xs },
+  avoiderText: { fontSize: Typography.sizes.sm, color: Colors.WARNING },
 });

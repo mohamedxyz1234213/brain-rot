@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius } from '../../../src/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors, Typography, Spacing, Radius, Sizing } from '../../../src/constants/theme';
 import { Card } from '../../../src/components/ui/Card';
 import { Button } from '../../../src/components/ui/Button';
 import { useScreenTimeStore } from '../../../src/stores/screenTimeStore';
@@ -63,7 +64,7 @@ export default function SetupLimitsScreen() {
               <View style={styles.appRow}>
                 <Pressable style={styles.appSelect} onPress={() => toggleApp(app.bundleId)}>
                   <View style={[styles.checkbox, selectedApps.has(app.bundleId) && styles.checkboxActive]}>
-                    {selectedApps.has(app.bundleId) && <Text style={styles.checkmark}>✓</Text>}
+                    {selectedApps.has(app.bundleId) && <Ionicons name="checkmark" size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} />}
                   </View>
                   <Text style={styles.appIcon}>{app.icon}</Text>
                   <Text style={styles.appName}>{app.name}</Text>
@@ -103,7 +104,6 @@ const styles = StyleSheet.create({
   appSelect: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   checkbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
   checkboxActive: { backgroundColor: Colors.SUCCESS, borderColor: Colors.SUCCESS },
-  checkmark: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
   appIcon: { fontSize: 24, marginRight: Spacing.sm },
   appName: { fontSize: Typography.sizes.md, color: Colors.TEXT_ON_SURFACE, fontWeight: '500' },
   limitControls: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },

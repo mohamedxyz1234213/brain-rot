@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Colors, Typography, Spacing, Radius } from '../../../src/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors, Typography, Spacing, Radius, Sizing } from '../../../src/constants/theme';
 import { Card } from '../../../src/components/ui/Card';
 import { Button } from '../../../src/components/ui/Button';
 import { useReligionStore } from '../../../src/stores/religionStore';
@@ -64,7 +65,7 @@ export default function SetupReligionScreen() {
             <Card key={feature.key} style={styles.featureCard}>
               <Pressable style={styles.featureRow} onPress={() => toggleFeature(feature.key)}>
                 <View style={[styles.featureCheckbox, enabledFeatures.has(feature.key) && styles.featureCheckboxActive]}>
-                  {enabledFeatures.has(feature.key) && <Text style={styles.checkmark}>✓</Text>}
+                  {enabledFeatures.has(feature.key) && <Ionicons name="checkmark" size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} />}
                 </View>
                 <View style={styles.featureInfo}>
                   <Text style={styles.featureIcon}>{feature.icon}</Text>
@@ -102,7 +103,6 @@ const styles = StyleSheet.create({
   featureRow: { flexDirection: 'row', alignItems: 'center' },
   featureCheckbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
   featureCheckboxActive: { backgroundColor: Colors.SUCCESS, borderColor: Colors.SUCCESS },
-  checkmark: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
   featureInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   featureIcon: { fontSize: 24, marginRight: Spacing.md },
   featureLabel: { fontSize: Typography.sizes.md, color: Colors.TEXT_ON_SURFACE, fontWeight: '500' },

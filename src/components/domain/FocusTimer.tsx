@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Colors, Typography, Spacing, Radius, ANIMATION } from '../../constants/theme';
+import { Colors, Typography, Spacing, Radius, Sizing } from '../../constants/theme';
 
 type FocusMode = 'pomodoro' | 'deep_work' | 'flow' | 'quick_sprint';
 
@@ -21,10 +22,10 @@ interface FocusTimerProps {
 }
 
 const MODE_LABELS: Record<FocusMode, string> = {
-  pomodoro: 'Pomodoro 🍅',
-  deep_work: 'Deep Work 🧠',
-  flow: 'Flow State 🌊',
-  quick_sprint: 'Quick Sprint ⚡',
+  pomodoro: 'Pomodoro',
+  deep_work: 'Deep Work',
+  flow: 'Flow State',
+  quick_sprint: 'Quick Sprint',
 };
 
 export function FocusTimer({
@@ -75,27 +76,29 @@ export function FocusTimer({
       </View>
 
       {distractionCount > 0 && (
-        <Text style={styles.distractionCount}>
-          😵 {distractionCount} distractions
-        </Text>
+        <View style={styles.distractionRow}>
+          <Ionicons name="pulse-outline" size={Typography.sizes.sm} color={Colors.WARNING} />
+          <Text style={styles.distractionCount}>{distractionCount} distractions</Text>
+        </View>
       )}
 
       <View style={styles.controls}>
         <Pressable style={styles.secondaryBtn} onPress={handleDistraction}>
-          <Text style={styles.secondaryBtnText}>😵 Distracted</Text>
+          <Ionicons name="alert-circle-outline" size={Sizing.iconSm} color={Colors.TEXT_PRIMARY} />
+          <Text style={styles.secondaryBtnText}>Distracted</Text>
         </Pressable>
 
         <Pressable
           style={[styles.primaryBtn, isPaused && styles.resumeBtn]}
           onPress={togglePause}
         >
-          <Text style={styles.primaryBtnText}>
-            {isPaused ? '▶ Resume' : '⏸ Pause'}
-          </Text>
+          <Ionicons name={isPaused ? 'play' : 'pause'} size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} />
+          <Text style={styles.primaryBtnText}>{isPaused ? 'Resume' : 'Pause'}</Text>
         </Pressable>
 
         <Pressable style={styles.dangerBtn} onPress={onCancel}>
-          <Text style={styles.dangerBtnText}>✗ End</Text>
+          <Ionicons name="close" size={Sizing.iconSm} color={Colors.DANGER} />
+          <Text style={styles.dangerBtnText}>End</Text>
         </Pressable>
       </View>
     </Animated.View>
@@ -136,7 +139,7 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 48,
     color: Colors.TEXT_PRIMARY,
-    fontWeight: '200',
+    fontWeight: '400',
     fontVariant: ['tabular-nums'],
   },
   progressText: {
@@ -144,16 +147,24 @@ const styles = StyleSheet.create({
     color: Colors.TEXT_SECONDARY,
     marginTop: Spacing.xs,
   },
+  distractionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.lg,
+  },
   distractionCount: {
     fontSize: Typography.sizes.sm,
     color: Colors.WARNING,
-    marginBottom: Spacing.lg,
   },
   controls: {
     flexDirection: 'row',
     gap: Spacing.md,
   },
   primaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     backgroundColor: Colors.PRIMARY,
@@ -163,11 +174,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.SUCCESS,
   },
   primaryBtnText: {
-    color: '#fff',
+    color: Colors.TEXT_ON_PRIMARY,
     fontSize: Typography.sizes.md,
     fontWeight: '600',
   },
   secondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     backgroundColor: Colors.SURFACE,
@@ -180,6 +194,9 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
   },
   dangerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     backgroundColor: `${Colors.DANGER}22`,

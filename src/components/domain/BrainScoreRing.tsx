@@ -12,13 +12,13 @@ interface BrainScoreRingProps {
 }
 
 const LEVEL_LABELS: Record<string, string> = {
-  zombie: 'Zombie 🧟',
-  waking_up: 'Waking Up 😴',
-  struggling: 'Struggling 😤',
-  recovering: 'Recovering 💪',
-  healing: 'Healing 🌱',
-  thriving: 'Thriving ⚡',
-  ascended: 'Ascended 🧘',
+  zombie: 'Zombie',
+  waking_up: 'Waking Up',
+  struggling: 'Struggling',
+  recovering: 'Recovering',
+  healing: 'Healing',
+  thriving: 'Thriving',
+  ascended: 'Ascended',
 };
 
 function getScoreLevel(score: number): string {
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
   score: {
     fontSize: Typography.sizes['4xl'],
-    fontWeight: '800',
+    fontWeight: '700',
   },
   label: {
     fontSize: Typography.sizes.sm,

@@ -9,14 +9,16 @@ interface AvatarCharacterProps {
   size?: number;
 }
 
+// Evolution from dull/gray (brain-rotted) to warm champagne/gold (ascended),
+// glow ramps in the brand gold to match the premium palette.
 const STAGE_COLORS = [
-  { skin: '#666666', glow: 'transparent', bg: '#1a1a1a' },
-  { skin: '#888888', glow: 'transparent', bg: '#1a2020' },
-  { skin: '#99aa99', glow: 'transparent', bg: '#1a2525' },
-  { skin: '#aabbaa', glow: '#43686F33', bg: '#1a2a2a' },
-  { skin: '#bbccbb', glow: '#43686F66', bg: '#1a3030' },
-  { skin: '#ccddcc', glow: '#43686F99', bg: '#1a3535' },
-  { skin: '#eeffee', glow: '#43686FCC', bg: '#1a3a3a' },
+  { skin: '#6E6A60', glow: 'transparent', bg: '#1A140C' },
+  { skin: '#8C8576', glow: 'transparent', bg: '#1F1810' },
+  { skin: '#A9947D', glow: 'transparent', bg: '#241C12' },
+  { skin: '#C6BAAC', glow: '#F3E49C33', bg: '#2A2016' },
+  { skin: '#D9CBA8', glow: '#F3E49C66', bg: '#302418' },
+  { skin: '#E8D9A8', glow: '#F3E49C99', bg: '#352819' },
+  { skin: '#F5EAC0', glow: '#F3E49CCC', bg: '#3A2C1B' },
 ];
 
 const STAGE_LABELS = [

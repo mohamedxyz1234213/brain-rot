@@ -1,9 +1,23 @@
-import React, { useCallback } from 'react';
-import { Pressable, Text, StyleSheet, View, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { Pressable, Text, StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Colors, Radius, Spacing, Typography, Sizing, Shadow, Gradients, ANIMATION } from '../../constants/theme';
+
+// Shimmer/pulse loading indicator — the design system bans spinning dots.
+function LoadingPulse({ color }: { color: string }) {
+  const opacity = useSharedValue(0.35);
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withTiming(1, { duration: 700, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true,
+    );
+  }, []);
+  const animated = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  return <Animated.View style={[styles.pulse, { backgroundColor: color }, animated]} />;
+}
 
 interface ButtonProps {
   title: string;
@@ -40,7 +54,7 @@ export function Button({
   }, []);
 
   const content = loading ? (
-    <ActivityIndicator color={variant === 'ghost' ? Colors.PRIMARY_LIGHT : Colors.TEXT_ON_PRIMARY} />
+    <LoadingPulse color={variant === 'ghost' || variant === 'secondary' ? Colors.PRIMARY_LIGHT : Colors.TEXT_ON_PRIMARY} />
   ) : (
     <Text style={[styles.text, styles[`text_${variant}`], styles[`text_${size}`], textStyle]}>
       {title}
@@ -98,7 +112,8 @@ const styles = StyleSheet.create({
   size_lg: { paddingVertical: Spacing.lg, paddingHorizontal: Spacing['2xl'] },
   disabled: { opacity: 0.5, elevation: 0, shadowOpacity: 0 },
   content: { alignItems: 'center', justifyContent: 'center' },
-  text: { fontWeight: Typography.weights.semibold },
+  pulse: { width: 56, height: 8, borderRadius: Radius.full },
+  text: { fontFamily: Typography.families.featureSemi, letterSpacing: 0.2 },
   text_primary: { color: Colors.TEXT_ON_PRIMARY },
   text_secondary: { color: Colors.TEXT_PRIMARY },
   text_danger: { color: Colors.TEXT_ON_PRIMARY },

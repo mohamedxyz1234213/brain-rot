@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors, Typography, Spacing, Radius, Sizing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
@@ -17,7 +18,7 @@ export default function BrainScanModal() {
     <SafeScreen>
       <View style={{ flex: 1 }}>
         <Pressable style={styles.closeBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close">
-          <Text style={styles.closeText}>✕</Text>
+          <Ionicons name="close" size={Sizing.iconLg} color={Colors.TEXT_SECONDARY} />
         </Pressable>
 
         <ScrollView contentContainerStyle={styles.content}>
@@ -81,10 +82,6 @@ const styles = StyleSheet.create({
     right: Spacing.xl,
     zIndex: 10,
     padding: Spacing.sm,
-  },
-  closeText: {
-    fontSize: Typography.sizes.xl,
-    color: Colors.TEXT_SECONDARY,
   },
   content: {
     paddingTop: Spacing['2xl'],

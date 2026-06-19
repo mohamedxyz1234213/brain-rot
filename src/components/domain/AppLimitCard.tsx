@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { AppLimit } from '../../services/backend/interface';
 import { Colors, Typography, Spacing, Radius, ANIMATION } from '../../constants/theme';
 
@@ -32,7 +33,12 @@ export function AppLimitCard({ limit, minutesUsed }: AppLimitCardProps) {
       </View>
 
       <View style={styles.footer}>
-        {limit.isHardBlock && <Text style={styles.badge}>🔒 Hard Block</Text>}
+        {limit.isHardBlock && (
+          <View style={styles.badge}>
+            <Ionicons name="lock-closed" size={12} color={Colors.DANGER} style={styles.badgeIcon} />
+            <Text style={styles.badgeText}>Hard Block</Text>
+          </View>
+        )}
         {isOverLimit && (
           <Text style={styles.overText}>
             +{minutesUsed - limit.dailyLimitMinutes}m over
@@ -87,6 +93,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badgeIcon: {
+    marginRight: 4,
+  },
+  badgeText: {
     fontSize: Typography.sizes.xs,
     color: Colors.DANGER,
   },

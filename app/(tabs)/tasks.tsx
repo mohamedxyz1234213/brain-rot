@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, TextInput, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, TextInput, Modal } from 'react-native';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Colors, Typography, Spacing, Radius, Sizing, Shadow, LetterSpacing, ANIMATION } from '../../src/constants/theme';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
 import { EmptyState } from '../../src/components/ui/EmptyState';
-import { SafeScreen } from '../../src/components/ui/SafeScreen';
+import { SafeScreen, TabHeader } from '../../src/components/ui/SafeScreen';
+import { SkeletonLoader } from '../../src/components/ui/SkeletonLoader';
 import { useTaskStore } from '../../src/stores/taskStore';
 import { useXPStore } from '../../src/stores/xpStore';
 import { useStreakStore } from '../../src/stores/streakStore';
@@ -113,14 +115,17 @@ export default function TasksScreen() {
   }, [activeTab, tasks]);
 
   return (
-    <SafeScreen>
-      <View style={styles.header}>
-        <Text style={styles.title}>Tasks</Text>
-        <View style={styles.headerActions}>
-          <Button title="✨ Plan Day" onPress={openPlanModal} variant="ghost" size="sm" />
-          <Button title="+ Add" onPress={() => setShowAddModal(true)} size="sm" />
-        </View>
-      </View>
+    <SafeScreen tabBarSpacing>
+      <TabHeader
+        eyebrow="Get it done"
+        title="Tasks"
+        rightAction={
+          <>
+            <Button title="Plan Day" onPress={openPlanModal} variant="ghost" size="sm" />
+            <Button title="+ Add" onPress={() => setShowAddModal(true)} size="sm" />
+          </>
+        }
+      />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabs}>
         {TABS.map((tab) => (
@@ -139,7 +144,7 @@ export default function TasksScreen() {
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
         {filteredTasks.length === 0 ? (
           <EmptyState
-            emoji="📝"
+            icon="clipboard-outline"
             title="No tasks here"
             subtitle="Add your first task to start healing your brain"
             action={<Button title="Add Task" onPress={() => setShowAddModal(true)} />}
@@ -155,16 +160,16 @@ export default function TasksScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={`Complete: ${task.title}`}
                   >
-                    {task.status === 'completed' && <Text style={styles.checkmark}>✓</Text>}
+                    {task.status === 'completed' && <Ionicons name="checkmark" size={Sizing.iconSm} color={Colors.TEXT_ON_PRIMARY} />}
                   </Pressable>
                   <View style={styles.taskContent}>
                     <View style={styles.titleRow}>
                       <Text style={[styles.taskTitle, task.status === 'completed' && styles.taskTitleCompleted]} numberOfLines={1}>
                         {task.title}
                       </Text>
-                      {task.isEatTheFrog && <Text style={styles.badge}>🐸</Text>}
-                      {task.isAppUnlocker && <Text style={styles.badge}>🔓</Text>}
-                      {task.postponeCount >= 3 && <Text style={styles.badge}>⚡</Text>}
+                      {task.isEatTheFrog && <Ionicons name="flame" size={Sizing.iconSm} color={Colors.WARNING} style={styles.badge} />}
+                      {task.isAppUnlocker && <Ionicons name="lock-open-outline" size={Sizing.iconSm} color={Colors.PRIMARY_LIGHT} style={styles.badge} />}
+                      {task.postponeCount >= 3 && <Ionicons name="warning-outline" size={Sizing.iconSm} color={Colors.WARNING} style={styles.badge} />}
                     </View>
                     <View style={styles.metaRow}>
                       <View style={[styles.priorityDot, { backgroundColor: PRIORITY_COLORS[task.priority] }]} />
@@ -174,7 +179,7 @@ export default function TasksScreen() {
                   </View>
                   {task.status === 'pending' && (
                     <Pressable style={styles.abandonBtn} onPress={() => handleAbandon(task.id)} accessibilityRole="button" accessibilityLabel={`Abandon: ${task.title}`}>
-                      <Text style={styles.abandonText}>✗</Text>
+                      <Ionicons name="close" size={Sizing.iconMd} color={Colors.DANGER} />
                     </Pressable>
                   )}
                 </View>
@@ -222,7 +227,12 @@ export default function TasksScreen() {
         <View style={styles.modalOverlay}>
           <Animated.View entering={FadeInLeft.duration(300)} style={[styles.modalContent, styles.planContent]}>
             <Text style={styles.modalTitle}>Plan My Day</Text>
-            {planOffline && <Text style={styles.offlineNote}>⚡ Offline planner — connect AI for smarter scheduling</Text>}
+            {planOffline && (
+              <View style={styles.offlineNote}>
+                <Ionicons name="flash-outline" size={Typography.sizes.sm} color={Colors.WARNING} />
+                <Text style={styles.offlineNoteText}>Offline planner — connect AI for smarter scheduling</Text>
+              </View>
+            )}
 
             <View style={styles.energyRow}>
               {(['morning', 'afternoon', 'evening'] as const).map((e) => (
@@ -240,7 +250,9 @@ export default function TasksScreen() {
 
             {planLoading ? (
               <View style={styles.planEmpty}>
-                <ActivityIndicator color={Colors.PRIMARY_LIGHT} />
+                <SkeletonLoader width="100%" height={48} style={{ marginBottom: Spacing.sm }} />
+                <SkeletonLoader width="85%" height={48} style={{ marginBottom: Spacing.sm }} />
+                <SkeletonLoader width="70%" height={48} style={{ marginBottom: Spacing.md }} />
                 <Text style={styles.planEmptyText}>Building your schedule…</Text>
               </View>
             ) : planSchedule.length === 0 ? (
@@ -254,7 +266,7 @@ export default function TasksScreen() {
                     <Text style={styles.planTime}>{block.time}</Text>
                     <View style={styles.planBlockBody}>
                       <Text style={[styles.planTask, block.task === 'Break' && styles.planTaskBreak]} numberOfLines={2}>
-                        {block.task === 'Break' ? '☕ Break' : block.task}
+                        {block.task}
                       </Text>
                       <Text style={styles.planDuration}>{block.duration} min</Text>
                     </View>
@@ -274,54 +286,50 @@ export default function TasksScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.lg },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  title: { fontSize: Typography.sizes['2xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
   tabs: { paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg, maxHeight: Sizing.touchTarget },
   tab: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, marginRight: Spacing.sm, borderRadius: Radius.full, backgroundColor: Colors.SURFACE, minHeight: Sizing.touchTarget, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.BORDER },
-  tabActive: { backgroundColor: Colors.PRIMARY_DARK, borderColor: Colors.PRIMARY_LIGHT, ...Shadow.sm },
-  tabText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
-  tabTextActive: { color: Colors.TEXT_ON_PRIMARY, fontWeight: 600 },
+  tabActive: { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY, ...Shadow.sm },
+  tabText: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureMedium, color: Colors.TEXT_SECONDARY, letterSpacing: 0.2 },
+  tabTextActive: { color: Colors.TEXT_ON_PRIMARY, fontFamily: Typography.families.featureSemi },
   list: { flex: 1 },
   listContent: { flexGrow: 1, padding: Spacing.lg, paddingBottom: Spacing['3xl'] },
   taskCard: { marginBottom: Spacing.md },
   taskRow: { flexDirection: 'row', alignItems: 'center' },
   checkbox: { width: Sizing.touchTarget, height: Sizing.touchTarget, borderRadius: Radius.full, borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
   checkboxCompleted: { backgroundColor: Colors.SUCCESS, borderColor: Colors.SUCCESS },
-  checkmark: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes.sm, fontWeight: 700 },
   taskContent: { flex: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'center' },
-  taskTitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, flex: 1 },
+  taskTitle: { fontSize: Typography.sizes.md, fontFamily: Typography.families.bodyMedium, color: Colors.TEXT_PRIMARY, flex: 1 },
   taskTitleCompleted: { textDecorationLine: 'line-through', color: Colors.TEXT_SECONDARY },
-  badge: { fontSize: Typography.sizes.lg, marginLeft: Spacing.sm },
+  badge: { marginLeft: Spacing.sm },
   metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: Spacing.xs },
   priorityDot: { width: Spacing.sm, height: Spacing.sm, borderRadius: Spacing.xs, marginRight: Spacing.xs },
-  meta: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
+  meta: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureMedium, color: Colors.TEXT_SECONDARY, letterSpacing: 0.3, textTransform: 'uppercase' },
   abandonBtn: { padding: Spacing.sm },
-  abandonText: { fontSize: Typography.sizes.lg, color: Colors.DANGER, fontWeight: 600 },
   modalOverlay: { flex: 1, backgroundColor: Colors.OVERLAY, justifyContent: 'center', padding: Spacing.xl },
   modalContent: { backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, padding: Spacing.xl, borderWidth: 1, borderColor: Colors.BORDER, ...Shadow.lg },
-  modalTitle: { fontSize: Typography.sizes.xl, fontWeight: 700, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.lg },
-  input: { backgroundColor: Colors.SURFACE_RAISED, borderRadius: Radius.lg, padding: Spacing.md, fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.lg, borderWidth: 1, borderColor: Colors.BORDER },
+  modalTitle: { fontSize: Typography.sizes['2xl'], fontFamily: Typography.families.display, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.lg, letterSpacing: LetterSpacing.tight },
+  input: { backgroundColor: Colors.SURFACE_RAISED, borderRadius: Radius.lg, padding: Spacing.md, fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.lg, borderWidth: 1, borderColor: Colors.BORDER },
   priorityRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.xl },
   priorityBtn: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.BORDER, minHeight: Sizing.touchTarget, justifyContent: 'center' },
   priorityBtnActive: { backgroundColor: Colors.DANGER_LIGHT },
-  priorityBtnText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
+  priorityBtnText: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureMedium, color: Colors.TEXT_SECONDARY, letterSpacing: 0.3, textTransform: 'uppercase' },
   modalActions: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.md },
   planContent: { maxHeight: '80%' },
-  offlineNote: { fontSize: Typography.sizes.sm, color: Colors.WARNING, marginBottom: Spacing.md },
+  offlineNote: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.md },
+  offlineNoteText: { fontSize: Typography.sizes.sm, color: Colors.WARNING, flex: 1 },
   energyRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
   energyBtn: { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.BORDER, alignItems: 'center', minHeight: Sizing.touchTarget, justifyContent: 'center' },
   energyBtnActive: { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY },
-  energyBtnText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY },
-  energyBtnTextActive: { color: Colors.TEXT_ON_PRIMARY, fontWeight: 600 },
+  energyBtnText: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureMedium, color: Colors.TEXT_SECONDARY, letterSpacing: 0.2, textTransform: 'capitalize' },
+  energyBtnTextActive: { color: Colors.TEXT_ON_PRIMARY, fontFamily: Typography.families.featureSemi },
   planList: { marginBottom: Spacing.lg },
   planEmpty: { paddingVertical: Spacing['2xl'], alignItems: 'center', gap: Spacing.md },
-  planEmptyText: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center' },
+  planEmptyText: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, textAlign: 'center' },
   planBlock: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm },
-  planTime: { width: 56, fontSize: Typography.sizes.sm, color: Colors.PRIMARY_LIGHT, fontWeight: 700 },
+  planTime: { width: 56, fontSize: Typography.sizes.sm, fontFamily: Typography.families.numeric, color: Colors.PRIMARY, letterSpacing: 0.2 },
   planBlockBody: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.SURFACE_RAISED, borderRadius: Radius.lg, padding: Spacing.md, borderWidth: 1, borderColor: Colors.BORDER },
-  planTask: { flex: 1, fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY },
+  planTask: { flex: 1, fontSize: Typography.sizes.md, fontFamily: Typography.families.bodyMedium, color: Colors.TEXT_PRIMARY },
   planTaskBreak: { color: Colors.TEXT_SECONDARY, fontStyle: 'italic' },
-  planDuration: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, marginLeft: Spacing.sm },
+  planDuration: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureMedium, color: Colors.TEXT_SECONDARY, marginLeft: Spacing.sm },
 });
