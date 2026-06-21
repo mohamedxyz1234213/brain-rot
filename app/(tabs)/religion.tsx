@@ -11,28 +11,23 @@ import { useReligionStore, PrayerName, PrayerStatus } from '../../src/stores/rel
 import { useStreakStore } from '../../src/stores/streakStore';
 import { useXPStore } from '../../src/stores/xpStore';
 import { useSettingsStore } from '../../src/stores/settingsStore';
+import { adhkar } from '../../src/data/adhkar';
+import { getPrayerTimes } from '../../src/services/prayerTimes';
+
+// Ordered loop of dhikr the counter cycles through. Each entry resolves to a
+// preloaded adhkar record; the counter auto-advances to the next entry when
+// the target count is reached and loops back to the start indefinitely.
+const DHIKR_CYCLE = [
+  'subhanallah_33',
+  'alhamdulillah_33',
+  'allahuakbar_33',
+  'subhanallah_wabihamdihi',
+  'subhanallah_aladheem',
+  'salawat_ibrahimiyya',
+];
 
 const PRAYER_LABELS: Record<PrayerName, string> = { fajr: 'Fajr', dhuhr: 'Dhuhr', asr: 'Asr', maghrib: 'Maghrib', isha: 'Isha' };
 const PRAYER_STATUS_COLORS: Record<string, string> = { on_time: Colors.SUCCESS, late: Colors.WARNING, missed: Colors.DANGER, pending: Colors.TEXT_SECONDARY };
-
-function getPrayerTimes(method: string): Record<PrayerName, string> {
-  const baseTimes: Record<PrayerName, string> = { fajr: '05:12', dhuhr: '12:30', asr: '15:45', maghrib: '18:22', isha: '19:50' };
-  const offsets: Record<string, Record<PrayerName, number>> = {
-    MWL: { fajr: -5, dhuhr: 0, asr: 10, maghrib: 5, isha: 10 },
-    ISNA: { fajr: -10, dhuhr: -5, asr: 5, maghrib: 0, isha: 5 },
-    Egypt: { fajr: 0, dhuhr: 5, asr: 15, maghrib: 8, isha: 12 },
-    Makkah: { fajr: 3, dhuhr: -3, asr: 8, maghrib: 3, isha: 7 },
-    Tehran: { fajr: -8, dhuhr: -2, asr: 12, maghrib: 6, isha: 15 },
-  };
-  const offset = offsets[method] ?? offsets.Makkah;
-  const result: Record<PrayerName, string> = {} as any;
-  for (const p of Object.keys(baseTimes) as PrayerName[]) {
-    const [h, m] = baseTimes[p].split(':').map(Number);
-    const total = h * 60 + m + (offset[p] ?? 0);
-    result[p] = `${Math.floor(total / 60).toString().padStart(2, '0')}:${(total % 60).toString().padStart(2, '0')}`;
-  }
-  return result;
-}
 
 export default function ReligionScreen() {
   const prayerLogs = useReligionStore((s) => s.prayerLogs);
@@ -45,7 +40,14 @@ export default function ReligionScreen() {
 
   const DHIKR_TARGET = 33;
   const activeDhikr = dhikrSessions[dhikrSessions.length - 1];
-  const dhikrCount = activeDhikr && !activeDhikr.isCompleted ? activeDhikr.completedCount : activeDhikr?.isCompleted ? activeDhikr.targetCount : 0;
+  const activeCycleId = activeDhikr?.dhikrId && DHIKR_CYCLE.includes(activeDhikr.dhikrId)
+    ? activeDhikr.dhikrId
+    : DHIKR_CYCLE[0];
+  const activeCycleIndex = DHIKR_CYCLE.indexOf(activeCycleId);
+  const activeMeta = adhkar.find((d) => d.id === activeCycleId) ?? adhkar.find((d) => d.id === DHIKR_CYCLE[0])!;
+  const dhikrCount = activeDhikr && !activeDhikr.isCompleted && activeDhikr.dhikrId === activeCycleId
+    ? activeDhikr.completedCount
+    : 0;
 
   const prayerTimes = getPrayerTimes(method);
   const prayers: PrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
@@ -75,10 +77,29 @@ export default function ReligionScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const store = useReligionStore.getState();
     const current = store.dhikrSessions[store.dhikrSessions.length - 1];
+
+    // If nothing in flight, start the first dhikr in the cycle.
     if (!current || current.isCompleted) {
-      store.startDhikr('subhanallah', DHIKR_TARGET);
+      const nextId = current?.isCompleted && DHIKR_CYCLE.includes(current.dhikrId)
+        ? DHIKR_CYCLE[(DHIKR_CYCLE.indexOf(current.dhikrId) + 1) % DHIKR_CYCLE.length]
+        : DHIKR_CYCLE[0];
+      store.startDhikr(nextId, DHIKR_TARGET);
+      store.incrementDhikr();
+      return;
     }
+
     store.incrementDhikr();
+
+    // After incrementing, if we just hit the target, immediately start the
+    // next dhikr in the cycle so the counter loops without an extra tap.
+    const afterTap = useReligionStore.getState().dhikrSessions.slice(-1)[0];
+    if (afterTap?.isCompleted) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const idx = DHIKR_CYCLE.indexOf(afterTap.dhikrId);
+      const nextId = DHIKR_CYCLE[(idx + 1) % DHIKR_CYCLE.length];
+      store.startDhikr(nextId, DHIKR_TARGET);
+      useXPStore.getState().addXP(5, `Completed ${DHIKR_TARGET} dhikr`);
+    }
   };
 
   const handleReadQuran = () => {
@@ -139,12 +160,26 @@ export default function ReligionScreen() {
 
         <Animated.View entering={FadeInDown.duration(500).delay(300)}>
           <Card glass style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Dhikr Counter</Text>
-            <Text style={styles.dhikrText}>سُبْحَانَ اللهِ وَبِحَمْدِهِ</Text>
-            <Text style={styles.dhikrTrans}>SubhanAllahi wa biHamdihi</Text>
+            <View style={styles.dhikrHeader}>
+              <Text style={styles.sectionTitle}>Dhikr Counter</Text>
+              <Text style={styles.dhikrCycleLabel}>{activeCycleIndex + 1} / {DHIKR_CYCLE.length}</Text>
+            </View>
+            <Text style={styles.dhikrText}>{activeMeta.arabic}</Text>
+            <Text style={styles.dhikrTrans}>{activeMeta.transliteration}</Text>
             <Pressable style={styles.dhikrButton} onPress={handleDhikrTap} accessibilityRole="button" accessibilityLabel="Tap to count dhikr">
-              <Text style={styles.dhikrButtonText}>{dhikrCount} / 33</Text>
+              <Text style={styles.dhikrButtonText}>{dhikrCount} / {DHIKR_TARGET}</Text>
             </Pressable>
+            <View style={styles.dhikrDots}>
+              {DHIKR_CYCLE.map((id, i) => (
+                <View
+                  key={id}
+                  style={[
+                    styles.dhikrDot,
+                    i === activeCycleIndex && styles.dhikrDotActive,
+                  ]}
+                />
+              ))}
+            </View>
           </Card>
         </Animated.View>
 
@@ -180,5 +215,10 @@ const styles = StyleSheet.create({
   dhikrTrans: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.lg, fontStyle: 'italic' },
   dhikrButton: { backgroundColor: Colors.PRIMARY, borderRadius: Radius.xl, paddingVertical: Spacing.xl, alignItems: 'center', minHeight: Sizing.touchTarget, ...Shadow.glow },
   dhikrButtonText: { color: Colors.TEXT_ON_PRIMARY, fontSize: Typography.sizes['2xl'], fontFamily: Typography.families.numeric, letterSpacing: LetterSpacing.tight },
+  dhikrHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.md },
+  dhikrCycleLabel: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.feature, color: Colors.TEXT_SECONDARY, letterSpacing: 1.2, textTransform: 'uppercase' },
+  dhikrDots: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.xs, marginTop: Spacing.md },
+  dhikrDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.BORDER },
+  dhikrDotActive: { width: 18, backgroundColor: Colors.PRIMARY },
   fastingText: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.md, lineHeight: Typography.lineHeight.normal },
 });

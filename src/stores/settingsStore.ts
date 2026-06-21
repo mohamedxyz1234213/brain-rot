@@ -16,6 +16,9 @@ interface SettingsState {
   dailyRoastEnabled: boolean;
   sleepReminderEnabled: boolean;
   prayerNotificationsEnabled: boolean;
+  /** Manual region override (ISO 3166-1 alpha-2), null = auto-detect. */
+  regionOverride: string | null;
+  setRegionOverride: (region: string | null) => void;
   setLanguage: (language: 'en' | 'ar') => void;
   setReligionEnabled: (enabled: boolean) => void;
   setDrivingDetection: (enabled: boolean) => void;
@@ -52,7 +55,9 @@ export const useSettingsStore = create<SettingsState>()(
       dailyRoastEnabled: true,
       sleepReminderEnabled: true,
       prayerNotificationsEnabled: true,
+      regionOverride: null,
 
+      setRegionOverride: (regionOverride) => set({ regionOverride }),
       setLanguage: (language) => set({ language }),
       setReligionEnabled: (enabled) => set({ religionEnabled: enabled }),
       setDrivingDetection: (enabled) => set({ drivingDetectionEnabled: enabled }),

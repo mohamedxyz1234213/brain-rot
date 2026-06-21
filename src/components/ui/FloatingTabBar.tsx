@@ -1,15 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Colors, Spacing, Radius, Shadow, Glass, Sizing, Typography } from '../../constants/theme';
+import { Colors, Spacing, Radius, Shadow, Glass, Sizing, Typography, ANIMATION } from '../../constants/theme';
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // Floating glassmorphic tab bar — a detached, blurred pill that hovers above
-// the home indicator. Active tab sits in a glowing teal lozenge.
+// the home indicator. Active tab sits in a glowing teal lozenge that springs
+// in with a subtle scale + label fade.
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
 
@@ -33,30 +40,74 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
             };
 
             return (
-              <Pressable
+              <TabItem
                 key={route.key}
+                focused={focused}
+                icon={icon}
+                label={label}
                 onPress={onPress}
-                style={styles.item}
-                accessibilityRole="button"
-                accessibilityState={focused ? { selected: true } : {}}
-                accessibilityLabel={label}
-                hitSlop={8}
-              >
-                <View style={[styles.pill, focused && styles.pillActive]}>
-                  {focused ? (
-                    <Text style={styles.label} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
-                      {label}
-                    </Text>
-                  ) : (
-                    icon
-                  )}
-                </View>
-              </Pressable>
+              />
             );
           })}
         </BlurView>
       </View>
     </View>
+  );
+}
+
+function TabItem({
+  focused,
+  icon,
+  label,
+  onPress,
+}: {
+  focused: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onPress: () => void;
+}) {
+  const progress = useSharedValue(focused ? 1 : 0);
+  const press = useSharedValue(1);
+
+  useEffect(() => {
+    progress.value = withSpring(focused ? 1 : 0, ANIMATION.springSoft);
+  }, [focused, progress]);
+
+  const pillStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: press.value * (0.96 + progress.value * 0.04) }],
+  }));
+
+  const labelStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ translateY: (1 - progress.value) * 4 }],
+  }));
+
+  const iconStyle = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
+    transform: [{ scale: 1 - progress.value * 0.2 }],
+    position: 'absolute',
+  }));
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={() => (press.value = withTiming(0.92, { duration: 90 }))}
+      onPressOut={() => (press.value = withSpring(1, ANIMATION.spring))}
+      style={styles.item}
+      accessibilityRole="button"
+      accessibilityState={focused ? { selected: true } : {}}
+      accessibilityLabel={label}
+      hitSlop={8}
+    >
+      <Animated.View style={[styles.pill, focused && styles.pillActive, pillStyle]}>
+        <Animated.View style={iconStyle}>{icon}</Animated.View>
+        <Animated.View style={labelStyle}>
+          <Text style={styles.label} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+            {label}
+          </Text>
+        </Animated.View>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -99,13 +150,13 @@ const styles = StyleSheet.create({
   },
   pillActive: {
     backgroundColor: Colors.PRIMARY_DARK,
-    ...Shadow.sm,
   },
   label: {
-    fontFamily: Typography.families.featureSemi,
-    fontSize: Typography.sizes.sm,
+    fontFamily: Typography.families.feature,
+    fontSize: Typography.sizes.xs + 1,
     color: Colors.TEXT_ON_PRIMARY,
-    letterSpacing: 0.2,
+    letterSpacing: 0.6,
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
 });

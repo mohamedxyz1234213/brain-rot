@@ -1,5 +1,5 @@
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, router, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Text as RNText, TextInput as RNTextInput } from 'react-native';
@@ -21,6 +21,10 @@ import { useAuthStore } from '../src/stores/authStore';
 import { useTaskStore } from '../src/stores/taskStore';
 import { useScreenTimeStore } from '../src/stores/screenTimeStore';
 import { scheduleDailyRoasts, resetSchedulingGuard } from '../src/services/roastNotificationService';
+import { schedulePrayerReminders, evaluatePrayerBlock, resetPrayerSchedulingGuard } from '../src/services/prayerReminderService';
+import { setRegionOverride as applyRegionOverride } from '../src/services/pricing';
+import { getPrayerTimes } from '../src/services/prayerTimes';
+import { useReligionStore } from '../src/stores/religionStore';
 
 import '../src/i18n';
 
@@ -59,11 +63,46 @@ export default function RootLayout() {
   const language = useSettingsStore((s) => s.language);
   const dailyRoastEnabled = useSettingsStore((s) => s.dailyRoastEnabled);
   const userName = useAuthStore((s) => s.user?.name);
+  const calculationMethod = useReligionStore((s) => s.selectedCalculationMethod);
+  const prayerLogs = useReligionStore((s) => s.prayerLogs);
+  const regionOverride = useSettingsStore((s) => s.regionOverride);
+  const pathname = usePathname();
 
   useEffect(() => {
     applyLanguage(language);
     resetSchedulingGuard();
+    resetPrayerSchedulingGuard();
   }, [language]);
+
+  // Sync the persisted manual region override into the pricing service so
+  // the next resolveTiers() call picks it up.
+  useEffect(() => {
+    applyRegionOverride(regionOverride);
+  }, [regionOverride]);
+
+  // Schedule prayer reminders for today (and re-schedule whenever a prayer
+  // is logged so reminders for marked prayers stop firing).
+  useEffect(() => {
+    const times = getPrayerTimes(calculationMethod);
+    schedulePrayerReminders(times, prayerLogs, { force: true });
+  }, [calculationMethod, prayerLogs]);
+
+  // Foreground hard-block watcher: every 30s, check if an unmarked prayer's
+  // window is closing within 30 min — if so, navigate into the prayer-block
+  // modal. Re-pushes if the user closes it without marking.
+  useEffect(() => {
+    const check = () => {
+      const times = getPrayerTimes(calculationMethod);
+      const logs = useReligionStore.getState().prayerLogs;
+      const offender = evaluatePrayerBlock(times, logs, 30);
+      if (offender && pathname !== '/prayer-block') {
+        router.push({ pathname: '/(modals)/prayer-block', params: { prayer: offender } });
+      }
+    };
+    check();
+    const t = setInterval(check, 30_000);
+    return () => clearInterval(t);
+  }, [calculationMethod, pathname, prayerLogs]);
 
   useEffect(() => {
     if (!dailyRoastEnabled) return;
@@ -120,6 +159,7 @@ export default function RootLayout() {
       <Stack.Screen name="screens" />
       <Stack.Screen name="(modals)/roast" options={{ presentation: 'fullScreenModal' }} />
       <Stack.Screen name="(modals)/app-blocked" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="(modals)/prayer-block" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
       <Stack.Screen name="(modals)/driving-alert" options={{ presentation: 'fullScreenModal' }} />
       <Stack.Screen name="(modals)/intervention" options={{ presentation: 'fullScreenModal' }} />
       <Stack.Screen name="(modals)/slot-machine" options={{ presentation: 'modal' }} />
