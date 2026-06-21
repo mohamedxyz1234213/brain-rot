@@ -41,7 +41,7 @@ const SCORE_LABELS = [
   { min: 20, max: 40, label: 'Waking Up' },
   { min: 40, max: 60, label: 'Struggling' },
   { min: 60, max: 75, label: 'Recovering' },
-  { min: 75, max: 85, label: 'Healing' },
+  { min: 75, max: 85, label: 'Restoring' },
   { min: 85, max: 95, label: 'Thriving' },
   { min: 95, max: 100, label: 'Ascended' },
 ];

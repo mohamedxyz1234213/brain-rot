@@ -13,9 +13,25 @@ import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display/700
 import { SpaceGrotesk_500Medium } from '@expo-google-fonts/space-grotesk/500Medium';
 import { SpaceGrotesk_600SemiBold } from '@expo-google-fonts/space-grotesk/600SemiBold';
 import { SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk/700Bold';
+import * as Notifications from 'expo-notifications';
 import { Colors } from '../src/constants/theme';
+import { applyLanguage } from '../src/i18n';
+import { useSettingsStore } from '../src/stores/settingsStore';
+import { useAuthStore } from '../src/stores/authStore';
+import { useTaskStore } from '../src/stores/taskStore';
+import { useScreenTimeStore } from '../src/stores/screenTimeStore';
+import { scheduleDailyRoasts, resetSchedulingGuard } from '../src/services/roastNotificationService';
 
 import '../src/i18n';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -40,6 +56,29 @@ function applyDefaultFont() {
 }
 
 export default function RootLayout() {
+  const language = useSettingsStore((s) => s.language);
+  const dailyRoastEnabled = useSettingsStore((s) => s.dailyRoastEnabled);
+  const userName = useAuthStore((s) => s.user?.name);
+
+  useEffect(() => {
+    applyLanguage(language);
+    resetSchedulingGuard();
+  }, [language]);
+
+  useEffect(() => {
+    if (!dailyRoastEnabled) return;
+    const pending = useTaskStore.getState().tasks.filter((t) => t.status === 'pending').length;
+    const topLog = useScreenTimeStore.getState().logs.sort((a, b) => b.minutesUsed - a.minutesUsed)[0];
+    scheduleDailyRoasts({
+      lang: language,
+      name: userName,
+      pendingTasks: pending,
+      topApp: topLog?.appName,
+      topMinutes: topLog?.minutesUsed,
+      perDay: 8,
+    });
+  }, [language, dailyRoastEnabled, userName]);
+
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     Inter_400Regular,

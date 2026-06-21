@@ -16,7 +16,7 @@ const TIERS = [
   },
   {
     id: 'healed',
-    name: 'Healed',
+    name: 'Cured',
     price: '$4.99',
     period: '/month',
     yearlyPrice: '$39.99/year',
@@ -44,7 +44,7 @@ const TIERS = [
     period: '/month',
     yearlyPrice: '$79.99/year',
     features: [
-      'Everything in Healed +',
+      'Everything in Cured +',
       'AI Coach Chat (30 msgs/mo)',
       'Monthly Life Trailer',
       'App Wrapped',
@@ -64,7 +64,7 @@ const TIERS = [
       'Parent dashboard',
       'Child mode (gentle, no roasting)',
       'Shared circle',
-      'All Healed features per member',
+      'All Cured features per member',
     ],
     isCurrent: false,
   },

@@ -16,7 +16,7 @@ const LEVEL_LABELS: Record<string, string> = {
   waking_up: 'Waking Up',
   struggling: 'Struggling',
   recovering: 'Recovering',
-  healing: 'Healing',
+  healing: 'Restoring',
   thriving: 'Thriving',
   ascended: 'Ascended',
 };

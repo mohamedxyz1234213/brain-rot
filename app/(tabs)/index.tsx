@@ -3,13 +3,14 @@ import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable } from 'r
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Colors, Typography, Spacing, Radius, Sizing, Gradients, LetterSpacing, ANIMATION, Shadow } from '../../src/constants/theme';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
+import { Colors, Typography, Spacing, Radius, Sizing, Gradients, LetterSpacing, Shadow } from '../../src/constants/theme';
 import { Card } from '../../src/components/ui/Card';
 import { ProgressBar } from '../../src/components/ui/ProgressBar';
-import { CircularProgress } from '../../src/components/ui/CircularProgress';
 import { Button } from '../../src/components/ui/Button';
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
-import { HeroPanel } from '../../src/components/ui/HeroPanel';
+import { ScoreShowcase } from '../../src/components/domain/ScoreShowcase';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useBrainScoreStore } from '../../src/stores/brainScoreStore';
 import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
@@ -19,17 +20,22 @@ import { useStreakStore } from '../../src/stores/streakStore';
 import { useXPStore } from '../../src/stores/xpStore';
 import { useReligionStore } from '../../src/stores/religionStore';
 import { useSettingsStore } from '../../src/stores/settingsStore';
-import { generateMorningBriefing } from '../../src/services/aiService';
+import { generateMorningBriefing, suggestNextTask, NextTaskSuggestion } from '../../src/services/aiService';
 
 const todayKey = () => new Date().toISOString().split('T')[0];
 
-// Tracks the day the briefing was dismissed, for the lifetime of the app session.
 let briefingDismissedOn: string | null = null;
 
 export default function DashboardScreen() {
+  const { t, i18n } = useTranslation();
+  const router = useRouter();
+  const lang = (i18n.language as 'en' | 'ar') ?? 'en';
+
   const user = useAuthStore((s) => s.user);
   const brainScore = useBrainScoreStore((s) => s.currentScore);
   const levelName = useBrainScoreStore((s) => s.getLevelName());
+  const scores = useBrainScoreStore((s) => s.scores);
+  const breakdown = useBrainScoreStore((s) => s.breakdown);
   const totalMinutes = useScreenTimeStore((s) => s.totalMinutesToday);
   const limits = useScreenTimeStore((s) => s.limits);
   const logs = useScreenTimeStore((s) => s.logs);
@@ -61,7 +67,6 @@ export default function DashboardScreen() {
   );
 
   const morningBriefingEnabled = useSettingsStore((s) => s.morningBriefingEnabled);
-  const scores = useBrainScoreStore((s) => s.scores);
   const [briefing, setBriefing] = useState<string | null>(null);
 
   useEffect(() => {
@@ -87,6 +92,64 @@ export default function DashboardScreen() {
     briefingDismissedOn = todayKey();
     setBriefing(null);
   };
+
+  // AI next-task suggestion
+  const [suggestion, setSuggestion] = useState<NextTaskSuggestion | null>(null);
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
+
+  const refreshSuggestion = useCallback(async () => {
+    const pending = useTaskStore.getState().tasks.filter((t) => t.status === 'pending');
+    if (!pending.length) { setSuggestion(null); return; }
+    setLoadingSuggestion(true);
+    const hour = new Date().getHours();
+    const res = await suggestNextTask(
+      pending.map((t) => ({
+        id: t.id,
+        title: t.title,
+        priority: t.priority,
+        estimatedMinutes: t.estimatedMinutes,
+        isEatTheFrog: t.isEatTheFrog,
+        postponeCount: t.postponeCount,
+      })),
+      { currentHour: hour, lang }
+    );
+    setSuggestion(res);
+    setLoadingSuggestion(false);
+  }, [lang]);
+
+  useEffect(() => { refreshSuggestion(); }, [refreshSuggestion, tasks.length]);
+
+  // Score delta (today vs yesterday)
+  const yesterdayScore = scores.length > 1 ? scores[1]?.score : null;
+  const delta = yesterdayScore != null ? Math.round(brainScore - yesterdayScore) : null;
+
+  // Recalculate score whenever underlying signals change so the showcase
+  // breakdown reflects real, current state instead of a stale snapshot.
+  useEffect(() => {
+    const allTasks = useTaskStore.getState().tasks;
+    const done = allTasks.filter((t) => t.status === 'completed').length;
+    const stLimit =
+      useScreenTimeStore.getState().limits.reduce((s, l) => s + l.dailyLimitMinutes, 0) || 180;
+    const focusMin = useFocusStore.getState().totalFocusMinutesToday;
+    const religionEnabled = useSettingsStore.getState().religionEnabled;
+    const day = todayKey();
+    const prayed = useReligionStore
+      .getState()
+      .prayerLogs.filter(
+        (l) => l.date.startsWith(day) && (l.status === 'on_time' || l.status === 'late')
+      ).length;
+    useBrainScoreStore.getState().calculateScore({
+      screenTimeMinutes: totalMinutes,
+      screenTimeLimit: stLimit,
+      tasksCompleted: done,
+      tasksTotal: Math.max(allTasks.length, 1),
+      focusSessions: focusMin >= 50 ? 2 : focusMin > 0 ? 1 : 0,
+      prayersCompleted: prayed,
+      prayersTotal: 5,
+      sleepHour: 23,
+      religionEnabled,
+    });
+  }, [totalMinutes, totalFocusMinutes, completedToday, prayerCount, tasks.length]);
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(() => {
@@ -118,8 +181,9 @@ export default function DashboardScreen() {
       sleepHour: 23,
       religionEnabled,
     });
+    refreshSuggestion();
     setRefreshing(false);
-  }, []);
+  }, [refreshSuggestion]);
 
   const handleCompleteFrog = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -130,8 +194,23 @@ export default function DashboardScreen() {
     }
   };
 
-  const greeting = user?.name ? `Hey ${user.name}` : 'Assalamu Alaikum';
-  const dateLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const handleStartSuggestion = () => {
+    if (!suggestion) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push({ pathname: '/(tabs)/focus', params: { taskId: suggestion.taskId } });
+  };
+
+  const handleCompleteSuggestion = () => {
+    if (!suggestion) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    useTaskStore.getState().completeTask(suggestion.taskId);
+    useXPStore.getState().addXP(20, 'Task completed from coach pick');
+    useStreakStore.getState().incrementStreak('tasks');
+    refreshSuggestion();
+  };
+
+  const greeting = user?.name ? `${t('dashboard.greeting')} ${user.name}` : t('dashboard.greetingFallback');
+  const dateLabel = new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
   return (
     <SafeScreen tabBarSpacing>
@@ -147,29 +226,25 @@ export default function DashboardScreen() {
           />
         }
       >
-        <HeroPanel
-          style={styles.heroPanel}
-          eyebrow={dateLabel}
-          title={greeting}
-          subtitle="Let's heal your brain today"
-          badge={
+        <View style={styles.headerBlock}>
+          <View style={styles.headerTop}>
+            <Text style={styles.headerEyebrow} numberOfLines={1} ellipsizeMode="tail">{dateLabel}</Text>
             <View style={styles.heroPill}>
               <View style={styles.heroDot} />
-              <Text style={styles.heroPillText}>Live</Text>
-            </View>
-          }
-        >
-          <View style={styles.heroScore}>
-            <CircularProgress progress={brainScore} size={176} strokeWidth={12} backgroundColor="rgba(242,230,218,0.18)" gradient={Gradients.score}>
-              <Text style={styles.scoreValue}>{brainScore}</Text>
-              <Text style={styles.scoreLabel}>Brain Score</Text>
-              <Text style={styles.levelLabel}>{levelName}</Text>
-            </CircularProgress>
-            <View style={styles.heroProgressWrap}>
-              <ProgressBar progress={brainScore} height={6} backgroundColor="rgba(242,230,218,0.18)" gradient={Gradients.score} />
+              <Text style={styles.heroPillText}>{t('common.live')}</Text>
             </View>
           </View>
-        </HeroPanel>
+          <Text style={styles.headerTitle} numberOfLines={1}>{greeting}</Text>
+          <Text style={styles.headerSubtitle} numberOfLines={1}>{t('dashboard.subtitle')}</Text>
+        </View>
+
+        <ScoreShowcase
+          score={brainScore}
+          levelName={levelName}
+          delta={delta}
+          breakdown={breakdown}
+          style={styles.scoreCard}
+        />
 
         {briefing && (
           <Animated.View entering={FadeInDown.duration(400)}>
@@ -177,7 +252,7 @@ export default function DashboardScreen() {
               <View style={styles.briefingHeader}>
                 <View style={styles.briefingTagRow}>
                   <Ionicons name="sunny-outline" size={Sizing.iconSm} color={Colors.PRIMARY_LIGHT} />
-                  <Text style={styles.briefingTag}>Morning Briefing</Text>
+                  <Text style={styles.briefingTag}>{t('dashboard.morningBriefing')}</Text>
                 </View>
                 <Pressable onPress={dismissBriefing} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dismiss briefing">
                   <Ionicons name="close" size={Sizing.iconMd} color={Colors.TEXT_SECONDARY} />
@@ -188,17 +263,64 @@ export default function DashboardScreen() {
           </Animated.View>
         )}
 
+        {/* AI Coach Pick */}
+        <Animated.View entering={FadeInDown.duration(500).delay(150)} style={styles.sectionBlock}>
+          <View style={styles.suggestionCard}>
+            <View style={styles.suggestionAccent} />
+            <View style={styles.suggestionHeader}>
+              <View style={styles.suggestionTagRow}>
+                <View style={styles.sparkBadge}>
+                  <Ionicons name="sparkles" size={12} color={Colors.TEXT_ON_PRIMARY} />
+                </View>
+                <Text style={styles.suggestionTag}>{t('dashboard.aiSuggestion')}</Text>
+              </View>
+              {suggestion?.isOffline && (
+                <View style={styles.offlineTag}>
+                  <Ionicons name="flash-outline" size={11} color={Colors.WARNING} />
+                  <Text style={styles.offlineTagText}>{t('dashboard.aiOffline')}</Text>
+                </View>
+              )}
+            </View>
+            {!suggestion ? (
+              <Text style={styles.suggestionEmpty}>
+                {loadingSuggestion ? t('common.loading') : t('dashboard.aiSuggestionEmpty')}
+              </Text>
+            ) : (
+              <>
+                <Text style={styles.suggestionTitle} numberOfLines={2}>{suggestion.title}</Text>
+                <Text style={styles.suggestionReason} numberOfLines={3}>{suggestion.reason}</Text>
+                <View style={styles.suggestionMetaRow}>
+                  <View style={styles.suggestionMetaPill}>
+                    <Ionicons name="time-outline" size={12} color={Colors.PRIMARY_DARK} />
+                    <Text style={styles.suggestionMetaText}>{suggestion.estimatedMinutes} {t('common.min')}</Text>
+                  </View>
+                  <View style={[styles.suggestionMetaPill, styles.priorityPill]}>
+                    <Text style={styles.suggestionMetaText}>{t(`tasks.${suggestion.priority}`)}</Text>
+                  </View>
+                </View>
+                <View style={styles.suggestionActions}>
+                  <Button title={t('dashboard.startNow')} onPress={handleStartSuggestion} size="sm" variant="primary" />
+                  <Pressable onPress={handleCompleteSuggestion} style={styles.doneInlineBtn} accessibilityRole="button">
+                    <Ionicons name="checkmark-circle-outline" size={Sizing.iconMd} color={Colors.SUCCESS} />
+                    <Text style={styles.doneInlineText}>{t('common.done')}</Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
+          </View>
+        </Animated.View>
+
         <Animated.View entering={FadeInDown.duration(500).delay(200)} style={styles.sectionBlock}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Today</Text>
-            <Text style={styles.sectionMeta}>Live overview</Text>
+            <Text style={styles.sectionTitle}>{t('dashboard.todayOverview')}</Text>
+            <Text style={styles.sectionMeta}>{t('dashboard.liveOverview')}</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statsRow}>
-            <StatCard label="Screen Time" value={`${screenTimeHours}h ${screenTimeMins}m`} progress={Math.min((totalMinutes / 180) * 100, 100)} />
-            <StatCard label="Tasks" value={`${completedToday}/${todayTasks.length + completedToday}`} progress={todayTasks.length > 0 ? (completedToday / (todayTasks.length + completedToday)) * 100 : 0} />
-            <StatCard label="Focus" value={`${totalFocusMinutes} min`} progress={Math.min((totalFocusMinutes / 60) * 100, 100)} />
-            <StatCard label="Prayers" value={`${prayerCount}/5`} progress={prayerCount * 20} />
-            <StatCard label="Streak" value={`${streak?.currentDays ?? 0}`} progress={100} />
+            <StatCard label={t('dashboard.screenTime')} value={`${screenTimeHours}${t('common.hours')} ${screenTimeMins}${t('common.min')}`} progress={Math.min((totalMinutes / 180) * 100, 100)} />
+            <StatCard label={t('dashboard.tasksCompleted')} value={`${completedToday}/${todayTasks.length + completedToday}`} progress={todayTasks.length > 0 ? (completedToday / (todayTasks.length + completedToday)) * 100 : 0} />
+            <StatCard label={t('dashboard.focusMinutes')} value={`${totalFocusMinutes} ${t('common.min')}`} progress={Math.min((totalFocusMinutes / 60) * 100, 100)} />
+            <StatCard label={t('dashboard.prayers')} value={`${prayerCount}/5`} progress={prayerCount * 20} />
+            <StatCard label={t('dashboard.streak')} value={`${streak?.currentDays ?? 0}`} progress={100} />
           </ScrollView>
         </Animated.View>
 
@@ -208,9 +330,9 @@ export default function DashboardScreen() {
               <View style={styles.frogIconWrap}>
                 <Ionicons name="flame" size={Sizing.iconLg} color={Colors.WARNING} />
               </View>
-              <Text style={styles.frogTitle}>Eat the Frog</Text>
+              <Text style={styles.frogTitle}>{t('dashboard.eatTheFrog')}</Text>
               <Text style={styles.frogTask} numberOfLines={2}>{frogTask.title}</Text>
-              <Button title="Complete to unlock apps" onPress={handleCompleteFrog} size="sm" variant="primary" />
+              <Button title={t('dashboard.completeToUnlock')} onPress={handleCompleteFrog} size="sm" variant="primary" />
             </Card>
           </Animated.View>
         )}
@@ -218,13 +340,13 @@ export default function DashboardScreen() {
         {limits.length > 0 && (
           <Animated.View entering={FadeInDown.duration(500).delay(400)} style={styles.sectionBlock}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>App Limits</Text>
-              <Text style={styles.sectionMeta}>{limits.length} tracked</Text>
+              <Text style={styles.sectionTitle}>{t('dashboard.appLimits')}</Text>
+              <Text style={styles.sectionMeta}>{t('dashboard.appsTracked', { count: limits.length })}</Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.limitRow}>
               {limits.map((limit, i) => (
                 <Animated.View key={limit.id} entering={FadeInRight.duration(300).delay(i * 100)}>
-                  <AppLimitPill name={limit.appName} used={usedForLimit(limit.appBundleId)} limit={limit.dailyLimitMinutes} isHard={limit.isHardBlock} />
+                  <AppLimitPill name={limit.appName} used={usedForLimit(limit.appBundleId)} limit={limit.dailyLimitMinutes} isHard={limit.isHardBlock} hardLabel={t('dashboard.hardBlock')} />
                 </Animated.View>
               ))}
             </ScrollView>
@@ -234,13 +356,13 @@ export default function DashboardScreen() {
         <Animated.View entering={FadeInDown.duration(500).delay(500)} style={styles.sectionBlock}>
           <Card glass style={styles.levelCard}>
             <View style={styles.levelHeader}>
-              <View>
-                <Text style={styles.levelKicker}>Growth</Text>
-                <Text style={styles.levelTitle}>Level {level}</Text>
+              <View style={{ flex: 1, marginRight: Spacing.md }}>
+                <Text style={styles.levelKicker}>{t('dashboard.growth')}</Text>
+                <Text style={styles.levelTitle} numberOfLines={1}>{t('dashboard.level', { level })}</Text>
               </View>
               <Text style={styles.levelPercent}>{Math.round(levelInfo.progress * 100)}%</Text>
             </View>
-            <Text style={styles.xpText}>{xp} XP to your next unlock</Text>
+            <Text style={styles.xpText}>{t('dashboard.xpToNext', { xp })}</Text>
             <ProgressBar progress={levelInfo.progress * 100} height={7} backgroundColor="rgba(67,104,111,0.10)" gradient={Gradients.brand} />
           </Card>
         </Animated.View>
@@ -250,16 +372,16 @@ export default function DashboardScreen() {
             <Card glass style={styles.focusCard}>
               <View style={styles.focusHeader}>
                 <View style={styles.focusDot} />
-                <Text style={styles.focusTitle}>Focus Active</Text>
+                <Text style={styles.focusTitle}>{t('dashboard.focusActive')}</Text>
               </View>
-              <Text style={styles.focusMode}>{activeSession.mode} · {Math.floor((activeSession.targetMinutes * 60 - useFocusStore.getState().remainingSeconds) / 60)} min completed</Text>
+              <Text style={styles.focusMode}>{activeSession.mode} · {Math.floor((activeSession.targetMinutes * 60 - useFocusStore.getState().remainingSeconds) / 60)} {t('common.min')}</Text>
             </Card>
           </Animated.View>
         )}
 
         <Animated.View entering={FadeInDown.duration(500).delay(600)} style={styles.sectionBlock}>
           <Card glass style={styles.motivationCard}>
-            <Text style={styles.motivationText}>"Time is an Amanah. Every minute scrolling is a minute stolen from your purpose."</Text>
+            <Text style={styles.motivationText}>"{t('dashboard.motivation')}"</Text>
           </Card>
         </Animated.View>
       </ScrollView>
@@ -277,14 +399,14 @@ function StatCard({ label, value, progress }: { label: string; value: string; pr
   );
 }
 
-function AppLimitPill({ name, used, limit, isHard }: { name: string; used: number; limit: number; isHard: boolean }) {
+function AppLimitPill({ name, used, limit, isHard, hardLabel }: { name: string; used: number; limit: number; isHard: boolean; hardLabel: string }) {
   const progress = (used / limit) * 100;
   const color = progress > 90 ? Colors.DANGER : progress > 70 ? Colors.WARNING : Colors.PRIMARY_LIGHT;
   return (
     <Card dense glass style={styles.appLimitPill}>
       <Text style={styles.appName}>{name}</Text>
       <Text style={styles.appTime}>{used}m / {limit}m</Text>
-      {isHard && <Text style={styles.hardBadge}>Hard Block</Text>}
+      {isHard && <Text style={styles.hardBadge}>{hardLabel}</Text>}
       <ProgressBar progress={progress} color={color} height={5} gradient={progress <= 70 ? Gradients.brand : undefined} />
     </Card>
   );
@@ -292,21 +414,39 @@ function AppLimitPill({ name, used, limit, isHard }: { name: string; used: numbe
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm, paddingBottom: Spacing['3xl'] },
-  heroPanel: { marginBottom: Spacing['2xl'] },
-  heroPill: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, paddingHorizontal: Spacing.md, paddingVertical: 6, borderRadius: Radius.full, backgroundColor: 'rgba(242,230,218,0.16)', borderWidth: 1, borderColor: 'rgba(242,230,218,0.32)' },
-  heroPillText: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureSemi, color: Colors.TEXT_ON_PRIMARY, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase' },
-  heroDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.SUCCESS },
-  heroScore: { alignItems: 'center', gap: Spacing.lg, width: '100%' },
-  heroProgressWrap: { width: '100%', paddingHorizontal: Spacing.xs },
+  headerBlock: { marginBottom: Spacing.lg, paddingHorizontal: Spacing.xs },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.xs },
+  headerEyebrow: { flex: 1, marginRight: Spacing.sm, fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureSemi, color: Colors.PRIMARY, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase' },
+  headerTitle: { fontSize: Typography.sizes['3xl'], fontFamily: Typography.families.display, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
+  headerSubtitle: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, marginTop: 2 },
+  heroPill: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, paddingHorizontal: Spacing.md, paddingVertical: 5, borderRadius: Radius.full, backgroundColor: 'rgba(90,143,123,0.14)', borderWidth: 1, borderColor: 'rgba(90,143,123,0.32)' },
+  heroPillText: { fontSize: 10, fontFamily: Typography.families.featureSemi, color: Colors.SUCCESS, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase' },
+  heroDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.SUCCESS },
+  scoreCard: { marginBottom: Spacing['2xl'] },
   sectionBlock: { marginBottom: Spacing['2xl'] },
   briefingCard: { marginBottom: Spacing.xl, borderLeftWidth: Spacing.xs, borderLeftColor: Colors.PRIMARY },
   briefingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
   briefingTagRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
   briefingTag: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureSemi, color: Colors.PRIMARY, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase' },
   briefingText: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.relaxed },
-  scoreValue: { fontSize: Typography.sizes['4xl'] + 4, fontFamily: Typography.families.numeric, color: Colors.TEXT_ON_PRIMARY, letterSpacing: LetterSpacing.tight },
-  scoreLabel: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureMedium, color: 'rgba(242,230,218,0.72)', marginTop: Spacing.xs, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase' },
-  levelLabel: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureSemi, color: Colors.TEXT_ON_PRIMARY, marginTop: Spacing.xs },
+  suggestionCard: { position: 'relative', borderRadius: Radius.xl, padding: Spacing.xl, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: 'rgba(67,104,111,0.18)', overflow: 'hidden', ...Shadow.md },
+  suggestionAccent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: Colors.PRIMARY },
+  suggestionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
+  suggestionTagRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  sparkBadge: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.PRIMARY },
+  suggestionTag: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureSemi, color: Colors.PRIMARY, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase' },
+  offlineTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: Radius.full, backgroundColor: Colors.WARNING_LIGHT },
+  offlineTagText: { fontSize: 10, color: Colors.WARNING, fontFamily: Typography.families.featureSemi, letterSpacing: 0.3, textTransform: 'uppercase' },
+  suggestionEmpty: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, paddingVertical: Spacing.sm },
+  suggestionTitle: { fontSize: Typography.sizes.xl, fontFamily: Typography.families.displaySemi, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight, marginBottom: Spacing.xs },
+  suggestionReason: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, lineHeight: Typography.lineHeight.normal, marginBottom: Spacing.md },
+  suggestionMetaRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.md, flexWrap: 'wrap' },
+  suggestionMetaPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Spacing.sm, paddingVertical: 4, borderRadius: Radius.full, backgroundColor: 'rgba(67,104,111,0.10)' },
+  priorityPill: { backgroundColor: 'rgba(194,145,78,0.16)' },
+  suggestionMetaText: { fontSize: 11, fontFamily: Typography.families.featureSemi, color: Colors.PRIMARY_DARK, letterSpacing: 0.4, textTransform: 'uppercase' },
+  suggestionActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  doneInlineBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, padding: Spacing.xs },
+  doneInlineText: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureSemi, color: Colors.SUCCESS, letterSpacing: 0.3 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: Spacing.md },
   sectionTitle: { fontSize: Typography.sizes.xl, fontFamily: Typography.families.displaySemi, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
   sectionMeta: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureSemi, color: Colors.TEXT_SECONDARY, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase', paddingBottom: 2 },

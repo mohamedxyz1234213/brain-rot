@@ -18,12 +18,12 @@ You prayed 5 times a day for 18 straight days.
 
 Your Brain Score went from 34 to 78.
 
-From Zombie... to Healing.
+From Zombie... to Restoring.
 
 This isn't just recovery.
 This is your origin story.
 
-BRAINROT HEALER
+BRAINROT — بنعالجك
 Chapter 2 begins now.`;
 
 export default function LifeTrailerScreen() {

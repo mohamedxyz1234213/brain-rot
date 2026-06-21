@@ -3,7 +3,7 @@
 //   gray  #B0B1B0  (neutral secondary / chips / dividers)
 //   cream #F2E6DA  (canvas)
 // Text is a warm deep-slate that harmonizes with the teal. Token names are
-// preserved so every screen inherits the re-skin from this single source.
+// preserved so every screen inherits the re-skin from this single source.1
 export const Colors = {
   BACKGROUND: '#F2E6DA', // warm cream canvas (signature)
   SURFACE: '#FFFFFF', // white cards / elevated surfaces

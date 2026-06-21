@@ -96,7 +96,7 @@ const WRAPPED_CARDS: WrappedCard[] = [
     icon: 'sparkles-outline',
     title: 'Your Summary',
     value: 'Recovering',
-    description: "You're healing. Keep going. Next month will be even better.",
+    description: "بنعالجك. Keep going. Next month will be even better.",
     color: Colors.SUCCESS,
   },
 ];

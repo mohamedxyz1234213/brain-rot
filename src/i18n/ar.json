@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "معالج تعفن الدماغ",
+    "appName": "BrainRot",
     "loading": "جاري التحميل...",
     "save": "حفظ",
     "cancel": "إلغاء",
@@ -11,7 +11,15 @@
     "next": "التالي",
     "skip": "تخطي",
     "retry": "إعادة المحاولة",
-    "offline": "وضع عدم الاتصال"
+    "offline": "وضع عدم الاتصال",
+    "today": "اليوم",
+    "live": "مباشر",
+    "min": "دقيقة",
+    "minutes": "دقائق",
+    "hours": "س",
+    "language": "اللغة",
+    "english": "الإنجليزية",
+    "arabic": "العربية"
   },
   "tabs": {
     "home": "الرئيسية",
@@ -21,7 +29,7 @@
     "profile": "الملف الشخصي"
   },
   "auth": {
-    "welcome": "مرحباً بك في معالج تعفن الدماغ",
+    "welcome": "أهلاً بيك في BrainRot",
     "signIn": "تسجيل الدخول",
     "signUp": "إنشاء حساب",
     "email": "البريد الإلكتروني",
@@ -29,15 +37,33 @@
     "forgotPassword": "نسيت كلمة المرور؟"
   },
   "dashboard": {
-    "greeting": "السلام عليكم",
+    "greeting": "أهلاً",
+    "greetingFallback": "السلام عليكم",
+    "subtitle": "بنعالجك النهارده",
     "brainScore": "نتيجة الدماغ",
     "screenTime": "وقت الشاشة",
-    "tasksCompleted": "المهام المنجزة",
-    "focusMinutes": "دقائق التركيز",
+    "tasksCompleted": "المهام",
+    "focusMinutes": "تركيز",
     "prayers": "الصلوات",
     "streak": "السلسلة",
     "eatTheFrog": "أكل الضفدع",
-    "completeToUnlock": "أكمل لفتح التطبيقات"
+    "completeToUnlock": "أكملها عشان تفتح التطبيقات",
+    "todayOverview": "اليوم",
+    "liveOverview": "نظرة مباشرة",
+    "appLimits": "حدود التطبيقات",
+    "appsTracked": "{{count}} تطبيق",
+    "growth": "نمو",
+    "level": "المستوى {{level}}",
+    "xpToNext": "{{xp}} نقطة لفتح المستوى التالي",
+    "focusActive": "جلسة تركيز نشطة",
+    "morningBriefing": "ملخص الصباح",
+    "aiSuggestion": "المدرب اختار لك دي",
+    "aiSuggestionEmpty": "مفيش مهام معلقة. ضيف واحدة عشان المدرب يختار.",
+    "aiOffline": "مدرب أوفلاين",
+    "startNow": "ابدأ دلوقتي",
+    "planMyDay": "خطط يومي",
+    "hardBlock": "حظر صارم",
+    "motivation": "الوقت أمانة. كل دقيقة بتسكرول فيها دقيقة بتتسرق من هدفك."
   },
   "tasks": {
     "today": "اليوم",
@@ -49,22 +75,56 @@
     "description": "الوصف",
     "priority": "الأولوية",
     "dueDate": "تاريخ الاستحقاق",
-    "aiPlanner": "مخطط الذكاء الاصطناعي"
+    "aiPlanner": "مخطط الذكاء الاصطناعي",
+    "planDay": "خطط اليوم",
+    "add": "+ إضافة",
+    "noTasks": "مفيش مهام هنا",
+    "noTasksHint": "ضيف أول مهمة عشان نبدأ نعالجك",
+    "newTask": "مهمة جديدة",
+    "whatToDo": "إيه اللي محتاج تخلصه؟",
+    "buildingSchedule": "بنبني جدولك…",
+    "noPendingToSchedule": "مفيش مهام معلقة. ضيف الأول.",
+    "planTitle": "خطط يومي",
+    "energyMorning": "صباح",
+    "energyAfternoon": "ظهر",
+    "energyEvening": "مساء",
+    "offlineSmart": "مخطط أوفلاين — وصّل الذكاء الاصطناعي لجدولة أذكى",
+    "low": "منخفضة",
+    "medium": "متوسطة",
+    "high": "عالية",
+    "critical": "حرجة",
+    "break": "استراحة"
   },
   "focus": {
     "pomodoro": "بومودورو",
     "deepWork": "عمل عميق",
     "flow": "تدفق",
     "quickSprint": "سباق سريع",
-    "startSession": "بدء الجلسة",
+    "startSession": "ابدأ جلسة تركيز",
     "endSession": "إنهاء الجلسة",
-    "distracted": "تشتت انتباهي"
+    "distracted": "اتشتت انتباهي",
+    "distraction": "تشتيت",
+    "pause": "إيقاف مؤقت",
+    "resume": "متابعة",
+    "end": "إنهاء",
+    "totalToday": "{{count}} دقيقة النهارده",
+    "deepWorkTag": "عمل عميق",
+    "sessionComplete": "خلصت الجلسة",
+    "minOf": "{{minutes}} دقيقة من {{mode}}",
+    "xpEarned": "+{{xp}} نقطة",
+    "pickTaskFirst": "اختار مهمة عشان تركز عليها",
+    "appsBlocked": "كل التطبيقات متقفلة لحد ما تخلص المهمة",
+    "appsUnlocked": "التطبيقات اتفتحت. شغل تمام.",
+    "selectedTask": "بتشتغل على",
+    "noTasksAvailable": "ضيف مهمة في تبويب المهام عشان تبدأ جلسة تركيز",
+    "blockingEnforced": "وضع صارم",
+    "blockingEnforcedHint": "التطبيقات المشتتة هتفضل مقفلة لحد ما تخلص أو تنهي الجلسة"
   },
   "roast": {
-    "title": "أنت تستحق هذا",
-    "deservedIt": "أنا أستحق هذا",
+    "title": "إنت مستحق ده",
+    "deservedIt": "أنا مستحق ده",
     "shareShame": "شارك عاري",
-    "proveWrong": "أثبت خطأهم ←"
+    "proveWrong": "أثبتلهم العكس ←"
   },
   "religion": {
     "prayerTimes": "مواقيت الصلاة",
@@ -80,11 +140,23 @@
   },
   "subscription": {
     "free": "مجاني",
-    "healed": "معالَج",
+    "healed": "اتعالج",
     "ascended": "متسامي",
     "family": "عائلي",
     "lifetime": "مدى الحياة",
     "upgrade": "ترقية الآن",
     "trial": "ابدأ تجربة مجانية لمدة 7 أيام"
+  },
+  "profile": {
+    "yourAccount": "حسابك",
+    "profile": "الملف الشخصي",
+    "statsOverview": "نظرة على الأرقام",
+    "signOut": "تسجيل الخروج",
+    "settings": "الإعدادات",
+    "analytics": "التحليلات",
+    "roastHistory": "سجل التحفيز",
+    "accountability": "المحاسبة",
+    "leaderboard": "المتصدرين",
+    "challenges": "التحديات"
   }
 }

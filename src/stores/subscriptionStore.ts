@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from '../lib/persistence';
 
-type Level = 'Zombie' | 'Waking Up' | 'Struggling' | 'Recovering' | 'Healing' | 'Thriving' | 'Ascended';
+type Level = 'Zombie' | 'Waking Up' | 'Struggling' | 'Recovering' | 'Restoring' | 'Thriving' | 'Ascended';
 
 interface SubscriptionState {
   tier: 'free' | 'healed' | 'ascended' | 'family' | 'lifetime';

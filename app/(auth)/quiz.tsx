@@ -30,9 +30,9 @@ const QUESTIONS: QuizQuestion[] = [
 
 function getResult(score: number) {
   if (score <= 20) return { icon: 'leaf-outline' as const, title: 'Minimal Brain Rot', message: "You're doing great! Minor optimizations will level you up." };
-  if (score <= 40) return { icon: 'ellipse-outline' as const, title: 'Moderate Brain Rot', message: "Some unhealthy habits forming. Let's catch them early." };
+  if (score <= 40) return { icon: 'ellipse-outline' as const, title: 'Moderate Brain Rot', message: "Some bad habits forming. Let's catch them early." };
   if (score <= 60) return { icon: 'warning-outline' as const, title: 'Significant Brain Rot', message: "Your dopamine system is compromised. Serious intervention needed." };
-  if (score <= 80) return { icon: 'skull-outline' as const, title: 'Severe Brain Rot', message: "Deep in the scroll hole. BrainRot Healer was built for you." };
+  if (score <= 80) return { icon: 'skull-outline' as const, title: 'Severe Brain Rot', message: "Deep in the scroll hole. BrainRot was built for you. بنعالجك." };
   return { icon: 'alert-circle-outline' as const, title: 'Critical Brain Rot', message: "Emergency intervention. Your brain runs on pure dopamine fumes." };
 }
 

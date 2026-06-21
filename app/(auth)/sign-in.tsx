@@ -46,7 +46,7 @@ export default function SignInScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
         <Animated.View entering={FadeInDown.duration(400)}>
           <Text style={styles.title}>Sign In</Text>
-          <Text style={styles.subtitle}>Welcome back, let's heal your brain</Text>
+          <Text style={styles.subtitle}>Welcome back. بنعالجك تاني.</Text>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.form}>

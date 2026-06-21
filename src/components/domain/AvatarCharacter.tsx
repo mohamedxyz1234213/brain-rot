@@ -23,7 +23,7 @@ const STAGE_COLORS = [
 
 const STAGE_LABELS = [
   'Zombie', 'Waking Up', 'Struggling', 'Recovering',
-  'Healing', 'Thriving', 'Ascended',
+  'Restoring', 'Thriving', 'Ascended',
 ];
 
 export function AvatarCharacter({ stage, size = 120 }: AvatarCharacterProps) {

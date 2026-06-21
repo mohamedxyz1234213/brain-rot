@@ -34,8 +34,8 @@ export default function WelcomeScreen() {
         <LinearGradient colors={[...Gradients.brandDark] as unknown as [string, string]} style={styles.heroOrb}>
           <Ionicons name="hardware-chip-outline" size={42} color={Colors.TEXT_ON_PRIMARY} />
         </LinearGradient>
-        <Text style={styles.title}>BrainRot Healer</Text>
-        <Text style={styles.subtitle}>Recover from social media addiction. Get roasted. Get healed.</Text>
+        <Text style={styles.title}>BrainRot</Text>
+        <Text style={styles.subtitle}>Recover from social media addiction. Get roasted. بنعالجك.</Text>
 
         <View style={styles.features}>
           <Animated.View entering={FadeInDown.duration(400).delay(200)}>

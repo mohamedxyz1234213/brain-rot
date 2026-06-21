@@ -23,9 +23,25 @@ interface RoastResult {
   isOffline: boolean;
 }
 
+// NOTE: EXPO_PUBLIC_* env vars are bundled into the client JS. Shipping a real
+// Anthropic key here would expose it to anyone who downloads the app. In
+// production, route requests through a backend proxy that holds the secret.
+// This file falls back to deterministic offline content when no key is set.
 const API_URL = process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY
   ? 'https://api.anthropic.com/v1/messages'
   : null;
+
+// Cap the number of tasks and characters we ever send to the model. Keeps the
+// prompt cheap and prevents accidental prompt-injection scale.
+const MAX_TASKS_IN_PROMPT = 25;
+const MAX_TITLE_CHARS = 120;
+
+function trimTaskList<T extends { title: string }>(tasks: T[]): T[] {
+  return tasks.slice(0, MAX_TASKS_IN_PROMPT).map((t) => ({
+    ...t,
+    title: typeof t.title === 'string' ? t.title.slice(0, MAX_TITLE_CHARS) : '',
+  }));
+}
 
 /**
  * Generate a roast using Claude API, with offline fallback
@@ -141,7 +157,7 @@ export async function generateDayPlan(
           {
             role: 'user',
             content: `Create a time-blocked daily schedule for these tasks. 
-Tasks: ${JSON.stringify(tasks)}
+Tasks: ${JSON.stringify(trimTaskList(tasks))}
 Preferences: Peak energy = ${preferences.energyLevel}, Work hours = ${preferences.workHours}
 
 Return ONLY a JSON array like: [{"time": "09:00", "task": "Task name", "duration": 30}]
@@ -199,6 +215,109 @@ function buildOfflineSchedule(
     }
   });
   return schedule;
+}
+
+/**
+ * Suggest the single next task to focus on right now, based on priority,
+ * estimated time, and the current time of day. Returns null if no tasks.
+ */
+export interface NextTaskSuggestion {
+  taskId: string;
+  title: string;
+  reason: string;
+  estimatedMinutes: number;
+  priority: string;
+  isOffline: boolean;
+}
+
+export async function suggestNextTask(
+  tasks: { id: string; title: string; priority: string; estimatedMinutes?: number; isEatTheFrog?: boolean; postponeCount?: number }[],
+  context: { currentHour: number; energyLevel?: 'morning' | 'afternoon' | 'evening'; lang?: 'en' | 'ar' }
+): Promise<NextTaskSuggestion | null> {
+  if (!tasks.length) return null;
+
+  // Always have a deterministic fallback pick (in case API fails)
+  const ranked = [...tasks].sort((a, b) => {
+    if (a.isEatTheFrog && !b.isEatTheFrog) return -1;
+    if (!a.isEatTheFrog && b.isEatTheFrog) return 1;
+    const p = (PRIORITY_RANK[a.priority] ?? 2) - (PRIORITY_RANK[b.priority] ?? 2);
+    if (p !== 0) return p;
+    return (b.postponeCount ?? 0) - (a.postponeCount ?? 0);
+  });
+  const pick = ranked[0];
+  const offlineReason = context.lang === 'ar'
+    ? pick.isEatTheFrog
+      ? 'هذه المهمة هي الضفدع — ابدأ بها قبل ما تتمد.'
+      : pick.priority === 'critical' || pick.priority === 'high'
+        ? 'أولوية عالية. خلصها قبل ما تتراكم عليك حاجات تانية.'
+        : 'مهمة سريعة دلوقتي تكسبك زخم لباقي اليوم.'
+    : pick.isEatTheFrog
+      ? "This is your Eat-the-Frog task — knock it out before anything else."
+      : pick.priority === 'critical' || pick.priority === 'high'
+        ? 'Highest leverage in your list right now. Tackle it while energy is fresh.'
+        : 'A short win to build momentum into the rest of the day.';
+
+  const fallback: NextTaskSuggestion = {
+    taskId: pick.id,
+    title: pick.title,
+    reason: offlineReason,
+    estimatedMinutes: pick.estimatedMinutes ?? 30,
+    priority: pick.priority,
+    isOffline: true,
+  };
+
+  if (!API_URL || !process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY) return fallback;
+
+  try {
+    const langInstr = context.lang === 'ar'
+      ? 'Respond in Arabic (Egyptian dialect, motivating, 1 sentence).'
+      : 'Respond in English, 1 motivating sentence.';
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 220,
+        messages: [
+          {
+            role: 'user',
+            content: `You are a focused productivity coach. Given the pending tasks and current hour, pick the ONE task to do next and explain why in one sentence. ${langInstr}
+
+Current hour (0-23): ${context.currentHour}
+Pending tasks: ${JSON.stringify(trimTaskList(tasks).map((t) => ({ id: t.id, title: t.title, priority: t.priority, mins: t.estimatedMinutes ?? 30, frog: !!t.isEatTheFrog, postpones: t.postponeCount ?? 0 })))}
+
+Return ONLY JSON in the form: {"taskId":"...","reason":"..."}`,
+          },
+        ],
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const text: string = data.content?.[0]?.text || '';
+      const m = text.match(/\{[\s\S]*\}/);
+      if (m) {
+        const parsed = JSON.parse(m[0]);
+        const chosen = tasks.find((t) => t.id === parsed.taskId) ?? pick;
+        return {
+          taskId: chosen.id,
+          title: chosen.title,
+          reason: parsed.reason ?? offlineReason,
+          estimatedMinutes: chosen.estimatedMinutes ?? 30,
+          priority: chosen.priority,
+          isOffline: false,
+        };
+      }
+    }
+  } catch (error) {
+    console.warn('AI suggestNextTask failed:', error);
+  }
+
+  return fallback;
 }
 
 /**

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Pressable, TextInput, Modal } from 
 import Animated, { FadeInLeft } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import { Colors, Typography, Spacing, Radius, Sizing, Shadow, LetterSpacing, ANIMATION } from '../../src/constants/theme';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
@@ -16,8 +17,8 @@ import { generateDayPlan, DayPlanBlock } from '../../src/services/aiService';
 
 type EnergyLevel = 'morning' | 'afternoon' | 'evening';
 
-const TABS = ['Today', 'Upcoming', 'Completed', 'Abandoned'] as const;
 type TaskTab = 'today' | 'upcoming' | 'completed' | 'abandoned';
+const TAB_IDS: TaskTab[] = ['today', 'upcoming', 'completed', 'abandoned'];
 
 const PRIORITY_COLORS: Record<string, string> = {
   low: Colors.TEXT_SECONDARY,
@@ -27,6 +28,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 export default function TasksScreen() {
+  const { t } = useTranslation();
   const activeTab = useTaskStore((s) => s.activeTab);
   const setActiveTab = useTaskStore((s) => s.setActiveTab);
   const tasks = useTaskStore((s) => s.tasks);
@@ -97,7 +99,6 @@ export default function TasksScreen() {
     handlePlanDay('morning');
   };
 
-  const tabMap: Record<string, TaskTab> = { Today: 'today', Upcoming: 'upcoming', Completed: 'completed', Abandoned: 'abandoned' };
   const filteredTasks = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     switch (activeTab) {
@@ -117,26 +118,26 @@ export default function TasksScreen() {
   return (
     <SafeScreen tabBarSpacing>
       <TabHeader
-        eyebrow="Get it done"
-        title="Tasks"
+        eyebrow={t('tabs.tasks')}
+        title={t('tabs.tasks')}
         rightAction={
           <>
-            <Button title="Plan Day" onPress={openPlanModal} variant="ghost" size="sm" />
-            <Button title="+ Add" onPress={() => setShowAddModal(true)} size="sm" />
+            <Button title={t('tasks.planDay')} onPress={openPlanModal} variant="ghost" size="sm" />
+            <Button title={t('tasks.add')} onPress={() => setShowAddModal(true)} size="sm" />
           </>
         }
       />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabs}>
-        {TABS.map((tab) => (
+        {TAB_IDS.map((tab) => (
           <Pressable
             key={tab}
-            style={[styles.tab, activeTab === tabMap[tab] && styles.tabActive]}
-            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setActiveTab(tabMap[tab]); }}
+            style={[styles.tab, activeTab === tab && styles.tabActive]}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setActiveTab(tab); }}
             accessibilityRole="button"
-            accessibilityLabel={tab}
+            accessibilityLabel={t(`tasks.${tab}`)}
           >
-            <Text style={[styles.tabText, activeTab === tabMap[tab] && styles.tabTextActive]}>{tab}</Text>
+            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{t(`tasks.${tab}`)}</Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -145,9 +146,9 @@ export default function TasksScreen() {
         {filteredTasks.length === 0 ? (
           <EmptyState
             icon="clipboard-outline"
-            title="No tasks here"
-            subtitle="Add your first task to start healing your brain"
-            action={<Button title="Add Task" onPress={() => setShowAddModal(true)} />}
+            title={t('tasks.noTasks')}
+            subtitle={t('tasks.noTasksHint')}
+            action={<Button title={t('tasks.addTask')} onPress={() => setShowAddModal(true)} />}
           />
         ) : (
           filteredTasks.map((task, i) => (
@@ -173,8 +174,8 @@ export default function TasksScreen() {
                     </View>
                     <View style={styles.metaRow}>
                       <View style={[styles.priorityDot, { backgroundColor: PRIORITY_COLORS[task.priority] }]} />
-                      <Text style={styles.meta}>{task.priority}</Text>
-                      {task.estimatedMinutes && <Text style={styles.meta}> · {task.estimatedMinutes}min</Text>}
+                      <Text style={styles.meta}>{t(`tasks.${task.priority}`)}</Text>
+                      {task.estimatedMinutes && <Text style={styles.meta}> · {task.estimatedMinutes}{t('common.min')}</Text>}
                     </View>
                   </View>
                   {task.status === 'pending' && (
@@ -192,15 +193,15 @@ export default function TasksScreen() {
       <Modal visible={showAddModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <Animated.View entering={FadeInLeft.duration(300)} style={styles.modalContent}>
-            <Text style={styles.modalTitle}>New Task</Text>
+            <Text style={styles.modalTitle}>{t('tasks.newTask')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="What needs to be done?"
+              placeholder={t('tasks.whatToDo')}
               placeholderTextColor={Colors.TEXT_SECONDARY}
               value={newTitle}
               onChangeText={setNewTitle}
               autoFocus
-              accessibilityLabel="Task title"
+              accessibilityLabel={t('tasks.title')}
             />
             <View style={styles.priorityRow}>
               {(['low', 'medium', 'high', 'critical'] as const).map((p) => (
@@ -209,15 +210,15 @@ export default function TasksScreen() {
                   style={[styles.priorityBtn, newPriority === p && styles.priorityBtnActive, { borderColor: PRIORITY_COLORS[p] }]}
                   onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setNewPriority(p); }}
                   accessibilityRole="button"
-                  accessibilityLabel={`Priority: ${p}`}
+                  accessibilityLabel={`${t('tasks.priority')}: ${t(`tasks.${p}`)}`}
                 >
-                  <Text style={[styles.priorityBtnText, newPriority === p && { color: PRIORITY_COLORS[p] }]}>{p}</Text>
+                  <Text style={[styles.priorityBtnText, newPriority === p && { color: PRIORITY_COLORS[p] }]}>{t(`tasks.${p}`)}</Text>
                 </Pressable>
               ))}
             </View>
             <View style={styles.modalActions}>
-              <Button title="Cancel" onPress={() => setShowAddModal(false)} variant="ghost" size="md" />
-              <Button title="Add Task" onPress={handleAddTask} size="md" />
+              <Button title={t('common.cancel')} onPress={() => setShowAddModal(false)} variant="ghost" size="md" />
+              <Button title={t('tasks.addTask')} onPress={handleAddTask} size="md" />
             </View>
           </Animated.View>
         </View>
@@ -226,11 +227,11 @@ export default function TasksScreen() {
       <Modal visible={showPlanModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <Animated.View entering={FadeInLeft.duration(300)} style={[styles.modalContent, styles.planContent]}>
-            <Text style={styles.modalTitle}>Plan My Day</Text>
+            <Text style={styles.modalTitle}>{t('tasks.planTitle')}</Text>
             {planOffline && (
               <View style={styles.offlineNote}>
                 <Ionicons name="flash-outline" size={Typography.sizes.sm} color={Colors.WARNING} />
-                <Text style={styles.offlineNoteText}>Offline planner — connect AI for smarter scheduling</Text>
+                <Text style={styles.offlineNoteText}>{t('tasks.offlineSmart')}</Text>
               </View>
             )}
 
@@ -241,9 +242,9 @@ export default function TasksScreen() {
                   style={[styles.energyBtn, energyLevel === e && styles.energyBtnActive]}
                   onPress={() => handlePlanDay(e)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Peak energy: ${e}`}
+                  accessibilityLabel={t(`tasks.energy${e.charAt(0).toUpperCase()}${e.slice(1)}`)}
                 >
-                  <Text style={[styles.energyBtnText, energyLevel === e && styles.energyBtnTextActive]}>{e}</Text>
+                  <Text style={[styles.energyBtnText, energyLevel === e && styles.energyBtnTextActive]}>{t(`tasks.energy${e.charAt(0).toUpperCase()}${e.slice(1)}`)}</Text>
                 </Pressable>
               ))}
             </View>
@@ -253,11 +254,11 @@ export default function TasksScreen() {
                 <SkeletonLoader width="100%" height={48} style={{ marginBottom: Spacing.sm }} />
                 <SkeletonLoader width="85%" height={48} style={{ marginBottom: Spacing.sm }} />
                 <SkeletonLoader width="70%" height={48} style={{ marginBottom: Spacing.md }} />
-                <Text style={styles.planEmptyText}>Building your schedule…</Text>
+                <Text style={styles.planEmptyText}>{t('tasks.buildingSchedule')}</Text>
               </View>
             ) : planSchedule.length === 0 ? (
               <View style={styles.planEmpty}>
-                <Text style={styles.planEmptyText}>No pending tasks to schedule. Add some first.</Text>
+                <Text style={styles.planEmptyText}>{t('tasks.noPendingToSchedule')}</Text>
               </View>
             ) : (
               <ScrollView style={styles.planList} contentContainerStyle={{ paddingBottom: Spacing.md }}>
@@ -266,9 +267,9 @@ export default function TasksScreen() {
                     <Text style={styles.planTime}>{block.time}</Text>
                     <View style={styles.planBlockBody}>
                       <Text style={[styles.planTask, block.task === 'Break' && styles.planTaskBreak]} numberOfLines={2}>
-                        {block.task}
+                        {block.task === 'Break' ? t('tasks.break') : block.task}
                       </Text>
-                      <Text style={styles.planDuration}>{block.duration} min</Text>
+                      <Text style={styles.planDuration}>{block.duration} {t('common.min')}</Text>
                     </View>
                   </View>
                 ))}
@@ -276,7 +277,7 @@ export default function TasksScreen() {
             )}
 
             <View style={styles.modalActions}>
-              <Button title="Done" onPress={() => setShowPlanModal(false)} size="md" />
+              <Button title={t('common.done')} onPress={() => setShowPlanModal(false)} size="md" />
             </View>
           </Animated.View>
         </View>

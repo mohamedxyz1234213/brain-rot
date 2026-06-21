@@ -100,7 +100,7 @@ export default function SetupPersonaScreen() {
         ))}
 
         <View style={styles.actions}>
-          <Button title="Start Healing" onPress={handleContinue} size="lg" disabled={!selectedPersona} />
+          <Button title="ابدأ — بنعالجك" onPress={handleContinue} size="lg" disabled={!selectedPersona} />
           <Button title="Skip" onPress={handleSkip} variant="ghost" size="md" />
         </View>
       </ScrollView>

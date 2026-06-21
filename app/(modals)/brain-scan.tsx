@@ -9,7 +9,7 @@ export default function BrainScanModal() {
   const regions = [
     { name: 'Prefrontal Cortex', label: 'Decision Making', score: 72, status: 'Recovering' },
     { name: 'Nucleus Accumbens', label: 'Reward Center', score: 45, status: 'Damaged' },
-    { name: 'Hippocampus', label: 'Memory', score: 68, status: 'Healing' },
+    { name: 'Hippocampus', label: 'Memory', score: 68, status: 'Restoring' },
     { name: 'Amygdala', label: 'Impulse Control', score: 55, status: 'Struggling' },
     { name: 'Anterior Cingulate', label: 'Focus', score: 78, status: 'Good' },
   ];
@@ -23,13 +23,13 @@ export default function BrainScanModal() {
 
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.badge}>WEEKLY BRAIN SCAN</Text>
-          <Text style={styles.title}>Brain Health Report</Text>
+          <Text style={styles.title}>Brain Status Report</Text>
           <Text style={styles.date}>Week of {new Date().toLocaleDateString()}</Text>
 
           <View style={styles.brainViz}>
             <Ionicons name="hardware-chip-outline" size={Sizing.iconLg} color={Colors.PRIMARY} style={styles.brainIcon} />
             <Text style={styles.overallScore}>72</Text>
-            <Text style={styles.overallLabel}>Overall Health</Text>
+            <Text style={styles.overallLabel}>Overall Status</Text>
           </View>
 
           <View style={styles.regionsCard}>

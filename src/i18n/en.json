@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "BrainRot Healer",
+    "appName": "BrainRot",
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel",
@@ -11,7 +11,15 @@
     "next": "Next",
     "skip": "Skip",
     "retry": "Retry",
-    "offline": "Offline Mode"
+    "offline": "Offline Mode",
+    "today": "Today",
+    "live": "Live",
+    "min": "min",
+    "minutes": "minutes",
+    "hours": "h",
+    "language": "Language",
+    "english": "English",
+    "arabic": "Arabic"
   },
   "tabs": {
     "home": "Home",
@@ -21,7 +29,7 @@
     "profile": "Profile"
   },
   "auth": {
-    "welcome": "Welcome to BrainRot Healer",
+    "welcome": "Welcome to BrainRot",
     "signIn": "Sign In",
     "signUp": "Sign Up",
     "email": "Email",
@@ -29,15 +37,33 @@
     "forgotPassword": "Forgot Password?"
   },
   "dashboard": {
-    "greeting": "Assalamu Alaikum",
+    "greeting": "Hey",
+    "greetingFallback": "Assalamu Alaikum",
+    "subtitle": "بنعالجك today",
     "brainScore": "Brain Score",
     "screenTime": "Screen Time",
-    "tasksCompleted": "Tasks Done",
-    "focusMinutes": "Focus Min",
+    "tasksCompleted": "Tasks",
+    "focusMinutes": "Focus",
     "prayers": "Prayers",
     "streak": "Streak",
     "eatTheFrog": "Eat the Frog",
-    "completeToUnlock": "Complete to unlock apps"
+    "completeToUnlock": "Complete to unlock apps",
+    "todayOverview": "Today",
+    "liveOverview": "Live overview",
+    "appLimits": "App Limits",
+    "appsTracked": "{{count}} tracked",
+    "growth": "Growth",
+    "level": "Level {{level}}",
+    "xpToNext": "{{xp}} XP to your next unlock",
+    "focusActive": "Focus Active",
+    "morningBriefing": "Morning Briefing",
+    "aiSuggestion": "Coach Picks This For You",
+    "aiSuggestionEmpty": "No pending tasks. Add one to get a coach pick.",
+    "aiOffline": "Offline coach",
+    "startNow": "Start now",
+    "planMyDay": "Plan my day",
+    "hardBlock": "Hard Block",
+    "motivation": "Time is an Amanah. Every minute scrolling is a minute stolen from your purpose."
   },
   "tasks": {
     "today": "Today",
@@ -49,16 +75,50 @@
     "description": "Description",
     "priority": "Priority",
     "dueDate": "Due Date",
-    "aiPlanner": "AI Day Planner"
+    "aiPlanner": "AI Day Planner",
+    "planDay": "Plan Day",
+    "add": "+ Add",
+    "noTasks": "No tasks here",
+    "noTasksHint": "Add your first task so we can start working on you",
+    "newTask": "New Task",
+    "whatToDo": "What needs to be done?",
+    "buildingSchedule": "Building your schedule…",
+    "noPendingToSchedule": "No pending tasks to schedule. Add some first.",
+    "planTitle": "Plan My Day",
+    "energyMorning": "morning",
+    "energyAfternoon": "afternoon",
+    "energyEvening": "evening",
+    "offlineSmart": "Offline planner — connect AI for smarter scheduling",
+    "low": "low",
+    "medium": "medium",
+    "high": "high",
+    "critical": "critical",
+    "break": "Break"
   },
   "focus": {
     "pomodoro": "Pomodoro",
     "deepWork": "Deep Work",
     "flow": "Flow",
     "quickSprint": "Quick Sprint",
-    "startSession": "Start Session",
+    "startSession": "Start Focus Session",
     "endSession": "End Session",
-    "distracted": "I got distracted"
+    "distracted": "I got distracted",
+    "distraction": "Distraction",
+    "pause": "Pause",
+    "resume": "Resume",
+    "end": "End",
+    "totalToday": "{{count}} min today",
+    "deepWorkTag": "Deep work",
+    "sessionComplete": "Session Complete",
+    "minOf": "{{minutes}} min of {{mode}}",
+    "xpEarned": "+{{xp}} XP",
+    "pickTaskFirst": "Pick a task to focus on",
+    "appsBlocked": "All apps blocked until you complete this task",
+    "appsUnlocked": "Apps unlocked. Great work.",
+    "selectedTask": "Working on",
+    "noTasksAvailable": "Add a task in the Tasks tab to start a focused session",
+    "blockingEnforced": "Strict mode",
+    "blockingEnforcedHint": "Distracting apps stay locked until you finish or end the session"
   },
   "roast": {
     "title": "You Deserved This",
@@ -80,11 +140,23 @@
   },
   "subscription": {
     "free": "Free",
-    "healed": "Healed",
+    "healed": "Cured",
     "ascended": "Ascended",
     "family": "Family",
     "lifetime": "Lifetime",
     "upgrade": "Upgrade Now",
     "trial": "Start 7-Day Free Trial"
+  },
+  "profile": {
+    "yourAccount": "Your account",
+    "profile": "Profile",
+    "statsOverview": "Stats Overview",
+    "signOut": "Sign Out",
+    "settings": "Settings",
+    "analytics": "Analytics",
+    "roastHistory": "Roast History",
+    "accountability": "Accountability",
+    "leaderboard": "Leaderboard",
+    "challenges": "Challenges"
   }
 }

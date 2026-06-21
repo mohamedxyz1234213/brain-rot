@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from '../lib/persistence';
 
-type Level = 'Zombie' | 'Waking Up' | 'Struggling' | 'Recovering' | 'Healing' | 'Thriving' | 'Ascended';
+type Level = 'Zombie' | 'Waking Up' | 'Struggling' | 'Recovering' | 'Restoring' | 'Thriving' | 'Ascended';
 
 interface LevelInfo {
   name: Level;
@@ -15,7 +15,7 @@ const LEVEL_THRESHOLDS: { name: Level; minXP: number }[] = [
   { name: 'Waking Up', minXP: 500 },
   { name: 'Struggling', minXP: 1500 },
   { name: 'Recovering', minXP: 3500 },
-  { name: 'Healing', minXP: 7000 },
+  { name: 'Restoring', minXP: 7000 },
   { name: 'Thriving', minXP: 13000 },
   { name: 'Ascended', minXP: 25000 },
 ];
