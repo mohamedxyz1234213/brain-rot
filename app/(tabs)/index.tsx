@@ -1,26 +1,26 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable } from 'react-native';
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
-import { Colors, Typography, Spacing, Radius, Sizing, Gradients, LetterSpacing, Shadow } from '../../src/constants/theme';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import { ScoreShowcase } from '../../src/components/domain/ScoreShowcase';
+import { Button } from '../../src/components/ui/Button';
 import { Card } from '../../src/components/ui/Card';
 import { ProgressBar } from '../../src/components/ui/ProgressBar';
-import { Button } from '../../src/components/ui/Button';
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
-import { ScoreShowcase } from '../../src/components/domain/ScoreShowcase';
+import { Colors, Gradients, LetterSpacing, Radius, Shadow, Sizing, Spacing, Typography } from '../../src/constants/theme';
+import { generateMorningBriefing, NextTaskSuggestion, suggestNextTask } from '../../src/services/aiService';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useBrainScoreStore } from '../../src/stores/brainScoreStore';
-import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
-import { useTaskStore } from '../../src/stores/taskStore';
 import { useFocusStore } from '../../src/stores/focusStore';
-import { useStreakStore } from '../../src/stores/streakStore';
-import { useXPStore } from '../../src/stores/xpStore';
 import { useReligionStore } from '../../src/stores/religionStore';
+import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
 import { useSettingsStore } from '../../src/stores/settingsStore';
-import { generateMorningBriefing, suggestNextTask, NextTaskSuggestion } from '../../src/services/aiService';
+import { useStreakStore } from '../../src/stores/streakStore';
+import { useTaskStore } from '../../src/stores/taskStore';
+import { useXPStore } from '../../src/stores/xpStore';
 
 const todayKey = () => new Date().toISOString().split('T')[0];
 
@@ -435,8 +435,8 @@ const styles = StyleSheet.create({
   suggestionTagRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   sparkBadge: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.PRIMARY },
   suggestionTag: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureSemi, color: Colors.PRIMARY, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase' },
-  offlineTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: Radius.full, backgroundColor: Colors.WARNING_LIGHT },
-  offlineTagText: { fontSize: 10, color: Colors.WARNING, fontFamily: Typography.families.featureSemi, letterSpacing: 0.3, textTransform: 'uppercase' },
+  offlineTag: { flexDirection: 'row', alignItems: 'center', gap: 0, paddingHorizontal: Spacing.sm, paddingVertical: 1, borderRadius: Radius.full, backgroundColor: Colors.WARNING_LIGHT },
+  offlineTagText: { fontSize: 9, color: Colors.WARNING, fontFamily: Typography.families.featureSemi, letterSpacing: 0.3, textTransform: 'uppercase' },
   suggestionEmpty: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, paddingVertical: Spacing.sm },
   suggestionTitle: { fontSize: Typography.sizes.xl, fontFamily: Typography.families.displaySemi, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight, marginBottom: Spacing.xs },
   suggestionReason: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, lineHeight: Typography.lineHeight.normal, marginBottom: Spacing.md },
