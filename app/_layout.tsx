@@ -20,7 +20,7 @@ import { useSettingsStore } from '../src/stores/settingsStore';
 import { useAuthStore } from '../src/stores/authStore';
 import { useTaskStore } from '../src/stores/taskStore';
 import { useScreenTimeStore } from '../src/stores/screenTimeStore';
-import { scheduleDailyRoasts, resetSchedulingGuard } from '../src/services/roastNotificationService';
+import { scheduleDailyRoasts, resetSchedulingGuard, fireUsageRoast } from '../src/services/roastNotificationService';
 import { schedulePrayerReminders, evaluatePrayerBlock, resetPrayerSchedulingGuard } from '../src/services/prayerReminderService';
 import { setRegionOverride as applyRegionOverride } from '../src/services/pricing';
 import { getPrayerTimes } from '../src/services/prayerTimes';
@@ -116,6 +116,31 @@ export default function RootLayout() {
       topMinutes: topLog?.minutesUsed,
       perDay: 8,
     });
+  }, [language, dailyRoastEnabled, userName]);
+
+  useEffect(() => {
+    if (!dailyRoastEnabled) return;
+
+    const checkUsage = () => {
+      const screenTime = useScreenTimeStore.getState();
+      const pending = useTaskStore.getState().tasks.filter((t) => t.status === 'pending').length;
+      const topLog = [...screenTime.logs].sort((a, b) => b.minutesUsed - a.minutesUsed)[0];
+      const overage = screenTime.getOverageApps()[0];
+
+      fireUsageRoast({
+        lang: language,
+        name: userName,
+        pendingTasks: pending,
+        topApp: overage?.appName ?? topLog?.appName,
+        topMinutes: overage?.dailyLimitMinutes ?? topLog?.minutesUsed,
+        totalMinutes: topLog?.minutesUsed ?? screenTime.totalMinutesToday,
+        limitMinutes: overage?.dailyLimitMinutes,
+      });
+    };
+
+    checkUsage();
+    const t = setInterval(checkUsage, 60_000);
+    return () => clearInterval(t);
   }, [language, dailyRoastEnabled, userName]);
 
   const [loaded, error] = useFonts({

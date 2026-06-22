@@ -27,7 +27,13 @@ interface ScheduleContext {
   perDay?: number; // how many roasts to schedule per day (default 6)
 }
 
+interface UsageRoastContext extends ScheduleContext {
+  totalMinutes?: number;
+  limitMinutes?: number;
+}
+
 let lastScheduledOn: string | null = null;
+let lastUsageRoastKey: string | null = null;
 
 export async function ensurePermissions(): Promise<boolean> {
   try {
@@ -166,7 +172,25 @@ export async function fireRoastNow(ctx: ScheduleContext): Promise<void> {
   }
 }
 
+export async function fireUsageRoast(ctx: UsageRoastContext): Promise<void> {
+  const total = ctx.totalMinutes ?? ctx.topMinutes ?? 0;
+  const limit = ctx.limitMinutes;
+  const bucket = limit && total >= limit ? `limit-${limit}` : `usage-${Math.floor(total / 30)}`;
+  const today = new Date().toISOString().split('T')[0];
+  const key = `${today}-${ctx.lang}-${ctx.topApp ?? 'overall'}-${bucket}`;
+
+  if (total < 30 && (!limit || total < limit)) return;
+  if (lastUsageRoastKey === key) return;
+
+  lastUsageRoastKey = key;
+  await fireRoastNow({
+    ...ctx,
+    topMinutes: total,
+  });
+}
+
 /** Reset the once-a-day guard (e.g. when the user changes language). */
 export function resetSchedulingGuard() {
   lastScheduledOn = null;
+  lastUsageRoastKey = null;
 }
