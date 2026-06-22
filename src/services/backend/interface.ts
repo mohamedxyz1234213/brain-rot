@@ -19,6 +19,7 @@ export interface User {
   language: 'en' | 'ar';
   religionEnabled: boolean;
   subscriptionTier: 'free' | 'healed' | 'ascended' | 'family' | 'lifetime';
+  role?: 'user' | 'admin';
   createdAt: string;
   updatedAt: string;
 }
@@ -163,6 +164,51 @@ export interface NotificationSettings {
   drivingAlert: boolean;
 }
 
+export interface AdminOverview {
+  totalUsers: number;
+  activeSubscriptions: number;
+  freeUsers: number;
+  totalScreenTimeMinutes: number;
+  blockedAttempts: number;
+  averageBrainScore: number;
+  focusMinutes: number;
+  generatedAt: string;
+}
+
+export interface AdminUserSummary {
+  id: string;
+  name: string;
+  email: string;
+  subscriptionTier: User['subscriptionTier'];
+  role?: User['role'];
+  brainScore: number;
+  xp: number;
+  streakDays: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminSubscriptionSummary {
+  id: string;
+  userId: string;
+  tier: Subscription['tier'];
+  isActive: boolean;
+  expiresAt?: string;
+  revenueCatId?: string;
+}
+
+export interface AdminTrafficMetric {
+  id: string;
+  userId: string;
+  appName: string;
+  appBundleId: string;
+  minutesUsed: number;
+  limit: number;
+  overageMinutes: number;
+  blockedAttempts: number;
+  date: string;
+}
+
 // ---------- Service Interface ----------
 
 export interface IBackendService {
@@ -227,4 +273,10 @@ export interface IBackendService {
   // Notifications
   getNotificationSettings(userId: string): Promise<NotificationSettings | null>;
   updateNotificationSettings(userId: string, data: Partial<NotificationSettings>): Promise<NotificationSettings>;
+
+  // Admin
+  getAdminOverview(): Promise<AdminOverview>;
+  getAdminUsers(limit?: number): Promise<AdminUserSummary[]>;
+  getAdminSubscriptions(limit?: number): Promise<AdminSubscriptionSummary[]>;
+  getAdminTrafficMetrics(days?: number): Promise<AdminTrafficMetric[]>;
 }

@@ -18,6 +18,10 @@ import {
   AccountabilityCircle,
   Subscription,
   NotificationSettings,
+  AdminOverview,
+  AdminUserSummary,
+  AdminSubscriptionSummary,
+  AdminTrafficMetric,
 } from './interface';
 
 const API_URL = process.env.EXPO_PUBLIC_MONGO_API_URL || 'http://localhost:3001/api';
@@ -257,5 +261,22 @@ export class MongoBackendService implements IBackendService {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+  }
+
+  // Admin
+  async getAdminOverview(): Promise<AdminOverview> {
+    return request<AdminOverview>('/admin/overview');
+  }
+
+  async getAdminUsers(limit = 50): Promise<AdminUserSummary[]> {
+    return request<AdminUserSummary[]>(`/admin/users?limit=${limit}`);
+  }
+
+  async getAdminSubscriptions(limit = 50): Promise<AdminSubscriptionSummary[]> {
+    return request<AdminSubscriptionSummary[]>(`/admin/subscriptions?limit=${limit}`);
+  }
+
+  async getAdminTrafficMetrics(days = 7): Promise<AdminTrafficMetric[]> {
+    return request<AdminTrafficMetric[]>(`/admin/traffic?days=${days}`);
   }
 }

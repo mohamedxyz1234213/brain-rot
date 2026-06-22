@@ -18,6 +18,10 @@ import {
   AccountabilityCircle,
   Subscription,
   NotificationSettings,
+  AdminOverview,
+  AdminUserSummary,
+  AdminSubscriptionSummary,
+  AdminTrafficMetric,
 } from './interface';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
@@ -343,6 +347,33 @@ export class SupabaseBackendService implements IBackendService {
     return supabaseRequest<NotificationSettings>(`/notification_settings?user_id=eq.${userId}`, {
       method: 'PATCH',
       body: JSON.stringify(this.toSnakeCase(data)),
+    });
+  }
+
+  // Admin
+  async getAdminOverview(): Promise<AdminOverview> {
+    return supabaseRequest<AdminOverview>('/rpc/admin_overview', { method: 'POST' });
+  }
+
+  async getAdminUsers(limit = 50): Promise<AdminUserSummary[]> {
+    return supabaseRequest<AdminUserSummary[]>('/admin_user_summaries', {
+      method: 'GET',
+      query: { select: '*', order: 'updated_at.desc', limit: String(limit) },
+    });
+  }
+
+  async getAdminSubscriptions(limit = 50): Promise<AdminSubscriptionSummary[]> {
+    return supabaseRequest<AdminSubscriptionSummary[]>('/admin_subscription_summaries', {
+      method: 'GET',
+      query: { select: '*', order: 'is_active.desc', limit: String(limit) },
+    });
+  }
+
+  async getAdminTrafficMetrics(days = 7): Promise<AdminTrafficMetric[]> {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    return supabaseRequest<AdminTrafficMetric[]>('/screen_time_logs', {
+      method: 'GET',
+      query: { date: `gte.${since}`, select: '*', order: 'date.desc' },
     });
   }
 

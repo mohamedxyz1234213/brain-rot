@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from '../lib/persistence';
+import { backendService } from '../services/backend';
 
 interface BrainScoreBreakdown {
   screenTimeScore: number;
@@ -33,6 +34,7 @@ interface BrainScoreState {
     religionEnabled: boolean;
   }) => number;
   setScore: (score: number, breakdown: BrainScoreBreakdown) => void;
+  syncScores: (userId: string, days?: number) => Promise<void>;
   getLevelName: () => string;
 }
 
@@ -137,6 +139,35 @@ export const useBrainScoreStore = create<BrainScoreState>()(
 
       setScore: (score, breakdown) => {
         set({ currentScore: score, breakdown });
+      },
+
+      syncScores: async (userId, days = 30) => {
+        set({ isLoading: true });
+        try {
+          const remoteScores = await backendService.getBrainScores(userId, days);
+          const scores: BrainScoreEntry[] = remoteScores.map((score) => ({
+            id: score.id,
+            date: score.date,
+            score: score.score,
+            breakdown: {
+              screenTimeScore: score.screenTimeScore,
+              taskScore: score.taskScore,
+              focusScore: score.focusScore,
+              prayerScore: score.prayerScore,
+              sleepScore: score.sleepScore,
+            },
+          }));
+          const latest = scores[0];
+          set({
+            scores,
+            currentScore: latest?.score ?? get().currentScore,
+            breakdown: latest?.breakdown ?? get().breakdown,
+            isLoading: false,
+          });
+        } catch (error) {
+          console.warn('brain score sync failed', error);
+          set({ isLoading: false });
+        }
       },
 
       getLevelName: () => {

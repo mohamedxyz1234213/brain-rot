@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from '../lib/persistence';
+import { backendService } from '../services/backend';
+import { Subscription } from '../services/backend/interface';
 
 type Level = 'Zombie' | 'Waking Up' | 'Struggling' | 'Recovering' | 'Restoring' | 'Thriving' | 'Ascended';
 
@@ -7,7 +9,10 @@ interface SubscriptionState {
   tier: 'free' | 'healed' | 'ascended' | 'family' | 'lifetime';
   isActive: boolean;
   isLoading: boolean;
+  subscription: Subscription | null;
   setTier: (tier: SubscriptionState['tier']) => void;
+  syncSubscription: (userId: string) => Promise<void>;
+  refreshSubscription: (userId: string) => Promise<void>;
   checkFeatureAccess: (feature: string) => boolean;
 }
 
@@ -42,15 +47,48 @@ export const useSubscriptionStore = create<SubscriptionState>()(
   persist(
     {
       name: 'subscription',
-      partialize: (state) => ({ tier: state.tier, isActive: state.isActive }),
+      partialize: (state) => ({ tier: state.tier, isActive: state.isActive, subscription: state.subscription }),
     },
     (set, get) => ({
       tier: 'free',
       isActive: false,
       isLoading: false,
+      subscription: null,
 
       setTier: (tier) => {
         set({ tier, isActive: tier !== 'free' });
+      },
+
+      syncSubscription: async (userId) => {
+        const { tier, isActive, subscription } = get();
+        set({ isLoading: true });
+        try {
+          const synced = await backendService.updateSubscription(userId, {
+            ...subscription,
+            userId,
+            tier,
+            isActive,
+          });
+          set({ subscription: synced, tier: synced.tier, isActive: synced.isActive, isLoading: false });
+        } catch (error) {
+          console.warn('subscription sync failed', error);
+          set({ isLoading: false });
+        }
+      },
+
+      refreshSubscription: async (userId) => {
+        set({ isLoading: true });
+        try {
+          const subscription = await backendService.getSubscription(userId);
+          if (subscription) {
+            set({ subscription, tier: subscription.tier, isActive: subscription.isActive, isLoading: false });
+          } else {
+            set({ subscription: null, tier: 'free', isActive: false, isLoading: false });
+          }
+        } catch (error) {
+          console.warn('subscription refresh failed', error);
+          set({ isLoading: false });
+        }
       },
 
       checkFeatureAccess: (feature) => {

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import { Colors, Typography, Spacing, Radius } from '../../constants/theme';
 
 type PrayerName = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
@@ -14,14 +15,6 @@ interface PrayerRowProps {
   status: PrayerStatus;
   onLog: (name: PrayerName, status: 'on_time' | 'late' | 'missed') => void;
 }
-
-const PRAYER_LABELS: Record<PrayerName, string> = {
-  fajr: 'Fajr',
-  dhuhr: 'Dhuhr',
-  asr: 'Asr',
-  maghrib: 'Maghrib',
-  isha: 'Isha',
-};
 
 const PRAYER_ICONS: Record<PrayerName, React.ComponentProps<typeof Ionicons>['name']> = {
   fajr: 'cloudy-night-outline',
@@ -39,13 +32,14 @@ const STATUS_COLORS: Record<PrayerStatus, string> = {
 };
 
 export function PrayerRow({ name, time, status, onLog }: PrayerRowProps) {
+  const { t } = useTranslation();
   return (
     <Animated.View entering={FadeIn.duration(300)}>
       <View style={styles.container}>
         <View style={styles.left}>
           <Ionicons name={PRAYER_ICONS[name]} size={24} color={Colors.PRIMARY_LIGHT} style={styles.icon} />
           <View>
-            <Text style={styles.name}>{PRAYER_LABELS[name]}</Text>
+            <Text style={styles.name}>{t(`religion.${name}`)}</Text>
             <Text style={styles.time}>{time}</Text>
           </View>
         </View>

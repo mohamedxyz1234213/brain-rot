@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { AppLimit, ScreenTimeLog } from '../services/backend/interface';
 import { persist } from '../lib/persistence';
+import { backendService } from '../services/backend';
 
 interface ScreenTimeState {
   logs: ScreenTimeLog[];
@@ -14,6 +15,7 @@ interface ScreenTimeState {
   calculateTotalMinutes: () => number;
   getOverageApps: () => AppLimit[];
   setLimits: (limits: AppLimit[]) => void;
+  syncToday: (userId: string) => Promise<void>;
 }
 
 const generateId = () => `st_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -69,6 +71,22 @@ export const useScreenTimeStore = create<ScreenTimeState>()(
 
       setLimits: (limits) => {
         set({ limits });
+      },
+
+      syncToday: async (userId) => {
+        set({ isLoading: true });
+        try {
+          const today = new Date().toISOString().split('T')[0];
+          const [logs, limits] = await Promise.all([
+            backendService.getScreenTimeLogs(userId, today),
+            backendService.getAppLimits(userId),
+          ]);
+          const totalMinutesToday = logs.reduce((sum, log) => sum + log.minutesUsed, 0);
+          set({ logs, limits, totalMinutesToday, isLoading: false });
+        } catch (error) {
+          console.warn('screen time sync failed', error);
+          set({ isLoading: false });
+        }
       },
     })
   )

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { User } from '../services/backend/interface';
-import { setBackendAuthToken } from '../services/backend';
+import { backendService, setBackendAuthToken } from '../services/backend';
 import { persist } from '../lib/persistence';
 
 interface AuthState {
@@ -14,6 +14,8 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
+  syncCurrentUser: () => Promise<void>;
+  isAdmin: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -58,6 +60,24 @@ export const useAuthStore = create<AuthState>()(
           if (data.email !== undefined && typeof data.email !== 'string') return;
           set({ user: { ...current, ...data } });
         }
+      },
+
+      syncCurrentUser: async () => {
+        const current = get().user;
+        if (!current) return;
+        set({ isLoading: true });
+        try {
+          const synced = await backendService.syncUser(current.clerkId, current);
+          set({ user: synced, isAuthenticated: true, isLoading: false });
+        } catch (error) {
+          console.warn('user sync failed', error);
+          set({ isLoading: false });
+        }
+      },
+
+      isAdmin: () => {
+        const user = get().user;
+        return user?.role === 'admin' || user?.email === process.env.EXPO_PUBLIC_ADMIN_EMAIL;
       },
     })
   )

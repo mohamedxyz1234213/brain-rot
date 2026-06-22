@@ -27,6 +27,8 @@ import { getPrayerTimes } from '../src/services/prayerTimes';
 import { useReligionStore } from '../src/stores/religionStore';
 import { useRoastStore } from '../src/stores/roastStore';
 import { generateRoast } from '../src/services/aiService';
+import { useSubscriptionStore } from '../src/stores/subscriptionStore';
+import { useBrainScoreStore } from '../src/stores/brainScoreStore';
 
 import '../src/i18n';
 
@@ -67,6 +69,7 @@ export default function RootLayout() {
   const language = useSettingsStore((s) => s.language);
   const dailyRoastEnabled = useSettingsStore((s) => s.dailyRoastEnabled);
   const userName = useAuthStore((s) => s.user?.name);
+  const userId = useAuthStore((s) => s.user?.id);
   const calculationMethod = useReligionStore((s) => s.selectedCalculationMethod);
   const prayerLogs = useReligionStore((s) => s.prayerLogs);
   const regionOverride = useSettingsStore((s) => s.regionOverride);
@@ -189,6 +192,14 @@ export default function RootLayout() {
     const t = setInterval(checkUsage, 60_000);
     return () => clearInterval(t);
   }, [language, dailyRoastEnabled, userName, pathname]);
+
+  useEffect(() => {
+    if (!userId) return;
+    useAuthStore.getState().syncCurrentUser();
+    useSubscriptionStore.getState().refreshSubscription(userId);
+    useScreenTimeStore.getState().syncToday(userId);
+    useBrainScoreStore.getState().syncScores(userId);
+  }, [userId]);
 
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),

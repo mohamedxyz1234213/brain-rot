@@ -49,7 +49,8 @@ function trimTaskList<T extends { title: string }>(tasks: T[]): T[] {
 export async function generateRoast(
   personaId: string,
   trigger: string,
-  context: RoastContext
+  context: RoastContext,
+  lang?: 'en' | 'ar'
 ): Promise<RoastResult> {
   const persona = roastPersonas.find((p) => p.id === personaId) || roastPersonas[0];
 

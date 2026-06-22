@@ -6,6 +6,8 @@ import { Colors, Typography, Spacing, Radius, Shadow, Layout, LetterSpacing, Siz
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 import { resolveTiers, getRegionInfo, TierId, SUPPORTED_REGIONS } from '../../src/services/pricing';
 import { useSettingsStore } from '../../src/stores/settingsStore';
+import { useSubscriptionStore } from '../../src/stores/subscriptionStore';
+import { useAuthStore } from '../../src/stores/authStore';
 
 interface TierContent {
   id: TierId;
@@ -85,6 +87,10 @@ export default function SubscriptionScreen() {
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
   const regionOverride = useSettingsStore((s) => s.regionOverride);
   const setRegionOverrideStore = useSettingsStore((s) => s.setRegionOverride);
+  const userId = useAuthStore((s) => s.user?.id);
+  const currentTier = useSubscriptionStore((s) => s.tier);
+  const setTier = useSubscriptionStore((s) => s.setTier);
+  const syncSubscription = useSubscriptionStore((s) => s.syncSubscription);
 
   // Re-resolve whenever the override changes (regionOverride drives the
   // pricing cache reset via the root layout effect).
@@ -128,6 +134,7 @@ export default function SubscriptionScreen() {
         </View>
 
         {TIER_CONTENT.map((tier) => {
+          const isCurrent = tier.id === currentTier;
           const prices = resolved.find((r) => r.id === tier.id);
           const monthly = prices?.monthly;
           const yearly = prices?.yearly;
@@ -160,7 +167,7 @@ export default function SubscriptionScreen() {
               style={[
                 styles.tierCard,
                 tier.isPopular && styles.tierCardPopular,
-                tier.isCurrent && styles.tierCardCurrent,
+                isCurrent && styles.tierCardCurrent,
               ]}
             >
               {tier.isPopular && (
@@ -196,13 +203,17 @@ export default function SubscriptionScreen() {
               <Pressable
                 style={[
                   styles.subscribeBtn,
-                  tier.isCurrent && styles.subscribeBtnCurrent,
+                  isCurrent && styles.subscribeBtnCurrent,
                 ]}
+                onPress={() => {
+                  setTier(tier.id);
+                  if (userId) syncSubscription(userId);
+                }}
                 accessibilityRole="button"
-                accessibilityLabel={tier.isCurrent ? 'Current plan' : `Subscribe to ${tier.name}`}
+                accessibilityLabel={isCurrent ? 'Current plan' : `Subscribe to ${tier.name}`}
               >
                 <Text style={styles.subscribeBtnText}>
-                  {tier.isCurrent ? 'Current Plan' : `Subscribe to ${tier.name}`}
+                  {isCurrent ? 'Current Plan' : `Subscribe to ${tier.name}`}
                 </Text>
               </Pressable>
             </View>
