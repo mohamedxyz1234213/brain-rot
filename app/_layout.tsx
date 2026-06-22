@@ -25,6 +25,8 @@ import { schedulePrayerReminders, evaluatePrayerBlock, resetPrayerSchedulingGuar
 import { setRegionOverride as applyRegionOverride } from '../src/services/pricing';
 import { getPrayerTimes } from '../src/services/prayerTimes';
 import { useReligionStore } from '../src/stores/religionStore';
+import { useRoastStore } from '../src/stores/roastStore';
+import { generateRoast } from '../src/services/aiService';
 
 import '../src/i18n';
 
@@ -44,6 +46,8 @@ export const unstable_settings = {
 };
 
 SplashScreen.preventAutoHideAsync();
+
+let lastBlockedOverageKey: string | null = null;
 
 // Make Inter the default body font app-wide, without editing every Text style.
 // Per-component styles that set their own fontFamily still win.
@@ -121,27 +125,70 @@ export default function RootLayout() {
   useEffect(() => {
     if (!dailyRoastEnabled) return;
 
-    const checkUsage = () => {
+    const checkUsage = async () => {
       const screenTime = useScreenTimeStore.getState();
       const pending = useTaskStore.getState().tasks.filter((t) => t.status === 'pending').length;
       const topLog = [...screenTime.logs].sort((a, b) => b.minutesUsed - a.minutesUsed)[0];
       const overage = screenTime.getOverageApps()[0];
+      const overageMinutes = overage
+        ? screenTime.logs
+            .filter((log) => log.appBundleId === overage.appBundleId)
+            .reduce((sum, log) => sum + log.minutesUsed, 0)
+        : 0;
 
       fireUsageRoast({
         lang: language,
         name: userName,
         pendingTasks: pending,
         topApp: overage?.appName ?? topLog?.appName,
-        topMinutes: overage?.dailyLimitMinutes ?? topLog?.minutesUsed,
-        totalMinutes: topLog?.minutesUsed ?? screenTime.totalMinutesToday,
+        topMinutes: overageMinutes || topLog?.minutesUsed,
+        totalMinutes: overageMinutes || (topLog?.minutesUsed ?? screenTime.totalMinutesToday),
         limitMinutes: overage?.dailyLimitMinutes,
+      });
+
+      if (!overage) return;
+
+      const today = new Date().toISOString().split('T')[0];
+      const overageKey = `${today}-${overage.id}-${overageMinutes}`;
+      const isAlreadyBlocking = pathname === '/app-blocked' || pathname === '/(modals)/app-blocked';
+      if (lastBlockedOverageKey === overageKey || isAlreadyBlocking) return;
+
+      lastBlockedOverageKey = overageKey;
+      const persona = useRoastStore.getState().selectedPersona;
+      const taskState = useTaskStore.getState();
+      const result = await generateRoast(persona, 'app_limit', {
+        userName: userName ?? 'there',
+        screenTimeToday: screenTime.totalMinutesToday,
+        screenTimeLimit: screenTime.limits.reduce((sum, limit) => sum + limit.dailyLimitMinutes, 0) || 180,
+        tasksCompleted: taskState.tasks.filter((task) => task.status === 'completed').length,
+        tasksTotal: Math.max(taskState.tasks.length, 1),
+        topWastedApp: overage.appName,
+        topWastedMinutes: overageMinutes,
+        blockedAttempts: 1,
+        streakDays: 0,
+      });
+
+      useRoastStore.getState().addRoast({
+        persona,
+        trigger: 'app_limit',
+        text: result.text,
+        isOffline: result.isOffline,
+      });
+
+      router.push({
+        pathname: '/(modals)/app-blocked',
+        params: {
+          app: overage.appName,
+          used: String(overageMinutes),
+          limit: String(overage.dailyLimitMinutes),
+        },
       });
     };
 
     checkUsage();
     const t = setInterval(checkUsage, 60_000);
     return () => clearInterval(t);
-  }, [language, dailyRoastEnabled, userName]);
+  }, [language, dailyRoastEnabled, userName, pathname]);
 
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),

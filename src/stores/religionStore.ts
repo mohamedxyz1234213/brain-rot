@@ -117,7 +117,8 @@ export const useReligionStore = create<ReligionState>()(
           isCompleted: false,
           startedAt: new Date().toISOString(),
         };
-        set({ dhikrSessions: [...get().dhikrSessions, session] });
+        const dhikrSessions = [...get().dhikrSessions, session].slice(-50);
+        set({ dhikrSessions });
       },
 
       incrementDhikr: () => {

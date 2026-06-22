@@ -23,6 +23,12 @@ import {
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
+let _authToken: string | null = null;
+
+function authHeaders(): Record<string, string> {
+  return _authToken ? { Authorization: `Bearer ${_authToken}` } : {};
+}
+
 async function supabaseRequest<T>(
   path: string,
   options?: RequestInit & { query?: Record<string, string> }
@@ -32,12 +38,12 @@ async function supabaseRequest<T>(
     Object.entries(options.query).forEach(([k, v]) => url.searchParams.set(k, v));
   }
 
-  const authHeader = 'Bearer ' + SUPABASE_ANON_KEY;
+  const anonAuth = 'Bearer ' + SUPABASE_ANON_KEY;
   const response = await fetch(url.toString(), {
     headers: {
       'Content-Type': 'application/json',
       apikey: SUPABASE_ANON_KEY,
-      Authorization: authHeader,
+      Authorization: _authToken ? `Bearer ${_authToken}` : anonAuth,
       Prefer: options?.method === 'POST' ? 'return=representation' : 'return=representation',
       ...options?.headers,
     },
@@ -54,6 +60,10 @@ async function supabaseRequest<T>(
 }
 
 export class SupabaseBackendService implements IBackendService {
+  setAuthToken(token: string | null): void {
+    _authToken = token;
+  }
+
   // Auth
   async syncUser(clerkId: string, data: Partial<User>): Promise<User> {
     return supabaseRequest<User>('/users', {

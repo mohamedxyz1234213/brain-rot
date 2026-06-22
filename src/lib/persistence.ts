@@ -8,6 +8,8 @@ export function persist<S extends object>(
     version?: number;
     partialize?: (state: any) => any;
     onHydrate?: (set: (partial: any) => void) => void;
+    /** Minimum ms between AsyncStorage writes (default 300). 0 = no debounce. */
+    debounceMs?: number;
   },
   stateCreator: (set: any, get: any, store: any) => S
 ): (set: any, get: any, store: any) => S {
@@ -16,6 +18,8 @@ export function persist<S extends object>(
 
     if (isClient) {
       const key = `brainrot_${config.name}`;
+      const debounceMs = config.debounceMs ?? 300;
+      let writeTimer: ReturnType<typeof setTimeout> | null = null;
 
       AsyncStorage.getItem(key)
         .then((value) => {
@@ -38,15 +42,28 @@ export function persist<S extends object>(
         });
 
       store.subscribe(() => {
-        const currentState = get();
-        const toStore = config.partialize
-          ? config.partialize(currentState)
-          : currentState;
-        AsyncStorage.setItem(
-          key,
-          JSON.stringify({ version: config.version || 1, data: toStore })
-        );
+        if (writeTimer) clearTimeout(writeTimer);
+        if (debounceMs === 0) {
+          flush();
+          return;
+        }
+        writeTimer = setTimeout(flush, debounceMs);
       });
+
+      function flush() {
+        try {
+          const currentState = get();
+          const toStore = config.partialize
+            ? config.partialize(currentState)
+            : currentState;
+          AsyncStorage.setItem(
+            key,
+            JSON.stringify({ version: config.version || 1, data: toStore })
+          );
+        } catch {
+          // serialization can throw for circular refs etc.
+        }
+      }
     } else {
       config.onHydrate?.(set);
     }

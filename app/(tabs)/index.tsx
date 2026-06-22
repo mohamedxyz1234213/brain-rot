@@ -30,6 +30,7 @@ export default function DashboardScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const lang = (i18n.language as 'en' | 'ar') ?? 'en';
+  const isArabic = lang === 'ar';
 
   const user = useAuthStore((s) => s.user);
   const brainScore = useBrainScoreStore((s) => s.currentScore);
@@ -211,6 +212,7 @@ export default function DashboardScreen() {
 
   const greeting = user?.name ? `${t('dashboard.greeting')} ${user.name}` : t('dashboard.greetingFallback');
   const dateLabel = new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const focusModeLabel = activeSession ? t(`dashboard.focusMode${activeSession.mode.split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join('')}`) : '';
 
   return (
     <SafeScreen tabBarSpacing>
@@ -226,16 +228,16 @@ export default function DashboardScreen() {
           />
         }
       >
-        <View style={styles.headerBlock}>
-          <View style={styles.headerTop}>
-            <Text style={styles.headerEyebrow} numberOfLines={1} ellipsizeMode="tail">{dateLabel}</Text>
+        <View style={[styles.headerBlock, isArabic && styles.rtlBlock]}>
+          <View style={[styles.headerTop, isArabic && styles.rowReverse]}>
+            <Text style={[styles.headerEyebrow, isArabic && styles.eyebrowArabic]} numberOfLines={1} ellipsizeMode="tail">{dateLabel}</Text>
             <View style={styles.heroPill}>
               <View style={styles.heroDot} />
-              <Text style={styles.heroPillText}>{t('common.live')}</Text>
+              <Text style={[styles.heroPillText, isArabic && styles.microArabic]}>{t('common.live')}</Text>
             </View>
           </View>
-          <Text style={styles.headerTitle} numberOfLines={1}>{greeting}</Text>
-          <Text style={styles.headerSubtitle} numberOfLines={1}>{t('dashboard.subtitle')}</Text>
+          <Text style={[styles.headerTitle, isArabic && styles.textArabicRight]} numberOfLines={1}>{greeting}</Text>
+          <Text style={[styles.headerSubtitle, isArabic && styles.textArabicRight]} numberOfLines={1}>{t('dashboard.subtitle')}</Text>
         </View>
 
         <ScoreShowcase
@@ -252,13 +254,13 @@ export default function DashboardScreen() {
               <View style={styles.briefingHeader}>
                 <View style={styles.briefingTagRow}>
                   <Ionicons name="sunny-outline" size={Sizing.iconSm} color={Colors.PRIMARY_LIGHT} />
-                  <Text style={styles.briefingTag}>{t('dashboard.morningBriefing')}</Text>
+                  <Text style={[styles.briefingTag, isArabic && styles.microArabic]}>{t('dashboard.morningBriefing')}</Text>
                 </View>
                 <Pressable onPress={dismissBriefing} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dismiss briefing">
                   <Ionicons name="close" size={Sizing.iconMd} color={Colors.TEXT_SECONDARY} />
                 </Pressable>
               </View>
-              <Text style={styles.briefingText}>{briefing}</Text>
+              <Text style={[styles.briefingText, isArabic && styles.textArabicRight]}>{briefing}</Text>
             </Card>
           </Animated.View>
         )}
@@ -272,37 +274,37 @@ export default function DashboardScreen() {
                 <View style={styles.sparkBadge}>
                   <Ionicons name="sparkles" size={12} color={Colors.TEXT_ON_PRIMARY} />
                 </View>
-                <Text style={styles.suggestionTag}>{t('dashboard.aiSuggestion')}</Text>
+                <Text style={[styles.suggestionTag, isArabic && styles.microArabic]}>{t('dashboard.aiSuggestion')}</Text>
               </View>
               {suggestion?.isOffline && (
                 <View style={styles.offlineTag}>
                   <Ionicons name="flash-outline" size={11} color={Colors.WARNING} />
-                  <Text style={styles.offlineTagText}>{t('dashboard.aiOffline')}</Text>
+                  <Text style={[styles.offlineTagText, isArabic && styles.microArabic]}>{t('dashboard.aiOffline')}</Text>
                 </View>
               )}
             </View>
             {!suggestion ? (
-              <Text style={styles.suggestionEmpty}>
+              <Text style={[styles.suggestionEmpty, isArabic && styles.textArabicRight]}>
                 {loadingSuggestion ? t('common.loading') : t('dashboard.aiSuggestionEmpty')}
               </Text>
             ) : (
               <>
-                <Text style={styles.suggestionTitle} numberOfLines={2}>{suggestion.title}</Text>
-                <Text style={styles.suggestionReason} numberOfLines={3}>{suggestion.reason}</Text>
+                <Text style={[styles.suggestionTitle, isArabic && styles.textArabicRight]} numberOfLines={2}>{suggestion.title}</Text>
+                <Text style={[styles.suggestionReason, isArabic && styles.textArabicRight]} numberOfLines={3}>{suggestion.reason}</Text>
                 <View style={styles.suggestionMetaRow}>
                   <View style={styles.suggestionMetaPill}>
                     <Ionicons name="time-outline" size={12} color={Colors.PRIMARY_DARK} />
-                    <Text style={styles.suggestionMetaText}>{suggestion.estimatedMinutes} {t('common.min')}</Text>
+                    <Text style={[styles.suggestionMetaText, isArabic && styles.microArabic]}>{suggestion.estimatedMinutes} {t('common.min')}</Text>
                   </View>
                   <View style={[styles.suggestionMetaPill, styles.priorityPill]}>
-                    <Text style={styles.suggestionMetaText}>{t(`tasks.${suggestion.priority}`)}</Text>
+                    <Text style={[styles.suggestionMetaText, isArabic && styles.microArabic]}>{t(`tasks.${suggestion.priority}`)}</Text>
                   </View>
                 </View>
                 <View style={styles.suggestionActions}>
                   <Button title={t('dashboard.startNow')} onPress={handleStartSuggestion} size="sm" variant="primary" />
                   <Pressable onPress={handleCompleteSuggestion} style={styles.doneInlineBtn} accessibilityRole="button">
                     <Ionicons name="checkmark-circle-outline" size={Sizing.iconMd} color={Colors.SUCCESS} />
-                    <Text style={styles.doneInlineText}>{t('common.done')}</Text>
+                    <Text style={[styles.doneInlineText, isArabic && styles.microArabic]}>{t('common.done')}</Text>
                   </Pressable>
                 </View>
               </>
@@ -311,16 +313,16 @@ export default function DashboardScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(500).delay(200)} style={styles.sectionBlock}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>{t('dashboard.todayOverview')}</Text>
-            <Text style={styles.sectionMeta}>{t('dashboard.liveOverview')}</Text>
+          <View style={[styles.sectionHeaderRow, isArabic && styles.rowReverse]}>
+            <Text style={[styles.sectionTitle, isArabic && styles.textArabicRight]}>{t('dashboard.todayOverview')}</Text>
+            <Text style={[styles.sectionMeta, isArabic && styles.microArabic]}>{t('dashboard.liveOverview')}</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statsRow}>
-            <StatCard label={t('dashboard.screenTime')} value={`${screenTimeHours}${t('common.hours')} ${screenTimeMins}${t('common.min')}`} progress={Math.min((totalMinutes / 180) * 100, 100)} />
-            <StatCard label={t('dashboard.tasksCompleted')} value={`${completedToday}/${todayTasks.length + completedToday}`} progress={todayTasks.length > 0 ? (completedToday / (todayTasks.length + completedToday)) * 100 : 0} />
-            <StatCard label={t('dashboard.focusMinutes')} value={`${totalFocusMinutes} ${t('common.min')}`} progress={Math.min((totalFocusMinutes / 60) * 100, 100)} />
-            <StatCard label={t('dashboard.prayers')} value={`${prayerCount}/5`} progress={prayerCount * 20} />
-            <StatCard label={t('dashboard.streak')} value={`${streak?.currentDays ?? 0}`} progress={100} />
+            <StatCard label={t('dashboard.screenTime')} value={`${screenTimeHours}${t('common.hours')} ${screenTimeMins}${t('common.min')}`} progress={Math.min((totalMinutes / 180) * 100, 100)} isArabic={isArabic} />
+            <StatCard label={t('dashboard.tasksCompleted')} value={`${completedToday}/${todayTasks.length + completedToday}`} progress={todayTasks.length > 0 ? (completedToday / (todayTasks.length + completedToday)) * 100 : 0} isArabic={isArabic} />
+            <StatCard label={t('dashboard.focusMinutes')} value={`${totalFocusMinutes} ${t('common.min')}`} progress={Math.min((totalFocusMinutes / 60) * 100, 100)} isArabic={isArabic} />
+            <StatCard label={t('dashboard.prayers')} value={`${prayerCount}/5`} progress={prayerCount * 20} isArabic={isArabic} />
+            <StatCard label={t('dashboard.streak')} value={`${streak?.currentDays ?? 0}`} progress={100} isArabic={isArabic} />
           </ScrollView>
         </Animated.View>
 
@@ -339,14 +341,14 @@ export default function DashboardScreen() {
 
         {limits.length > 0 && (
           <Animated.View entering={FadeInDown.duration(500).delay(400)} style={styles.sectionBlock}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>{t('dashboard.appLimits')}</Text>
-              <Text style={styles.sectionMeta}>{t('dashboard.appsTracked', { count: limits.length })}</Text>
+            <View style={[styles.sectionHeaderRow, isArabic && styles.rowReverse]}>
+              <Text style={[styles.sectionTitle, isArabic && styles.textArabicRight]}>{t('dashboard.appLimits')}</Text>
+              <Text style={[styles.sectionMeta, isArabic && styles.microArabic]}>{t('dashboard.appsTracked', { count: limits.length })}</Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.limitRow}>
               {limits.map((limit, i) => (
                 <Animated.View key={limit.id} entering={FadeInRight.duration(300).delay(i * 100)}>
-                  <AppLimitPill name={limit.appName} used={usedForLimit(limit.appBundleId)} limit={limit.dailyLimitMinutes} isHard={limit.isHardBlock} hardLabel={t('dashboard.hardBlock')} />
+                  <AppLimitPill name={limit.appName} used={usedForLimit(limit.appBundleId)} limit={limit.dailyLimitMinutes} isHard={limit.isHardBlock} hardLabel={t('dashboard.hardBlock')} minLabel={t('common.min')} isArabic={isArabic} />
                 </Animated.View>
               ))}
             </ScrollView>
@@ -357,12 +359,12 @@ export default function DashboardScreen() {
           <Card glass style={styles.levelCard}>
             <View style={styles.levelHeader}>
               <View style={{ flex: 1, marginRight: Spacing.md }}>
-                <Text style={styles.levelKicker}>{t('dashboard.growth')}</Text>
-                <Text style={styles.levelTitle} numberOfLines={1}>{t('dashboard.level', { level })}</Text>
+                <Text style={[styles.levelKicker, isArabic && styles.microArabic]}>{t('dashboard.growth')}</Text>
+                <Text style={[styles.levelTitle, isArabic && styles.textArabicRight]} numberOfLines={1}>{t('dashboard.level', { level })}</Text>
               </View>
               <Text style={styles.levelPercent}>{Math.round(levelInfo.progress * 100)}%</Text>
             </View>
-            <Text style={styles.xpText}>{t('dashboard.xpToNext', { xp })}</Text>
+            <Text style={[styles.xpText, isArabic && styles.textArabicRight]}>{t('dashboard.xpToNext', { xp })}</Text>
             <ProgressBar progress={levelInfo.progress * 100} height={7} backgroundColor="rgba(67,104,111,0.10)" gradient={Gradients.brand} />
           </Card>
         </Animated.View>
@@ -372,16 +374,16 @@ export default function DashboardScreen() {
             <Card glass style={styles.focusCard}>
               <View style={styles.focusHeader}>
                 <View style={styles.focusDot} />
-                <Text style={styles.focusTitle}>{t('dashboard.focusActive')}</Text>
+                <Text style={[styles.focusTitle, isArabic && styles.textArabicRight]}>{t('dashboard.focusActive')}</Text>
               </View>
-              <Text style={styles.focusMode}>{activeSession.mode} · {Math.floor((activeSession.targetMinutes * 60 - useFocusStore.getState().remainingSeconds) / 60)} {t('common.min')}</Text>
+              <Text style={[styles.focusMode, isArabic && styles.textArabicRight]}>{focusModeLabel} · {Math.floor((activeSession.targetMinutes * 60 - useFocusStore.getState().remainingSeconds) / 60)} {t('common.min')}</Text>
             </Card>
           </Animated.View>
         )}
 
         <Animated.View entering={FadeInDown.duration(500).delay(600)} style={styles.sectionBlock}>
           <Card glass style={styles.motivationCard}>
-            <Text style={styles.motivationText}>"{t('dashboard.motivation')}"</Text>
+            <Text style={[styles.motivationText, isArabic && styles.textArabicRight]}>"{t('dashboard.motivation')}"</Text>
           </Card>
         </Animated.View>
       </ScrollView>
@@ -389,24 +391,24 @@ export default function DashboardScreen() {
   );
 }
 
-function StatCard({ label, value, progress }: { label: string; value: string; progress: number }) {
+function StatCard({ label, value, progress, isArabic }: { label: string; value: string; progress: number; isArabic: boolean }) {
   return (
     <Card dense glass style={styles.statCard}>
       <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statLabel, isArabic && styles.microArabic]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{label}</Text>
       <ProgressBar progress={progress} height={5} gradient={Gradients.brand} />
     </Card>
   );
 }
 
-function AppLimitPill({ name, used, limit, isHard, hardLabel }: { name: string; used: number; limit: number; isHard: boolean; hardLabel: string }) {
+function AppLimitPill({ name, used, limit, isHard, hardLabel, minLabel, isArabic }: { name: string; used: number; limit: number; isHard: boolean; hardLabel: string; minLabel: string; isArabic: boolean }) {
   const progress = (used / limit) * 100;
   const color = progress > 90 ? Colors.DANGER : progress > 70 ? Colors.WARNING : Colors.PRIMARY_LIGHT;
   return (
     <Card dense glass style={styles.appLimitPill}>
-      <Text style={styles.appName}>{name}</Text>
-      <Text style={styles.appTime}>{used}m / {limit}m</Text>
-      {isHard && <Text style={styles.hardBadge}>{hardLabel}</Text>}
+      <Text style={[styles.appName, isArabic && styles.textArabicRight]}>{name}</Text>
+      <Text style={[styles.appTime, isArabic && styles.textArabicRight]}>{used} {minLabel} / {limit} {minLabel}</Text>
+      {isHard && <Text style={[styles.hardBadge, isArabic && styles.microArabic]}>{hardLabel}</Text>}
       <ProgressBar progress={progress} color={color} height={5} gradient={progress <= 70 ? Gradients.brand : undefined} />
     </Card>
   );
@@ -476,4 +478,9 @@ const styles = StyleSheet.create({
   appName: { fontSize: Typography.sizes.md, fontFamily: Typography.families.featureSemi, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
   appTime: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, marginVertical: Spacing.xs },
   hardBadge: { fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureSemi, color: Colors.DANGER, marginBottom: Spacing.xs, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase' },
+  rtlBlock: { direction: 'rtl' },
+  rowReverse: { flexDirection: 'row-reverse' },
+  textArabicRight: { textAlign: 'right', writingDirection: 'rtl' },
+  eyebrowArabic: { marginRight: 0, marginLeft: Spacing.sm, textAlign: 'right', writingDirection: 'rtl', letterSpacing: 0, textTransform: 'none', fontFamily: Typography.families.bodySemibold, includeFontPadding: false },
+  microArabic: { letterSpacing: 0, textTransform: 'none', fontFamily: Typography.families.bodySemibold, writingDirection: 'rtl', includeFontPadding: false },
 });

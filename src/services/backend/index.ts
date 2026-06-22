@@ -21,5 +21,10 @@ function createBackendService(): IBackendService {
 }
 
 export const backendService: IBackendService = createBackendService();
+
+export function setBackendAuthToken(token: string | null) {
+  backendService.setAuthToken(token);
+}
+
 export type { IBackendService } from './interface';
 export * from './interface';

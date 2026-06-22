@@ -9,6 +9,7 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
+      "usesAppleSignIn": true,
       "bundleIdentifier": "com.brainrothealer.app",
       "info": {
         "NSCameraUsageDescription": "BrainRot Healer uses your camera briefly to remind you who is in control. Nothing is stored.",
@@ -44,7 +45,8 @@
           "backgroundColor": "#0E0B04"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true

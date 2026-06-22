@@ -6,8 +6,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import {
-  arabicRoastNotifications,
-  englishRoastNotifications,
+  getRoastBank,
   fillTokens,
   RoastNotif,
 } from '../data/notificationRoasts';
@@ -95,7 +94,7 @@ export async function scheduleDailyRoasts(ctx: ScheduleContext): Promise<number>
     await Notifications.cancelAllScheduledNotificationsAsync();
   } catch {}
 
-  const bank: RoastNotif[] = ctx.lang === 'ar' ? arabicRoastNotifications : englishRoastNotifications;
+  const bank: RoastNotif[] = getRoastBank(ctx.lang);
   const perDay = ctx.perDay ?? 6;
   const hours = shuffle(ROAST_HOURS).slice(0, perDay).sort((a, b) => a - b);
   const picks = pickN(bank, perDay);
@@ -148,7 +147,7 @@ export async function fireRoastNow(ctx: ScheduleContext): Promise<void> {
   if (!granted) return;
   await setupAndroidChannel();
 
-  const bank = ctx.lang === 'ar' ? arabicRoastNotifications : englishRoastNotifications;
+  const bank = getRoastBank(ctx.lang);
   const notif = bank[Math.floor(Math.random() * bank.length)];
   const ctxFill = {
     name: ctx.name,

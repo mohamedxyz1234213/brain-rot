@@ -166,6 +166,8 @@ export interface NotificationSettings {
 // ---------- Service Interface ----------
 
 export interface IBackendService {
+  setAuthToken(token: string | null): void;
+
   // Auth
   syncUser(clerkId: string, data: Partial<User>): Promise<User>;
   getUser(userId: string): Promise<User | null>;

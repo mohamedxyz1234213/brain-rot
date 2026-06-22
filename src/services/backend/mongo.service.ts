@@ -22,10 +22,17 @@ import {
 
 const API_URL = process.env.EXPO_PUBLIC_MONGO_API_URL || 'http://localhost:3001/api';
 
+let _authToken: string | null = null;
+
+function authHeaders(): Record<string, string> {
+  return _authToken ? { Authorization: `Bearer ${_authToken}` } : {};
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders(),
       ...options?.headers,
     },
     ...options,
@@ -40,6 +47,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export class MongoBackendService implements IBackendService {
+  setAuthToken(token: string | null): void {
+    _authToken = token;
+  }
+
   // Auth
   async syncUser(clerkId: string, data: Partial<User>): Promise<User> {
     return request<User>('/users/sync', {

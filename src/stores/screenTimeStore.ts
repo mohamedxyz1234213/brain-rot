@@ -59,8 +59,11 @@ export const useScreenTimeStore = create<ScreenTimeState>()(
 
       getOverageApps: () => {
         return get().limits.filter((l: AppLimit) => {
-          const log = get().logs.find((lg: ScreenTimeLog) => lg.appBundleId === l.appBundleId);
-          return log && log.minutesUsed > l.dailyLimitMinutes;
+          if (!l.isEnabled) return false;
+          const minutesUsed = get().logs
+            .filter((lg: ScreenTimeLog) => lg.appBundleId === l.appBundleId)
+            .reduce((sum: number, lg: ScreenTimeLog) => sum + lg.minutesUsed, 0);
+          return minutesUsed >= l.dailyLimitMinutes;
         });
       },
 

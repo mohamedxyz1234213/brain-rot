@@ -43,6 +43,7 @@ export const useFocusStore = create<FocusState>()(
   persist(
     {
       name: 'focus',
+      debounceMs: 500,
       partialize: (state) => ({
         sessions: state.sessions.slice(0, 20),
         totalFocusMinutesToday: state.totalFocusMinutesToday,

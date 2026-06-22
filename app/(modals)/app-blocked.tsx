@@ -10,12 +10,16 @@ import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
 import { useTaskStore } from '../../src/stores/taskStore';
 import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
+import { useRoastStore } from '../../src/stores/roastStore';
 
 export default function AppBlockedScreen() {
-  const params = useLocalSearchParams<{ app?: string }>();
+  const params = useLocalSearchParams<{ app?: string; used?: string; limit?: string }>();
   const limits = useScreenTimeStore((s) => s.limits);
   const appName = params.app ?? limits[0]?.appName ?? 'This app';
+  const activeRoast = useRoastStore((s) => s.activeRoast);
   const unlockerTasks = useTaskStore((s) => s.getTaskUnlockerTasks());
+  const used = Number(params.used ?? 0);
+  const limit = Number(params.limit ?? 0);
 
   const handleTaskUnlock = () => {
     if (unlockerTasks.length > 0) {
@@ -40,9 +44,9 @@ export default function AppBlockedScreen() {
       <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
         <Ionicons name="lock-closed-outline" size={Sizing.avatarMd} color={Colors.PRIMARY} style={styles.blockIcon} />
         <Text style={styles.blockTitle}>{appName} is Blocked</Text>
-        <Text style={styles.blockReason}>You've hit your daily limit</Text>
+        <Text style={styles.blockReason}>{limit > 0 ? `You've used ${used} min of your ${limit} min limit` : "You've hit your daily limit"}</Text>
 
-        <Text style={styles.roastText}>"Your phone called. It's embarrassed."</Text>
+        <Text style={styles.roastText}>"{activeRoast?.text ?? "Your phone called. It's embarrassed."}"</Text>
 
         <View style={styles.options}>
           {unlockerTasks.length > 0 && (

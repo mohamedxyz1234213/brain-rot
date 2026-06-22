@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -19,6 +20,8 @@ const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 // in with a subtle scale + label fade.
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { i18n } = useTranslation();
+  const isArabic = i18n.language === 'ar';
 
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { bottom: insets.bottom + Spacing.sm }]}>
@@ -45,6 +48,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                 focused={focused}
                 icon={icon}
                 label={label}
+                isArabic={isArabic}
                 onPress={onPress}
               />
             );
@@ -59,11 +63,13 @@ function TabItem({
   focused,
   icon,
   label,
+  isArabic,
   onPress,
 }: {
   focused: boolean;
   icon: React.ReactNode;
   label: string;
+  isArabic: boolean;
   onPress: () => void;
 }) {
   const progress = useSharedValue(focused ? 1 : 0);
@@ -101,8 +107,8 @@ function TabItem({
     >
       <Animated.View style={[styles.pill, focused && styles.pillActive, pillStyle]}>
         <Animated.View style={iconStyle}>{icon}</Animated.View>
-        <Animated.View style={labelStyle}>
-          <Text style={styles.label} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+        <Animated.View style={[styles.labelWrap, labelStyle]}>
+          <Text style={[styles.label, isArabic && styles.labelArabic]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72}>
             {label}
           </Text>
         </Animated.View>
@@ -138,18 +144,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
-    paddingHorizontal: 2,
+    paddingHorizontal: 1,
   },
   pill: {
     alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
     height: 44,
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: 6,
     borderRadius: Radius.full,
   },
   pillActive: {
     backgroundColor: Colors.PRIMARY_DARK,
+  },
+  labelWrap: {
+    alignSelf: 'stretch',
+    paddingHorizontal: 2,
   },
   label: {
     fontFamily: Typography.families.feature,
@@ -158,5 +168,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textAlign: 'center',
     textTransform: 'uppercase',
+  },
+  labelArabic: {
+    fontFamily: Typography.families.bodySemibold,
+    fontSize: Typography.sizes.xs,
+    letterSpacing: 0,
+    writingDirection: 'rtl',
+    textTransform: 'none',
+    includeFontPadding: false,
   },
 });

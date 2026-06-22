@@ -4,6 +4,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Colors, Typography, Spacing, Radius, Shadow, LetterSpacing, ANIMATION } from '../../constants/theme';
 import { BrainScoreOrb } from './BrainScoreOrb';
 
@@ -23,12 +24,12 @@ interface ScoreShowcaseProps {
 
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
-const BREAKDOWN_META: { key: keyof ScoreShowcaseProps['breakdown']; label: string; icon: IoniconName }[] = [
-  { key: 'screenTimeScore', label: 'Screen', icon: 'phone-portrait-outline' },
-  { key: 'taskScore', label: 'Tasks', icon: 'checkmark-done-outline' },
-  { key: 'focusScore', label: 'Focus', icon: 'timer-outline' },
-  { key: 'prayerScore', label: 'Spirit', icon: 'moon-outline' },
-  { key: 'sleepScore', label: 'Sleep', icon: 'bed-outline' },
+const BREAKDOWN_META: { key: keyof ScoreShowcaseProps['breakdown']; labelKey: string; icon: IoniconName }[] = [
+  { key: 'screenTimeScore', labelKey: 'dashboard.scoreBreakdownScreen', icon: 'phone-portrait-outline' },
+  { key: 'taskScore', labelKey: 'dashboard.scoreBreakdownTasks', icon: 'checkmark-done-outline' },
+  { key: 'focusScore', labelKey: 'dashboard.scoreBreakdownFocus', icon: 'timer-outline' },
+  { key: 'prayerScore', labelKey: 'dashboard.scoreBreakdownSpirit', icon: 'moon-outline' },
+  { key: 'sleepScore', labelKey: 'dashboard.scoreBreakdownSleep', icon: 'bed-outline' },
 ];
 
 function getZoneColor(score: number): string {
@@ -38,7 +39,7 @@ function getZoneColor(score: number): string {
   return Colors.DANGER;
 }
 
-function BreakdownCell({ value, icon, label }: { value: number; icon: IoniconName; label: string }) {
+function BreakdownCell({ value, icon, label, isArabic }: { value: number; icon: IoniconName; label: string; isArabic: boolean }) {
   const v = Math.max(0, Math.min(100, Math.round(value)));
   const color = getZoneColor(v);
   return (
@@ -47,12 +48,14 @@ function BreakdownCell({ value, icon, label }: { value: number; icon: IoniconNam
         <Ionicons name={icon} size={16} color={color} />
       </View>
       <Text style={breakdownStyles.value}>{v}</Text>
-      <Text style={breakdownStyles.label}>{label}</Text>
+      <Text style={[breakdownStyles.label, isArabic && breakdownStyles.labelArabic]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{label}</Text>
     </View>
   );
 }
 
 export function ScoreShowcase({ score, levelName, delta, breakdown, style }: ScoreShowcaseProps) {
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === 'ar';
   const zone = getZoneColor(score);
 
   return (
@@ -105,7 +108,8 @@ export function ScoreShowcase({ score, levelName, delta, breakdown, style }: Sco
               key={meta.key}
               value={breakdown[meta.key]}
               icon={meta.icon}
-              label={meta.label}
+              label={t(meta.labelKey)}
+              isArabic={isArabic}
             />
           ))}
         </View>
@@ -201,5 +205,14 @@ const breakdownStyles = StyleSheet.create({
     color: Colors.TEXT_SECONDARY,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  labelArabic: {
+    fontFamily: Typography.families.bodySemibold,
+    fontSize: 9,
+    letterSpacing: 0,
+    textTransform: 'none',
+    writingDirection: 'rtl',
+    includeFontPadding: false,
   },
 });

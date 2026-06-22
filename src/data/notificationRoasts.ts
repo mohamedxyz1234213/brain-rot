@@ -338,24 +338,50 @@ const englishBodies = [
   'One task. Ten minutes. No performance speech. Just stop donating your day to {app}.',
 ];
 
-function expandRoastBank(titles: string[], bodies: string[], targetCount: number): RoastNotif[] {
-  const out: RoastNotif[] = [];
-  for (let i = 0; i < targetCount; i++) {
-    const title = titles[i % titles.length];
-    const body = bodies[(i + Math.floor(i / titles.length)) % bodies.length];
-    out.push({ title, body, tone: tones[i % tones.length] });
+// Lazy expansion — build the arrays on first access instead of at module
+// load time, keeping startup memory and bundle decode cost low.
+let _lazyArabicExpanded: RoastNotif[] | null = null;
+let _lazyEnglishExpanded: RoastNotif[] | null = null;
+
+function ensureArabicExpanded(): RoastNotif[] {
+  if (!_lazyArabicExpanded) {
+    const out: RoastNotif[] = [];
+    for (let i = 0; i < 1800; i++) {
+      out.push({
+        title: egyptianArabicTitles[i % egyptianArabicTitles.length],
+        body: egyptianArabicBodies[(i + Math.floor(i / egyptianArabicTitles.length)) % egyptianArabicBodies.length],
+        tone: tones[i % tones.length],
+      });
+    }
+    _lazyArabicExpanded = out;
   }
-  return out;
+  return _lazyArabicExpanded;
 }
 
-const expandedArabicRoastNotifications = expandRoastBank(egyptianArabicTitles, egyptianArabicBodies, 1800);
-const expandedEnglishRoastNotifications = expandRoastBank(englishTitles, englishBodies, 220);
+function ensureEnglishExpanded(): RoastNotif[] {
+  if (!_lazyEnglishExpanded) {
+    const out: RoastNotif[] = [];
+    for (let i = 0; i < 220; i++) {
+      out.push({
+        title: englishTitles[i % englishTitles.length],
+        body: englishBodies[(i + Math.floor(i / englishTitles.length)) % englishBodies.length],
+        tone: tones[i % tones.length],
+      });
+    }
+    _lazyEnglishExpanded = out;
+  }
+  return _lazyEnglishExpanded;
+}
 
-arabicRoastNotifications.push(...expandedArabicRoastNotifications);
-englishRoastNotifications.push(...expandedEnglishRoastNotifications);
+export function getRoastBank(lang: 'en' | 'ar'): RoastNotif[] {
+  if (lang === 'ar') {
+    return [...arabicRoastNotifications, ...ensureArabicExpanded()];
+  }
+  return [...englishRoastNotifications, ...ensureEnglishExpanded()];
+}
 
 export function pickRandomNotif(lang: 'en' | 'ar'): RoastNotif {
-  const bank = lang === 'ar' ? arabicRoastNotifications : englishRoastNotifications;
+  const bank = getRoastBank(lang);
   return bank[Math.floor(Math.random() * bank.length)];
 }
 

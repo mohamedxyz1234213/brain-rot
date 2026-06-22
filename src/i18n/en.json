@@ -63,7 +63,16 @@
     "startNow": "Start now",
     "planMyDay": "Plan my day",
     "hardBlock": "Hard Block",
-    "motivation": "Time is an Amanah. Every minute scrolling is a minute stolen from your purpose."
+    "motivation": "Time is an Amanah. Every minute scrolling is a minute stolen from your purpose.",
+    "scoreBreakdownScreen": "Screen",
+    "scoreBreakdownTasks": "Tasks",
+    "scoreBreakdownFocus": "Focus",
+    "scoreBreakdownSpirit": "Spirit",
+    "scoreBreakdownSleep": "Sleep",
+    "focusModePomodoro": "Pomodoro",
+    "focusModeDeepWork": "Deep Work",
+    "focusModeFlow": "Flow",
+    "focusModeQuickSprint": "Quick Sprint"
   },
   "tasks": {
     "today": "Today",

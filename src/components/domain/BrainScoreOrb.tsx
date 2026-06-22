@@ -12,6 +12,7 @@ import Svg, {
   LinearGradient as SvgLinearGradient,
   Stop,
 } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { Colors, Typography, LetterSpacing, ANIMATION } from '../../constants/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -33,6 +34,8 @@ function getZoneColor(score: number): string {
  * with the score number centered. No halos, no pulse, no shimmer.
  */
 export function BrainScoreOrb({ score, size = 220 }: BrainScoreOrbProps) {
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === 'ar';
   const clampedScore = Math.max(0, Math.min(100, score));
   const center = size / 2;
   const stroke = 14;
@@ -85,7 +88,7 @@ export function BrainScoreOrb({ score, size = 220 }: BrainScoreOrbProps) {
         />
       </Svg>
       <View style={styles.center} pointerEvents="none">
-        <Text style={styles.kicker}>Brain Score</Text>
+        <Text style={[styles.kicker, isArabic && styles.kickerArabic]}>{t('dashboard.brainScore')}</Text>
         <Text style={[styles.value, { color: zone }]}>{Math.round(clampedScore)}</Text>
         <Text style={styles.outOf}>/ 100</Text>
       </View>
@@ -103,6 +106,14 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: 'uppercase',
     marginBottom: 4,
+  },
+  kickerArabic: {
+    fontFamily: Typography.families.bodySemibold,
+    fontSize: 11,
+    letterSpacing: 0,
+    textTransform: 'none',
+    writingDirection: 'rtl',
+    includeFontPadding: false,
   },
   value: {
     fontSize: 64,
