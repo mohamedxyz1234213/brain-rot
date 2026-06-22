@@ -15,16 +15,15 @@ type SettingsSection = { title: string; items: SettingsItem[] };
 
 export default function SettingsScreen() {
   const s = useSettingsStore();
+  const isMuslim = s.religion === 'muslim';
   const quranGoal = useReligionStore((st) => st.quranProgress.dailyPageGoal);
   const updateQuran = useReligionStore((st) => st.updateQuranProgress);
   const logout = useAuthStore((st) => st.logout);
 
-  // Blocking/appearance preferences that aren't persisted in settingsStore yet.
   const [local, setLocal] = useState({
     smartBlocking: true,
     doomScrollTax: true,
     greyscale: false,
-    fakeLoading: true,
     haptics: true,
     darkMode: true,
   });
@@ -73,7 +72,7 @@ export default function SettingsScreen() {
     Alert.alert('Export Data', 'Your data is stored on-device. A shareable export is coming soon.');
   };
 
-  const sections: SettingsSection[] = [
+  const sections: SettingsSection[] = (() => { const sects: SettingsSection[] = [
     {
       title: 'App Blocking',
       items: [
@@ -81,7 +80,6 @@ export default function SettingsScreen() {
         { kind: 'toggle', label: 'Smart Blocking (auto-tighten)', value: local.smartBlocking, onChange: setLocalKey('smartBlocking') },
         { kind: 'toggle', label: 'Doom Scroll Tax', value: local.doomScrollTax, onChange: setLocalKey('doomScrollTax') },
         { kind: 'toggle', label: 'Greyscale Mode', value: local.greyscale, onChange: setLocalKey('greyscale') },
-        { kind: 'toggle', label: 'Fake Loading Screen', value: local.fakeLoading, onChange: setLocalKey('fakeLoading') },
       ],
     },
     {
@@ -91,7 +89,7 @@ export default function SettingsScreen() {
         { kind: 'toggle', label: 'Morning Briefing (7am)', value: s.morningBriefingEnabled, onChange: bind(s.morningBriefingEnabled, s.setMorningBriefing) },
         { kind: 'toggle', label: 'Daily Roast (9pm)', value: s.dailyRoastEnabled, onChange: bind(s.dailyRoastEnabled, s.setDailyRoast) },
         { kind: 'toggle', label: 'Sleep Reminder (11pm)', value: s.sleepReminderEnabled, onChange: bind(s.sleepReminderEnabled, s.setSleepReminder) },
-        { kind: 'toggle', label: 'Prayer Times', value: s.prayerNotificationsEnabled, onChange: bind(s.prayerNotificationsEnabled, s.setPrayerNotifications) },
+        ...(isMuslim ? [{ kind: 'toggle' as const, label: 'Prayer Times', value: s.prayerNotificationsEnabled, onChange: bind(s.prayerNotificationsEnabled, s.setPrayerNotifications) }] : []),
       ],
     },
     {
@@ -100,14 +98,14 @@ export default function SettingsScreen() {
         { kind: 'nav', label: 'Change Roast Persona', hint: s.roastPersona.replace(/_/g, ' '), onPress: go('/setup/persona') },
       ],
     },
-    {
+    ...(isMuslim ? [{
       title: 'Religion',
       items: [
         { kind: 'toggle', label: 'Islamic Features', value: s.religionEnabled, onChange: bind(s.religionEnabled, s.setReligionEnabled) },
         { kind: 'nav', label: 'Prayer Calculation Method', onPress: go('/setup/religion') },
         { kind: 'nav', label: 'Quran Daily Goal', hint: `${quranGoal} page${quranGoal === 1 ? '' : 's'}`, onPress: cycleQuranGoal },
       ],
-    },
+    } as SettingsSection] : []),
     {
       title: 'Privacy & Safety',
       items: [
@@ -134,6 +132,7 @@ export default function SettingsScreen() {
       ],
     },
   ];
+  return sects; })();
 
   return (
     <SafeScreen>

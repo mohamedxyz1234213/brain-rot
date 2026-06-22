@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -23,7 +23,16 @@ const FEATURES = [
 ] as const;
 
 export default function SetupReligionScreen() {
+  const religion = useSettingsStore((s) => s.religion);
   const [method, setMethod] = useState<string>('Makkah');
+
+  useEffect(() => {
+    if (religion !== 'muslim') {
+      router.replace('/setup/persona');
+    }
+  }, [religion]);
+
+  if (religion !== 'muslim') return null;
   const [enabledFeatures, setEnabledFeatures] = useState<Set<string>>(new Set(FEATURES.map((f) => f.key)));
 
   const toggleFeature = (key: string) => {

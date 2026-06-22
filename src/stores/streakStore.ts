@@ -31,15 +31,6 @@ function getFireLevel(days: number): number {
   return 0;
 }
 
-const DEFAULT_STREAKS: Streak[] = [
-  { id: 'st_screen_time', type: 'screen_time', currentDays: 0, longestDays: 0, lastDate: '', shieldsUsed: 0, maxShields: 2, fireLevel: 0 },
-  { id: 'st_tasks', type: 'tasks', currentDays: 0, longestDays: 0, lastDate: '', shieldsUsed: 0, maxShields: 2, fireLevel: 0 },
-  { id: 'st_prayers', type: 'prayers', currentDays: 0, longestDays: 0, lastDate: '', shieldsUsed: 0, maxShields: 2, fireLevel: 0 },
-  { id: 'st_focus', type: 'focus', currentDays: 0, longestDays: 0, lastDate: '', shieldsUsed: 0, maxShields: 2, fireLevel: 0 },
-  { id: 'st_no_social', type: 'no_social', currentDays: 0, longestDays: 0, lastDate: '', shieldsUsed: 0, maxShields: 2, fireLevel: 0 },
-  { id: 'st_fasting', type: 'fasting', currentDays: 0, longestDays: 0, lastDate: '', shieldsUsed: 0, maxShields: 2, fireLevel: 0 },
-];
-
 export const useStreakStore = create<StreakState>()(
   persist(
     {
@@ -47,7 +38,7 @@ export const useStreakStore = create<StreakState>()(
       partialize: (state: any) => ({ streaks: state.streaks }),
     },
     (set, get) => ({
-      streaks: DEFAULT_STREAKS,
+      streaks: [],
       isLoading: false,
 
       incrementStreak: (type) => {

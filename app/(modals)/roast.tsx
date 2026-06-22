@@ -42,6 +42,7 @@ export default function RoastModal() {
     const topMinutes = topApp
       ? st.logs.filter((l) => l.appBundleId === topApp.appBundleId).reduce((s, l) => s + l.minutesUsed, 0)
       : st.totalMinutesToday;
+    const appLang = useSettingsStore.getState().language;
 
     generateRoast(persona, 'daily_review', {
       userName: useAuthStore.getState().user?.name ?? 'there',
@@ -53,7 +54,7 @@ export default function RoastModal() {
       topWastedMinutes: topMinutes,
       blockedAttempts: 0,
       streakDays: useStreakStore.getState().getStreak('screen_time')?.currentDays ?? 0,
-    }).then((result) => {
+    }, appLang).then((result) => {
       if (cancelled) return;
       useRoastStore.getState().addRoast({
         persona,

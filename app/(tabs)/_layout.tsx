@@ -4,11 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { Colors } from '../../src/constants/theme';
 import { FloatingTabBar } from '../../src/components/ui';
 import { useAuthStore } from '../../src/stores/authStore';
+import { useSettingsStore } from '../../src/stores/settingsStore';
 
 export default function TabLayout() {
   const { t } = useTranslation();
   const isHydrated = useAuthStore((s) => s.isHydrated);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const religion = useSettingsStore((s) => s.religion);
 
   // Wait for persisted auth to load before deciding, to avoid a redirect flash.
   if (!isHydrated) return null;
@@ -44,13 +46,15 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'timer' : 'timer-outline'} size={size} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="religion"
-        options={{
-          title: t('tabs.religion'),
-          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'moon' : 'moon-outline'} size={size} color={color} />,
-        }}
-      />
+      {religion === 'muslim' && (
+        <Tabs.Screen
+          name="religion"
+          options={{
+            title: t('tabs.religion'),
+            tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'moon' : 'moon-outline'} size={size} color={color} />,
+          }}
+        />
+      )}
       <Tabs.Screen
         name="profile"
         options={{

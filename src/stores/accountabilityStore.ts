@@ -48,19 +48,6 @@ interface AccountabilityState {
 
 const generateId = () => `circle_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
-const DEFAULT_CHALLENGES: Challenge[] = [
-  { id: 'ch_1', title: 'No TikTok Week', description: '7 days without TikTok.', durationDays: 7, startDate: new Date().toISOString(), endDate: new Date(Date.now() + 7*24*60*60*1000).toISOString(), participantCount: 234, type: 'no_tiktok', difficulty: 'medium', isJoined: false },
-  { id: 'ch_2', title: '30-Day Brain Detox', description: 'Full month of discipline.', durationDays: 30, startDate: new Date().toISOString(), endDate: new Date(Date.now() + 30*24*60*60*1000).toISOString(), participantCount: 89, type: 'brain_detox', difficulty: 'hard', isJoined: false },
-  { id: 'ch_3', title: 'Exam Mode', description: '14 days zero social media.', durationDays: 14, startDate: new Date().toISOString(), endDate: new Date(Date.now() + 14*24*60*60*1000).toISOString(), participantCount: 156, type: 'exam_mode', difficulty: 'medium', isJoined: false },
-  { id: 'ch_4', title: 'Quick Detox', description: '3-day mini challenge.', durationDays: 3, startDate: new Date().toISOString(), endDate: new Date(Date.now() + 3*24*60*60*1000).toISOString(), participantCount: 567, type: 'custom', difficulty: 'easy', isJoined: false },
-];
-
-const DEFAULT_LEADERBOARD: LeaderboardEntry[] = [
-  { userId: '1', name: 'Ahmed M.', score: 94, streak: 45, xp: 18500, focusHours: 32, rank: 1 },
-  { userId: '2', name: 'Sarah K.', score: 91, streak: 32, xp: 14200, focusHours: 28, rank: 2 },
-  { userId: '3', name: 'Omar A.', score: 87, streak: 28, xp: 9800, focusHours: 24, rank: 3 },
-];
-
 export const useAccountabilityStore = create<AccountabilityState>()(
   persist(
     {
@@ -72,8 +59,8 @@ export const useAccountabilityStore = create<AccountabilityState>()(
     },
     (set, get) => ({
       circles: [],
-      challenges: DEFAULT_CHALLENGES,
-      leaderboard: DEFAULT_LEADERBOARD,
+      challenges: [],
+      leaderboard: [],
       isLoading: false,
 
       addCircle: (name) => {

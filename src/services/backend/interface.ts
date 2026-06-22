@@ -17,6 +17,7 @@ export interface User {
   streakDays: number;
   roastPersona: string;
   language: 'en' | 'ar';
+  religion: 'muslim' | 'christian';
   religionEnabled: boolean;
   subscriptionTier: 'free' | 'healed' | 'ascended' | 'family' | 'lifetime';
   role?: 'user' | 'admin';

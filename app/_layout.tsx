@@ -67,6 +67,7 @@ function applyDefaultFont() {
 
 export default function RootLayout() {
   const language = useSettingsStore((s) => s.language);
+  const religion = useSettingsStore((s) => s.religion);
   const dailyRoastEnabled = useSettingsStore((s) => s.dailyRoastEnabled);
   const userName = useAuthStore((s) => s.user?.name);
   const userId = useAuthStore((s) => s.user?.id);
@@ -90,14 +91,16 @@ export default function RootLayout() {
   // Schedule prayer reminders for today (and re-schedule whenever a prayer
   // is logged so reminders for marked prayers stop firing).
   useEffect(() => {
+    if (religion !== 'muslim') return;
     const times = getPrayerTimes(calculationMethod);
     schedulePrayerReminders(times, prayerLogs, { force: true });
-  }, [calculationMethod, prayerLogs]);
+  }, [calculationMethod, prayerLogs, religion]);
 
   // Foreground hard-block watcher: every 30s, check if an unmarked prayer's
   // window is closing within 30 min — if so, navigate into the prayer-block
   // modal. Re-pushes if the user closes it without marking.
   useEffect(() => {
+    if (religion !== 'muslim') return;
     const check = () => {
       const times = getPrayerTimes(calculationMethod);
       const logs = useReligionStore.getState().prayerLogs;
@@ -109,7 +112,7 @@ export default function RootLayout() {
     check();
     const t = setInterval(check, 30_000);
     return () => clearInterval(t);
-  }, [calculationMethod, pathname, prayerLogs]);
+  }, [calculationMethod, pathname, prayerLogs, religion]);
 
   useEffect(() => {
     if (!dailyRoastEnabled) return;
@@ -169,7 +172,7 @@ export default function RootLayout() {
         topWastedMinutes: overageMinutes,
         blockedAttempts: 1,
         streakDays: 0,
-      });
+      }, language);
 
       useRoastStore.getState().addRoast({
         persona,

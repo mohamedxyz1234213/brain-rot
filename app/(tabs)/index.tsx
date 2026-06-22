@@ -31,6 +31,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const lang = (i18n.language as 'en' | 'ar') ?? 'en';
   const isArabic = lang === 'ar';
+  const userReligion = useAuthStore((s) => s.user?.religion) ?? 'muslim';
 
   const user = useAuthStore((s) => s.user);
   const brainScore = useBrainScoreStore((s) => s.currentScore);
@@ -81,7 +82,7 @@ export default function DashboardScreen() {
       tasksTotal: todayTasks.length + completedToday,
       brainScore: yesterday?.score ?? brainScore,
       streakDays: streak?.currentDays ?? 0,
-    }).then((text) => {
+    }, lang).then((text) => {
       if (!cancelled) setBriefing(text);
     });
     return () => { cancelled = true; };
@@ -321,7 +322,7 @@ export default function DashboardScreen() {
             <StatCard label={t('dashboard.screenTime')} value={`${screenTimeHours}${t('common.hours')} ${screenTimeMins}${t('common.min')}`} progress={Math.min((totalMinutes / 180) * 100, 100)} isArabic={isArabic} />
             <StatCard label={t('dashboard.tasksCompleted')} value={`${completedToday}/${todayTasks.length + completedToday}`} progress={todayTasks.length > 0 ? (completedToday / (todayTasks.length + completedToday)) * 100 : 0} isArabic={isArabic} />
             <StatCard label={t('dashboard.focusMinutes')} value={`${totalFocusMinutes} ${t('common.min')}`} progress={Math.min((totalFocusMinutes / 60) * 100, 100)} isArabic={isArabic} />
-            <StatCard label={t('dashboard.prayers')} value={`${prayerCount}/5`} progress={prayerCount * 20} isArabic={isArabic} />
+            {userReligion === 'muslim' && <StatCard label={t('dashboard.prayers')} value={`${prayerCount}/5`} progress={prayerCount * 20} isArabic={isArabic} />}
             <StatCard label={t('dashboard.streak')} value={`${streak?.currentDays ?? 0}`} progress={100} isArabic={isArabic} />
           </ScrollView>
         </Animated.View>

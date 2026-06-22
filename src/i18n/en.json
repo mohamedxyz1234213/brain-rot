@@ -159,7 +159,19 @@
     "xpPrayerMissed": "Missed {{prayer}}",
     "xpDhikrComplete": "Completed {{count}} dhikr",
     "xpQuranPage": "Quran page read",
-    "tapToCount": "Tap to count dhikr"
+    "tapToCount": "Tap to count dhikr",
+    "prayerLock": "Prayer Lock",
+    "prayerNotPrayed": "{{prayer}} hasn't been prayed",
+    "prayerMinutesLeft": "Only {{minutes}} min left in the window. The app is paused until you pray and mark it.",
+    "prayerReminder": "Step away from the phone. Make wudu. Come back and mark it the moment you finish.",
+    "iPrayed": "I prayed {{prayer}}",
+    "prayerStaysClosed": "This screen will stay closed until {{prayer}} is marked.",
+    "notificationTimeFor": "Time for {{prayer}}",
+    "notificationStandUp": "Stand up. Mark it in the app the moment you finish.",
+    "notificationStillWaiting": "{{prayer}} still waiting",
+    "notificationDontLetSlip": "15 minutes in. Don't let it slip.",
+    "notificationLastCall": "{{prayer}} — last call",
+    "notificationWillLock": "The app will lock you out at the 30-min warning."
   },
   "subscription": {
     "free": "Free",

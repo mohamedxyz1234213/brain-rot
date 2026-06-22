@@ -14,19 +14,12 @@
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import i18n from '../i18n';
 import type { PrayerName, PrayerLog } from '../stores/religionStore';
 
 const CHANNEL_ID = 'brainrot-prayer';
 
 const PRAYER_ORDER: PrayerName[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-
-const PRAYER_LABELS: Record<PrayerName, string> = {
-  fajr: 'Fajr',
-  dhuhr: 'Dhuhr',
-  asr: 'Asr',
-  maghrib: 'Maghrib',
-  isha: 'Isha',
-};
 
 export interface PrayerSchedule {
   prayer: PrayerName;
@@ -125,10 +118,11 @@ export async function schedulePrayerReminders(
 
   for (const { prayer, start } of schedule) {
     if (logged.has(prayer)) continue;
+    const t = (key: string, opts?: Record<string, any>) => i18n.t(key, { prayer: i18n.t(`religion.${prayer}`), ...opts });
     const reminders: { offsetMin: number; title: string; body: string }[] = [
-      { offsetMin: 0, title: `Time for ${PRAYER_LABELS[prayer]}`, body: `Stand up. Mark it in the app the moment you finish.` },
-      { offsetMin: 15, title: `${PRAYER_LABELS[prayer]} still waiting`, body: `15 minutes in. Don't let it slip.` },
-      { offsetMin: 30, title: `${PRAYER_LABELS[prayer]} — last call`, body: `The app will lock you out at the 30-min warning.` },
+      { offsetMin: 0, title: t('religion.notificationTimeFor'), body: t('religion.notificationStandUp') },
+      { offsetMin: 15, title: t('religion.notificationStillWaiting'), body: t('religion.notificationDontLetSlip') },
+      { offsetMin: 30, title: t('religion.notificationLastCall'), body: t('religion.notificationWillLock') },
     ];
     for (const r of reminders) {
       const fire = new Date(start.getTime() + r.offsetMin * 60_000);
@@ -200,4 +194,6 @@ export function evaluatePrayerBlock(
   return null;
 }
 
-export const PRAYER_LABEL = PRAYER_LABELS;
+export function getPrayerLabel(prayer: PrayerName): string {
+  return i18n.t(`religion.${prayer}`);
+}

@@ -58,6 +58,7 @@ export function makeAppUser(profile: OAuthProfile): User {
     streakDays: 0,
     roastPersona: settings.roastPersona,
     language: settings.language,
+    religion: settings.religion,
     religionEnabled: settings.religionEnabled,
     subscriptionTier: 'free',
     createdAt: now,

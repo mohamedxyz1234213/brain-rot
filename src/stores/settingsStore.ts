@@ -3,6 +3,7 @@ import { persist } from '../lib/persistence';
 
 interface SettingsState {
   language: 'en' | 'ar';
+  religion: 'muslim' | 'christian';
   religionEnabled: boolean;
   drivingDetectionEnabled: boolean;
   mirrorFeatureEnabled: boolean;
@@ -20,6 +21,7 @@ interface SettingsState {
   regionOverride: string | null;
   setRegionOverride: (region: string | null) => void;
   setLanguage: (language: 'en' | 'ar') => void;
+  setReligion: (religion: 'muslim' | 'christian') => void;
   setReligionEnabled: (enabled: boolean) => void;
   setDrivingDetection: (enabled: boolean) => void;
   setMirrorFeature: (enabled: boolean) => void;
@@ -42,6 +44,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     (set) => ({
       language: 'en',
+      religion: 'muslim',
       religionEnabled: false,
       drivingDetectionEnabled: false,
       mirrorFeatureEnabled: false,
@@ -59,6 +62,7 @@ export const useSettingsStore = create<SettingsState>()(
 
       setRegionOverride: (regionOverride) => set({ regionOverride }),
       setLanguage: (language) => set({ language }),
+      setReligion: (religion) => set({ religion, religionEnabled: religion === 'muslim' }),
       setReligionEnabled: (enabled) => set({ religionEnabled: enabled }),
       setDrivingDetection: (enabled) => set({ drivingDetectionEnabled: enabled }),
       setMirrorFeature: (enabled) => set({ mirrorFeatureEnabled: enabled }),

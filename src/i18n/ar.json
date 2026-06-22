@@ -159,7 +159,19 @@
     "xpPrayerMissed": "فاتتني {{prayer}}",
     "xpDhikrComplete": "أتممت {{count}} ذكر",
     "xpQuranPage": "قرأت صفحة قرآن",
-    "tapToCount": "اضغط لحساب الذكر"
+    "tapToCount": "اضغط لحساب الذكر",
+    "prayerLock": "قفل الصلاة",
+    "prayerNotPrayed": "{{prayer}} لسه متصليتش",
+    "prayerMinutesLeft": "فضل {{minutes}} دقيقة بس في الوقت. التطبيق هيتقفل لحد ما تصلي وتسجل.",
+    "prayerReminder": "ابعد عن التليفون. توضأ وارجع سجلها بعد ما تخلص الصلاة.",
+    "iPrayed": "صليت {{prayer}}",
+    "prayerStaysClosed": "الشاشة دي هتفضل مقفولة لغاية ما تسجل {{prayer}}",
+    "notificationTimeFor": "حان وقت صلاة {{prayer}}",
+    "notificationStandUp": "قم للصلاة. سجلها في التطبيق بعد ما تخلص.",
+    "notificationStillWaiting": "{{prayer}} لسه مستنياكي",
+    "notificationDontLetSlip": "لسه ١٥ دقيقة. متضيعش الفريضة.",
+    "notificationLastCall": "{{prayer}} — آخر فرصة",
+    "notificationWillLock": "التطبيق هيتقفل عندك بعد التحذير بتاع ٣٠ دقيقة."
   },
   "subscription": {
     "free": "مجاني",

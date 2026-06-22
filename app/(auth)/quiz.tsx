@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
@@ -16,24 +16,15 @@ interface QuizQuestion {
 }
 
 const QUESTIONS: QuizQuestion[] = [
-  { question: 'How many hours per day on social media?', options: [{ text: '< 1 hour', score: 0 }, { text: '1-2 hours', score: 2 }, { text: '2-4 hours', score: 5 }, { text: '4-6 hours', score: 8 }, { text: '6+ hours', score: 10 }] },
-  { question: 'Check phone within 5 min of waking?', options: [{ text: 'Never', score: 0 }, { text: 'Sometimes', score: 3 }, { text: 'Most days', score: 6 }, { text: 'Every day', score: 10 }] },
-  { question: 'Scroll when you should be sleeping?', options: [{ text: 'Never', score: 0 }, { text: 'Rarely', score: 2 }, { text: 'Few times/week', score: 5 }, { text: 'Every night', score: 8 }, { text: 'Past 2am regularly', score: 10 }] },
-  { question: 'Feel when you can\'t access social media?', options: [{ text: 'Totally fine', score: 0 }, { text: 'Slightly bored', score: 2 }, { text: 'Anxious', score: 6 }, { text: 'Panic', score: 10 }] },
-  { question: 'Open same app without realizing?', options: [{ text: 'Never', score: 0 }, { text: '1-2 times/day', score: 2 }, { text: '5-10 times/day', score: 5 }, { text: '10-20/day', score: 8 }, { text: '20+/day', score: 10 }] },
-  { question: 'Social media affected productivity?', options: [{ text: 'Not at all', score: 0 }, { text: 'Slightly', score: 3 }, { text: 'Significantly', score: 7 }, { text: 'Ruined it', score: 10 }] },
-  { question: 'Compare yourself to others on social media?', options: [{ text: 'Never', score: 0 }, { text: 'Occasionally', score: 3 }, { text: 'Frequently', score: 7 }, { text: 'Constantly', score: 10 }] },
-  { question: 'Tried to reduce screen time and failed?', options: [{ text: "Don't need to", score: 0 }, { text: 'Tried once', score: 2 }, { text: 'Multiple times', score: 7 }, { text: "Can't last a day", score: 10 }] },
-  { question: 'Use phone during prayers/meals/conversations?', options: [{ text: 'Never', score: 0 }, { text: 'Rarely', score: 2 }, { text: 'Sometimes', score: 5 }, { text: 'Often', score: 8 }, { text: 'Almost always', score: 10 }] },
-  { question: 'Feel if you permanently deleted social media?', options: [{ text: 'Relieved', score: 0 }, { text: "I'd adapt", score: 2 }, { text: 'Worried FOMO', score: 5 }, { text: "Can't imagine it", score: 8 }, { text: 'Absolute terror', score: 10 }] },
+  { question: 'How much time on social media daily?', options: [{ text: 'Under 1h', score: 0 }, { text: '1-3h', score: 4 }, { text: '3h+', score: 9 }] },
+  { question: 'Can you stop scrolling when you need to?', options: [{ text: 'Easily', score: 0 }, { text: 'With effort', score: 5 }, { text: 'Nope', score: 10 }] },
+  { question: 'How does social media make you feel?', options: [{ text: 'Fine', score: 0 }, { text: 'Anxious', score: 5 }, { text: 'Addicted', score: 10 }] },
 ];
 
 function getResult(score: number) {
-  if (score <= 20) return { icon: 'leaf-outline' as const, title: 'Minimal Brain Rot', message: "You're doing great! Minor optimizations will level you up." };
-  if (score <= 40) return { icon: 'ellipse-outline' as const, title: 'Moderate Brain Rot', message: "Some bad habits forming. Let's catch them early." };
-  if (score <= 60) return { icon: 'warning-outline' as const, title: 'Significant Brain Rot', message: "Your dopamine system is compromised. Serious intervention needed." };
-  if (score <= 80) return { icon: 'skull-outline' as const, title: 'Severe Brain Rot', message: "Deep in the scroll hole. BrainRot was built for you. بنعالجك." };
-  return { icon: 'alert-circle-outline' as const, title: 'Critical Brain Rot', message: "Emergency intervention. Your brain runs on pure dopamine fumes." };
+  if (score <= 10) return { icon: 'leaf-outline' as const, title: 'Mild Brain Rot', message: "You're in control. We'll keep you sharp with some light guardrails." };
+  if (score <= 18) return { icon: 'warning-outline' as const, title: 'Moderate Brain Rot', message: "Bad habits are creeping in. Let's fix them before they take over." };
+  return { icon: 'skull-outline' as const, title: 'Severe Brain Rot', message: "Your dopamine system is cooked. BrainRot was made for you. بنعالجك." };
 }
 
 export default function QuizScreen() {
@@ -66,7 +57,7 @@ export default function QuizScreen() {
       sleepScore: 100 - percentage * 0.1,
     });
     useXPStore.getState().addXP(25, 'Quiz completed');
-    router.push('/setup/limits');
+    router.push('/religion-picker');
   };
 
   if (showResult) {
@@ -100,13 +91,13 @@ export default function QuizScreen() {
 
       <Animated.View entering={FadeInDown.duration(400)} style={styles.questionContent}>
         <Text style={styles.question}>{question.question}</Text>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.optionsList}>
           {question.options.map((option, index) => (
             <Pressable key={index} style={styles.optionBtn} onPress={() => handleAnswer(option.score)} accessibilityRole="button" accessibilityLabel={option.text}>
               <Text style={styles.optionText}>{option.text}</Text>
             </Pressable>
           ))}
-        </ScrollView>
+        </View>
       </Animated.View>
     </SafeScreen>
   );
@@ -117,7 +108,8 @@ const styles = StyleSheet.create({
   progress: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, textAlign: 'center', marginBottom: Spacing.sm },
   questionContent: { flex: 1, paddingHorizontal: Spacing.xl },
   question: { fontSize: Typography.sizes.xl, color: Colors.TEXT_PRIMARY, fontWeight: 600, lineHeight: Typography.lineHeight.relaxed, marginBottom: Spacing.xl, letterSpacing: LetterSpacing.tight },
-  optionBtn: { padding: Spacing.lg, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, marginBottom: Spacing.md, borderWidth: 1, borderColor: Colors.BORDER, minHeight: 44, ...Shadow.sm },
+  optionsList: { gap: Spacing.md },
+  optionBtn: { padding: Spacing.lg, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, borderWidth: 1, borderColor: Colors.BORDER, minHeight: 52, alignItems: 'center', ...Shadow.sm },
   optionText: { fontSize: Typography.sizes.md, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.normal },
   resultContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.xl },
   resultIcon: { marginBottom: Spacing.xl },

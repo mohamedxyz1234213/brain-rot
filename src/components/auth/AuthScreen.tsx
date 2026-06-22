@@ -134,7 +134,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     useAuthStore.getState().setUser(makeAppUser(profile));
     if (isSignUp) {
       useXPStore.getState().addXP(50, `${provider} account created`);
-      router.replace('/(auth)/setup/limits');
+      router.replace('/(auth)/religion-picker');
     } else {
       useXPStore.getState().setXP(0);
       router.replace('/(tabs)');
@@ -182,7 +182,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
 
     if (isSignUp) {
       useXPStore.getState().addXP(50, 'Account created');
-      router.replace('/(auth)/setup/limits');
+      router.replace('/(auth)/religion-picker');
     } else {
       useXPStore.getState().setXP(0);
       router.replace('/(tabs)');

@@ -4,6 +4,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Colors, Typography, Spacing, Radius, Sizing, Shadow, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui';
 import { Card } from '../../src/components/ui/Card';
@@ -11,12 +12,14 @@ import { Button } from '../../src/components/ui/Button';
 import { useReligionStore, PrayerName } from '../../src/stores/religionStore';
 import { useXPStore } from '../../src/stores/xpStore';
 import { useStreakStore } from '../../src/stores/streakStore';
-import { PRAYER_LABEL, buildSchedule } from '../../src/services/prayerReminderService';
+import { buildSchedule } from '../../src/services/prayerReminderService';
 import { getPrayerTimes } from '../../src/services/prayerTimes';
 
 export default function PrayerBlockScreen() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ prayer?: PrayerName }>();
   const prayer = (params.prayer as PrayerName) ?? 'dhuhr';
+  const prayerLabel = t(`religion.${prayer}`);
   const logPrayer = useReligionStore((s) => s.logPrayer);
   const method = useReligionStore((s) => s.selectedCalculationMethod);
   const [now, setNow] = useState(Date.now());
@@ -36,7 +39,7 @@ export default function PrayerBlockScreen() {
   const handleMarkPrayed = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     logPrayer(prayer, 'on_time');
-    useXPStore.getState().addXP(15, `Prayed ${PRAYER_LABEL[prayer]} on time`);
+    useXPStore.getState().addXP(15, t('religion.xpPrayerOnTime', { prayer: prayerLabel }));
     useStreakStore.getState().incrementStreak('prayers');
     router.back();
   };
@@ -48,24 +51,24 @@ export default function PrayerBlockScreen() {
           <Ionicons name="moon" size={Sizing.avatarMd} color={Colors.PRIMARY} />
         </View>
 
-        <Text style={styles.eyebrow}>Prayer Lock</Text>
-        <Text style={styles.title}>{PRAYER_LABEL[prayer]} hasn't been prayed</Text>
+        <Text style={styles.eyebrow}>{t('religion.prayerLock')}</Text>
+        <Text style={styles.title}>{t('religion.prayerNotPrayed', { prayer: prayerLabel })}</Text>
         <Text style={styles.subtitle}>
-          Only <Text style={styles.timeLeft}>{minutesLeft} min</Text> left in the window. The app is paused until you pray and mark it.
+          {t('religion.prayerMinutesLeft', { minutes: minutesLeft })}
         </Text>
 
         <Card glass style={styles.reminder}>
           <Ionicons name="time-outline" size={Sizing.iconMd} color={Colors.PRIMARY} />
           <Text style={styles.reminderText}>
-            Step away from the phone. Make wudu. Come back and mark it the moment you finish.
+            {t('religion.prayerReminder')}
           </Text>
         </Card>
 
         <View style={styles.actions}>
-          <Button title={`I prayed ${PRAYER_LABEL[prayer]}`} onPress={handleMarkPrayed} size="lg" />
+          <Button title={t('religion.iPrayed', { prayer: prayerLabel })} onPress={handleMarkPrayed} size="lg" />
         </View>
 
-        <Text style={styles.footnote}>This screen will stay closed until {PRAYER_LABEL[prayer]} is marked.</Text>
+        <Text style={styles.footnote}>{t('religion.prayerStaysClosed', { prayer: prayerLabel })}</Text>
       </Animated.View>
     </SafeScreen>
   );

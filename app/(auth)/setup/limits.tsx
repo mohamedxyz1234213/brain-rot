@@ -9,6 +9,7 @@ import { Colors, Typography, Spacing, Radius, Sizing } from '../../../src/consta
 import { Card } from '../../../src/components/ui/Card';
 import { Button } from '../../../src/components/ui/Button';
 import { useScreenTimeStore } from '../../../src/stores/screenTimeStore';
+import { useSettingsStore } from '../../../src/stores/settingsStore';
 
 const POPULAR_APPS = [
   { bundleId: 'com.zhiliaoapp.musically', name: 'TikTok', icon: 'musical-notes-outline' },
@@ -47,7 +48,12 @@ export default function SetupLimitsScreen() {
         addLimit({ userId: 'current_user', appBundleId: app.bundleId, appName: app.name, dailyLimitMinutes: limits[bundleId] ?? 30, isEnabled: true, isHardBlock: false });
       }
     }
-    router.push('/setup/religion');
+    const religion = useSettingsStore.getState().religion;
+    if (religion === 'muslim') {
+      router.push('/setup/religion');
+    } else {
+      router.push('/setup/persona');
+    }
   };
 
   return (
@@ -87,7 +93,7 @@ export default function SetupLimitsScreen() {
 
         <View style={styles.actions}>
           <Button title="Continue" onPress={handleContinue} size="lg" />
-          <Button title="Skip" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/setup/religion'); }} variant="ghost" size="md" />
+          <Button title="Skip" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); const religion = useSettingsStore.getState().religion; router.push(religion === 'muslim' ? '/setup/religion' : '/setup/persona'); }} variant="ghost" size="md" />
         </View>
       </ScrollView>
     </SafeAreaView>
