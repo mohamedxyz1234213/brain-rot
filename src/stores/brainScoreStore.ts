@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 import { backendService } from '../services/backend';
 
 interface BrainScoreBreakdown {
@@ -34,9 +34,18 @@ interface BrainScoreState {
     religionEnabled: boolean;
   }) => number;
   setScore: (score: number, breakdown: BrainScoreBreakdown) => void;
+  resetScores: () => void;
   syncScores: (userId: string, days?: number) => Promise<void>;
   getLevelName: () => string;
 }
+
+const EMPTY_BREAKDOWN: BrainScoreBreakdown = {
+  screenTimeScore: 0,
+  taskScore: 0,
+  focusScore: 0,
+  prayerScore: 0,
+  sleepScore: 0,
+};
 
 const SCORE_LABELS = [
   { min: 0, max: 20, label: 'Zombie' },
@@ -59,6 +68,7 @@ export const useBrainScoreStore = create<BrainScoreState>()(
   persist(
     {
       name: 'brain_score',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state) => ({
         currentScore: state.currentScore,
         breakdown: state.breakdown,
@@ -68,21 +78,33 @@ export const useBrainScoreStore = create<BrainScoreState>()(
     (set, get) => ({
       currentScore: 0,
       scores: [],
-      breakdown: {
-        screenTimeScore: 0,
-        taskScore: 0,
-        focusScore: 0,
-        prayerScore: 0,
-        sleepScore: 0,
-      },
+      breakdown: EMPTY_BREAKDOWN,
       isLoading: false,
 
       calculateScore: (data) => {
-        const screenTimeRatio = data.screenTimeMinutes / data.screenTimeLimit;
-        const screenTimeScore = calculateSubScore(screenTimeRatio, [1, 1.2, 1.5, 2]);
+        const hasUserActivity =
+          data.screenTimeMinutes > 0 ||
+          data.tasksCompleted > 0 ||
+          data.tasksTotal > 0 ||
+          data.focusSessions > 0 ||
+          data.prayersCompleted > 0;
+
+        if (!hasUserActivity) {
+          set({ currentScore: 0, breakdown: EMPTY_BREAKDOWN });
+          return 0;
+        }
+
+        const screenTimeRatio = data.screenTimeLimit > 0
+          ? data.screenTimeMinutes / data.screenTimeLimit
+          : 0;
+        const screenTimeScore = data.screenTimeMinutes > 0 && data.screenTimeLimit > 0
+          ? calculateSubScore(screenTimeRatio, [1, 1.2, 1.5, 2])
+          : 0;
 
         const taskRatio = data.tasksCompleted / data.tasksTotal;
-        const taskScore = calculateSubScore(taskRatio, [0.9, 0.75, 0.5, 0.25]);
+        const taskScore = data.tasksTotal > 0
+          ? calculateSubScore(taskRatio, [0.9, 0.75, 0.5, 0.25])
+          : 0;
 
         let focusScore: number;
         if (data.focusSessions >= 2) focusScore = 100;
@@ -141,10 +163,19 @@ export const useBrainScoreStore = create<BrainScoreState>()(
         set({ currentScore: score, breakdown });
       },
 
+      resetScores: () => {
+        set({ currentScore: 0, scores: [], breakdown: EMPTY_BREAKDOWN, isLoading: false });
+      },
+
       syncScores: async (userId, days = 30) => {
         set({ isLoading: true });
         try {
           const remoteScores = await backendService.getBrainScores(userId, days);
+          if (remoteScores.length === 0) {
+            set({ currentScore: 0, scores: [], breakdown: EMPTY_BREAKDOWN, isLoading: false });
+            return;
+          }
+
           const scores: BrainScoreEntry[] = remoteScores.map((score) => ({
             id: score.id,
             date: score.date,
@@ -160,8 +191,8 @@ export const useBrainScoreStore = create<BrainScoreState>()(
           const latest = scores[0];
           set({
             scores,
-            currentScore: latest?.score ?? get().currentScore,
-            breakdown: latest?.breakdown ?? get().breakdown,
+            currentScore: latest?.score ?? 0,
+            breakdown: latest?.breakdown ?? EMPTY_BREAKDOWN,
             isLoading: false,
           });
         } catch (error) {

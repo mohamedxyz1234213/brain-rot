@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
 interface DrivingSession {
   startedAt: string;
@@ -15,12 +15,14 @@ interface DrivingState {
   setDriving: (isDriving: boolean) => void;
   setPhonePicked: () => void;
   resetSession: () => void;
+  resetDriving: () => void;
 }
 
 export const useDrivingStore = create<DrivingState>()(
   persist(
     {
       name: 'driving',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state) => ({
         drivingSessions: state.drivingSessions.slice(0, 20),
       }),
@@ -68,6 +70,10 @@ export const useDrivingStore = create<DrivingState>()(
           drivingStartedAt: null,
           phonePickedWhileDriving: false,
         });
+      },
+
+      resetDriving: () => {
+        set({ isDriving: false, drivingStartedAt: null, phonePickedWhileDriving: false, drivingSessions: [] });
       },
     })
   )

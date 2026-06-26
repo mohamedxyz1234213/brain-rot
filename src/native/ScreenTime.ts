@@ -42,24 +42,10 @@ const MockScreenTimeModule: ScreenTimeNativeModule = {
   async blockApp(bundleId) { console.log(`[Mock] Blocked: ${bundleId}`); },
   async unblockApp(bundleId) { console.log(`[Mock] Unblocked: ${bundleId}`); },
   async getUsageStats() {
-    return [
-      { bundleId: 'com.zhiliaoapp.musically', appName: 'TikTok', minutesUsed: 45 },
-      { bundleId: 'com.instagram.android', appName: 'Instagram', minutesUsed: 30 },
-      { bundleId: 'com.twitter.android', appName: 'X', minutesUsed: 20 },
-      { bundleId: 'com.snapchat.android', appName: 'Snapchat', minutesUsed: 15 },
-      { bundleId: 'com.google.android.youtube', appName: 'YouTube', minutesUsed: 35 },
-    ];
+    return [];
   },
   async getInstalledApps() {
-    return [
-      { bundleId: 'com.zhiliaoapp.musically', name: 'TikTok', category: 'social' },
-      { bundleId: 'com.instagram.android', name: 'Instagram', category: 'social' },
-      { bundleId: 'com.twitter.android', name: 'X', category: 'social' },
-      { bundleId: 'com.snapchat.android', name: 'Snapchat', category: 'social' },
-      { bundleId: 'com.google.android.youtube', name: 'YouTube', category: 'entertainment' },
-      { bundleId: 'com.facebook.katana', name: 'Facebook', category: 'social' },
-      { bundleId: 'com.netflix.mediaclient', name: 'Netflix', category: 'entertainment' },
-    ];
+    return [];
   },
   async startMonitoring() { console.log('[Mock] Monitoring started'); },
   async stopMonitoring() { console.log('[Mock] Monitoring stopped'); },

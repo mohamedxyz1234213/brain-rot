@@ -18,6 +18,7 @@ import {
   AccountabilityCircle,
   Subscription,
   NotificationSettings,
+  AuthResult,
   AdminOverview,
   AdminUserSummary,
   AdminSubscriptionSummary,
@@ -56,6 +57,27 @@ export class MongoBackendService implements IBackendService {
   }
 
   // Auth
+  async signUpWithEmail(name: string, email: string, password: string, user: User): Promise<AuthResult> {
+    return request<AuthResult>('/auth/email/sign-up', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password, user }),
+    });
+  }
+
+  async signInWithEmail(email: string, password: string): Promise<AuthResult> {
+    return request<AuthResult>('/auth/email/sign-in', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async signInWithOAuth(provider: 'google' | 'apple', token: string, user: User): Promise<AuthResult> {
+    return request<AuthResult>('/auth/oauth', {
+      method: 'POST',
+      body: JSON.stringify({ provider, token, user }),
+    });
+  }
+
   async syncUser(clerkId: string, data: Partial<User>): Promise<User> {
     return request<User>('/users/sync', {
       method: 'POST',

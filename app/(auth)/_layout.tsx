@@ -3,6 +3,6 @@ import { Colors } from '../../src/constants/theme';
 
 export default function AuthLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.BACKGROUND } }} />
+    <Stack initialRouteName="sign-in" screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.BACKGROUND } }} />
   );
 }

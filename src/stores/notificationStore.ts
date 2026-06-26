@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
 interface NotificationEntry {
   id: string;
@@ -34,6 +34,7 @@ export const useNotificationStore = create<NotificationState>()(
   persist(
     {
       name: 'notifications',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state: any) => ({
         notificationsEnabled: state.notificationsEnabled,
         morningBriefing: state.morningBriefing,

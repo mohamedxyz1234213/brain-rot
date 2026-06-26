@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
 interface Achievement {
   id: string;
@@ -38,6 +38,7 @@ interface GamificationState {
   startVillainArc: () => void;
   decrementVillainArcDay: () => void;
   endVillainArc: () => void;
+  resetGamification: () => void;
 }
 
 const AVATAR_THRESHOLDS = [0, 20, 35, 50, 65, 80, 95];
@@ -71,6 +72,7 @@ export const useGamificationStore = create<GamificationState>()(
   persist(
     {
       name: 'gamification',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state: any) => ({
         unlockedAchievements: state.unlockedAchievements,
         avatarStage: state.avatarStage,
@@ -136,6 +138,10 @@ export const useGamificationStore = create<GamificationState>()(
 
       endVillainArc: () => {
         set({ villainArcActive: false, villainArcDaysLeft: 0 });
+      },
+
+      resetGamification: () => {
+        set({ achievements: [], unlockedAchievements: [], lootBoxes: [], avatarStage: 0, villainArcActive: false, villainArcDaysLeft: 0 });
       },
     })
   )

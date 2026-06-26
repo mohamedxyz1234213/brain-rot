@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
 type RoastPersona = 'egyptian_dad' | 'egyptian_mom' | 'future_self' | 'drill_sergeant' | 'sigmund_freud' | 'david_goggins';
 
@@ -21,6 +21,7 @@ interface RoastState {
   dismissRoast: () => void;
   setPersona: (persona: RoastPersona) => void;
   getLatestRoasts: (limit?: number) => RoastEntry[];
+  resetRoasts: () => void;
 }
 
 const generateId = () => `roast_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -29,6 +30,7 @@ export const useRoastStore = create<RoastState>()(
   persist(
     {
       name: 'roasts',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state) => ({
         roasts: state.roasts.slice(0, 10),
         selectedPersona: state.selectedPersona,
@@ -62,6 +64,10 @@ export const useRoastStore = create<RoastState>()(
 
       getLatestRoasts: (limit = 10) => {
         return get().roasts.slice(0, limit);
+      },
+
+      resetRoasts: () => {
+        set({ roasts: [], activeRoast: null, selectedPersona: 'egyptian_dad', isLoading: false });
       },
     })
   )

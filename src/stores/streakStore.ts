@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
 type StreakType = 'screen_time' | 'tasks' | 'prayers' | 'focus' | 'no_social' | 'fasting';
 
@@ -22,6 +22,7 @@ interface StreakState {
   useShield: (type: StreakType) => boolean;
   getStreak: (type: StreakType) => Streak | undefined;
   getMaxStreak: () => Streak | undefined;
+  resetStreaks: () => void;
 }
 
 function getFireLevel(days: number): number {
@@ -35,6 +36,7 @@ export const useStreakStore = create<StreakState>()(
   persist(
     {
       name: 'streaks',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state: any) => ({ streaks: state.streaks }),
     },
     (set, get) => ({
@@ -86,6 +88,10 @@ export const useStreakStore = create<StreakState>()(
         return streaks.reduce((max: Streak | undefined, s: Streak) =>
           max && max.currentDays > s.currentDays ? max : s, undefined as Streak | undefined
         );
+      },
+
+      resetStreaks: () => {
+        set({ streaks: [], isLoading: false });
       },
     })
   )

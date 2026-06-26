@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
 type PrayerName = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 type PrayerStatus = 'pending' | 'on_time' | 'late' | 'missed';
@@ -47,14 +47,28 @@ interface ReligionState {
   setCalculationMethod: (method: ReligionState['selectedCalculationMethod']) => void;
   getTodayPrayerStatuses: () => PrayerLog[];
   getPrayerCompletionRate: () => number;
+  resetReligion: () => void;
 }
 
 const generateId = () => `prayer_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+const createDefaultQuranProgress = (): QuranProgress => ({
+  currentSurah: 1,
+  currentAyah: 1,
+  currentJuz: 1,
+  currentPage: 1,
+  dailyPageGoal: 5,
+  khatmGoal: 1,
+  khatmCount: 0,
+  pagesReadToday: 0,
+  lastReadAt: new Date().toISOString(),
+});
 
 export const useReligionStore = create<ReligionState>()(
   persist(
     {
       name: 'religion',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state: any) => ({
         prayerLogs: state.prayerLogs.slice(0, 50),
         quranProgress: state.quranProgress,
@@ -63,17 +77,7 @@ export const useReligionStore = create<ReligionState>()(
     },
     (set, get) => ({
       prayerLogs: [],
-      quranProgress: {
-        currentSurah: 1,
-        currentAyah: 1,
-        currentJuz: 1,
-        currentPage: 1,
-        dailyPageGoal: 5,
-        khatmGoal: 1,
-        khatmCount: 0,
-        pagesReadToday: 0,
-        lastReadAt: new Date().toISOString(),
-      },
+      quranProgress: createDefaultQuranProgress(),
       dhikrSessions: [],
       selectedCalculationMethod: 'Makkah',
       isLoading: false,
@@ -162,6 +166,16 @@ export const useReligionStore = create<ReligionState>()(
         const todayLogs = get().getTodayPrayerStatuses();
         const completed = todayLogs.filter((l: PrayerLog) => l.status !== 'missed' && l.status !== 'pending').length;
         return completed / 5;
+      },
+
+      resetReligion: () => {
+        set({
+          prayerLogs: [],
+          quranProgress: createDefaultQuranProgress(),
+          dhikrSessions: [],
+          selectedCalculationMethod: 'Makkah',
+          isLoading: false,
+        });
       },
     })
   )

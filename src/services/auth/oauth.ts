@@ -15,6 +15,7 @@ export interface OAuthProfile {
   email: string;
   name: string;
   avatar?: string;
+  token?: string;
 }
 
 export const googleDiscovery = {
@@ -86,7 +87,7 @@ export async function getGoogleProfile(accessToken: string): Promise<OAuthProfil
     throw new Error('Google did not return a usable profile.');
   }
 
-  return { provider: 'google', providerId, email, name, avatar };
+  return { provider: 'google', providerId, email, name, avatar, token: accessToken };
 }
 
 export async function signInWithApple(): Promise<OAuthProfile> {
@@ -107,5 +108,6 @@ export async function signInWithApple(): Promise<OAuthProfile> {
     providerId: credential.user,
     email,
     name: formattedName || email.split('@')[0] || 'Apple User',
+    token: credential.identityToken ?? credential.authorizationCode ?? undefined,
   };
 }

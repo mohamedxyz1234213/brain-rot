@@ -47,9 +47,9 @@ export default function RoastModal() {
     generateRoast(persona, 'daily_review', {
       userName: useAuthStore.getState().user?.name ?? 'there',
       screenTimeToday: st.totalMinutesToday,
-      screenTimeLimit: st.limits.reduce((s, l) => s + l.dailyLimitMinutes, 0) || 180,
+      screenTimeLimit: st.limits.reduce((s, l) => s + l.dailyLimitMinutes, 0),
       tasksCompleted: taskState.tasks.filter((t) => t.status === 'completed').length,
-      tasksTotal: Math.max(taskState.tasks.length, 1),
+      tasksTotal: taskState.tasks.length,
       topWastedApp: topApp?.appName ?? 'social media',
       topWastedMinutes: topMinutes,
       blockedAttempts: 0,

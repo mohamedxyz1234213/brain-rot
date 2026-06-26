@@ -30,13 +30,13 @@ import { SafeScreen } from '../ui/SafeScreen';
 import { ANIMATION, Colors, Glass, Gradients, Layout, LetterSpacing, Radius, Shadow, Spacing, Typography } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { useXPStore } from '../../stores/xpStore';
+import { backendService } from '../../services/backend';
 import {
   getGoogleClientId,
   getGoogleProfile,
   googleDiscovery,
   googleRedirectUri,
   makeAppUser,
-  makeEmailUser,
   signInWithApple,
   type OAuthProfile,
 } from '../../services/auth/oauth';
@@ -130,8 +130,15 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     return Math.min(1, (password.length + (/[A-Z]/.test(password) ? 2 : 0) + (/\d/.test(password) ? 2 : 0)) / 12);
   }, [password]);
 
-  function finishAuth(profile: OAuthProfile, provider: 'google' | 'apple' | 'email') {
-    useAuthStore.getState().setUser(makeAppUser(profile));
+  async function finishAuth(profile: OAuthProfile, provider: 'google' | 'apple' | 'email') {
+    const draftUser = makeAppUser(profile);
+    const result = provider === 'email'
+      ? isSignUp
+        ? await backendService.signUpWithEmail(draftUser.name, draftUser.email, password, draftUser)
+        : await backendService.signInWithEmail(draftUser.email, password)
+      : await backendService.signInWithOAuth(provider, profile.token ?? '', draftUser);
+
+    useAuthStore.getState().completeAuth(result.user, result.token);
     if (isSignUp) {
       useXPStore.getState().addXP(50, `${provider} account created`);
       router.replace('/(auth)/religion-picker');
@@ -147,7 +154,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
       setStatus(`Completing ${provider === 'google' ? 'Google' : 'Apple'} sign-${isSignUp ? 'up' : 'in'}...`);
       const profile = await loadProfile();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      finishAuth(profile, provider);
+      await finishAuth(profile, provider);
     } catch (error) {
       const message = error instanceof Error ? error.message : `${provider} authentication failed.`;
       setStatus(message);
@@ -176,18 +183,20 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     }
 
     setBusyProvider('email');
-    setStatus(isSignUp ? 'Creating your local account...' : 'Signing you in...');
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    useAuthStore.getState().setUser(makeEmailUser(displayName, cleanEmail));
-
-    if (isSignUp) {
-      useXPStore.getState().addXP(50, 'Account created');
-      router.replace('/(auth)/religion-picker');
-    } else {
-      useXPStore.getState().setXP(0);
-      router.replace('/(tabs)');
+    setStatus(isSignUp ? 'Creating your account...' : 'Signing you in...');
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await finishAuth({
+        provider: 'email',
+        providerId: cleanEmail,
+        email: cleanEmail,
+        name: displayName,
+      }, 'email');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Email authentication failed.');
+    } finally {
+      setBusyProvider(null);
     }
-    setBusyProvider(null);
   }
 
   async function handleGoogleAuth() {

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
 type FocusMode = 'pomodoro' | 'deep_work' | 'flow' | 'quick_sprint';
 
@@ -35,6 +35,7 @@ interface FocusState {
   logDistraction: () => void;
   tickTimer: () => void;
   getModeDuration: (mode: FocusMode) => number;
+  resetFocus: () => void;
 }
 
 const generateId = () => `focus_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -43,6 +44,7 @@ export const useFocusStore = create<FocusState>()(
   persist(
     {
       name: 'focus',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       debounceMs: 500,
       partialize: (state) => ({
         sessions: state.sessions.slice(0, 20),
@@ -125,6 +127,10 @@ export const useFocusStore = create<FocusState>()(
       },
 
       getModeDuration: (mode) => MODE_DURATIONS[mode],
+
+      resetFocus: () => {
+        set({ sessions: [], activeSession: null, isActive: false, remainingSeconds: 0, totalFocusMinutesToday: 0 });
+      },
     })
   )
 );

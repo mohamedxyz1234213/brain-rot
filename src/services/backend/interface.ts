@@ -165,6 +165,11 @@ export interface NotificationSettings {
   drivingAlert: boolean;
 }
 
+export interface AuthResult {
+  user: User;
+  token: string;
+}
+
 export interface AdminOverview {
   totalUsers: number;
   activeSubscriptions: number;
@@ -216,6 +221,9 @@ export interface IBackendService {
   setAuthToken(token: string | null): void;
 
   // Auth
+  signUpWithEmail(name: string, email: string, password: string, user: User): Promise<AuthResult>;
+  signInWithEmail(email: string, password: string): Promise<AuthResult>;
+  signInWithOAuth(provider: 'google' | 'apple', token: string, user: User): Promise<AuthResult>;
   syncUser(clerkId: string, data: Partial<User>): Promise<User>;
   getUser(userId: string): Promise<User | null>;
   updateUser(userId: string, data: Partial<User>): Promise<User>;

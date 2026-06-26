@@ -30,7 +30,34 @@ const db = client.db(MONGODB_DB);
 app.use(express.json({ limit: '1mb' }));
 app.use(cors({ origin: (process.env.CORS_ORIGIN || '').split(',').filter(Boolean), credentials: true }));
 
-type AuthedRequest = Request & { admin?: { id: string; email: string; role: 'admin' } };
+type AuthedRequest = Request & { admin?: { id: string; email: string; role: 'admin' }; userId?: string };
+
+type AuthUser = {
+  id: string;
+  email: string;
+  role?: 'admin' | 'user';
+};
+
+function createToken(user: AuthUser): string {
+  return jwt.sign(user, jwtSecret, { expiresIn: '7d' });
+}
+
+function verifyToken(token: string): AuthUser {
+  return jwt.verify(token, jwtSecret) as AuthUser;
+}
+
+function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return res.status(401).send('Missing auth token');
+  try {
+    const user = verifyToken(token);
+    req.userId = user.id;
+    next();
+  } catch {
+    res.status(401).send('Invalid auth token');
+  }
+}
 
 const userSchema = z.object({
   id: z.string().optional(),
@@ -50,12 +77,22 @@ const userSchema = z.object({
   role: z.enum(['user', 'admin']).default('user'),
 });
 
+const emailAuthSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
 function publicId(doc: WithId<Record<string, unknown>>) {
   return { ...doc, id: String(doc._id), _id: undefined };
 }
 
 function objectId(value: string | string[]) {
   return new ObjectId(Array.isArray(value) ? value[0] : value);
+}
+
+function withoutCreatedAt<T extends Record<string, unknown>>(value: T) {
+  const { createdAt: _createdAt, ...rest } = value;
+  return rest;
 }
 
 function requireAdmin(req: AuthedRequest, res: Response, next: NextFunction) {
@@ -99,6 +136,70 @@ app.post('/api/admin/auth/sign-in', async (req, res) => {
   res.json({ token, admin: { id, email: admin.email, name: admin.name, role: 'admin' } });
 });
 
+app.post('/api/auth/email/sign-up', async (req, res) => {
+  const parsed = emailAuthSchema.extend({ name: z.string().min(1), user: userSchema }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).send('Invalid sign-up payload');
+  const email = parsed.data.email.toLowerCase();
+  const existing = await db.collection('users').findOne({ email });
+  if (existing?.passwordHash) return res.status(409).send('An account with this email already exists');
+
+  const now = new Date().toISOString();
+  const user = {
+    ...parsed.data.user,
+    id: parsed.data.user.id || `email_${email.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+    clerkId: parsed.data.user.clerkId || `email_${email}`,
+    name: parsed.data.name,
+    email,
+    passwordHash: await bcrypt.hash(parsed.data.password, 12),
+    authProvider: 'email',
+    updatedAt: now,
+    createdAt: now,
+  };
+  await db.collection('users').updateOne({ email }, { $set: withoutCreatedAt(user), $setOnInsert: { createdAt: now } }, { upsert: true });
+  const saved = await db.collection('users').findOne({ email });
+  const publicUser = publicId(saved as WithId<Record<string, unknown>>);
+  delete (publicUser as Record<string, unknown>).passwordHash;
+  res.json({ user: publicUser, token: createToken({ id: String(publicUser.id), email, role: 'user' }) });
+});
+
+app.post('/api/auth/email/sign-in', async (req, res) => {
+  const parsed = emailAuthSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).send('Invalid sign-in payload');
+  const email = parsed.data.email.toLowerCase();
+  const user = await db.collection('users').findOne({ email });
+  if (!user || typeof user.passwordHash !== 'string') return res.status(401).send('Invalid email or password');
+  const ok = await bcrypt.compare(parsed.data.password, user.passwordHash);
+  if (!ok) return res.status(401).send('Invalid email or password');
+  const publicUser = publicId(user as WithId<Record<string, unknown>>);
+  delete (publicUser as Record<string, unknown>).passwordHash;
+  res.json({ user: publicUser, token: createToken({ id: String(publicUser.id), email, role: 'user' }) });
+});
+
+app.post('/api/auth/oauth', async (req, res) => {
+  const parsed = z.object({
+    provider: z.enum(['google', 'apple']),
+    token: z.string().min(1),
+    user: userSchema,
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).send('Invalid OAuth payload');
+  const now = new Date().toISOString();
+  const user = {
+    ...parsed.data.user,
+    authProvider: parsed.data.provider,
+    oauthTokenPreview: parsed.data.token.slice(0, 12),
+    updatedAt: now,
+  };
+  await db.collection('users').updateOne(
+    { clerkId: user.clerkId },
+    { $set: withoutCreatedAt(user), $setOnInsert: { createdAt: now } },
+    { upsert: true }
+  );
+  const saved = await db.collection('users').findOne({ clerkId: user.clerkId });
+  const publicUser = publicId(saved as WithId<Record<string, unknown>>);
+  delete (publicUser as Record<string, unknown>).passwordHash;
+  res.json({ user: publicUser, token: createToken({ id: String(publicUser.id), email: String(user.email), role: 'user' }) });
+});
+
 app.post('/api/users/sync', async (req, res) => {
   const parsed = userSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).send(parsed.error.message);
@@ -106,7 +207,7 @@ app.post('/api/users/sync', async (req, res) => {
   const data = { ...parsed.data, updatedAt: now };
   await db.collection('users').updateOne(
     { clerkId: data.clerkId },
-    { $set: data, $setOnInsert: { createdAt: now } },
+    { $set: withoutCreatedAt(data), $setOnInsert: { createdAt: now } },
     { upsert: true }
   );
   const user = await db.collection('users').findOne({ clerkId: data.clerkId });
@@ -166,7 +267,7 @@ app.patch('/api/subscriptions/:userId', async (req, res) => {
   const now = new Date().toISOString();
   await db.collection('subscriptions').updateOne(
     { userId: req.params.userId },
-    { $set: { ...req.body, userId: req.params.userId, updatedAt: now }, $setOnInsert: { createdAt: now } },
+    { $set: withoutCreatedAt({ ...req.body, userId: req.params.userId, updatedAt: now }), $setOnInsert: { createdAt: now } },
     { upsert: true }
   );
   if (req.body.tier) await db.collection('users').updateOne({ id: req.params.userId }, { $set: { subscriptionTier: req.body.tier, updatedAt: now } });
@@ -248,7 +349,7 @@ app.delete('/api/admin/users/:userId', requireAdmin, async (req, res) => {
 
 app.patch('/api/admin/subscriptions/:userId', requireAdmin, async (req, res) => {
   const now = new Date().toISOString();
-  await db.collection('subscriptions').updateOne({ userId: req.params.userId }, { $set: { ...req.body, userId: req.params.userId, updatedAt: now }, $setOnInsert: { createdAt: now } }, { upsert: true });
+  await db.collection('subscriptions').updateOne({ userId: req.params.userId }, { $set: withoutCreatedAt({ ...req.body, userId: req.params.userId, updatedAt: now }), $setOnInsert: { createdAt: now } }, { upsert: true });
   if (req.body.tier) await db.collection('users').updateOne({ id: req.params.userId }, { $set: { subscriptionTier: req.body.tier, updatedAt: now } });
   res.json({ ok: true });
 });

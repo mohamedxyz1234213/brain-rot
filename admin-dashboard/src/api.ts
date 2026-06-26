@@ -56,8 +56,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   });
 
   if (response.status === 401 || response.status === 403) {
+    const body = await response.text();
+    console.error('Auth error:', response.status, body);
     clearStoredSession();
-    throw new Error('Your admin session is no longer authorized. Sign in again.');
+    throw new Error(body || 'Your admin session is no longer authorized. Sign in again.');
   }
 
   if (!response.ok) {

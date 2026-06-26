@@ -2,14 +2,31 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const isClient = typeof window !== 'undefined';
 
+const DEFAULT_USER_SUFFIX = 'anon';
+
+let activeUserStorageSuffix = DEFAULT_USER_SUFFIX;
+const suffixListeners = new Set<(suffix: string) => void>();
+
+export function setActiveUserStorageSuffix(userId: string | null | undefined) {
+  const nextSuffix = userId || DEFAULT_USER_SUFFIX;
+  if (activeUserStorageSuffix === nextSuffix) return;
+  activeUserStorageSuffix = nextSuffix;
+  suffixListeners.forEach((listener) => listener(nextSuffix));
+}
+
+export function getActiveUserStorageSuffix() {
+  return activeUserStorageSuffix;
+}
+
 export function persist<S extends object>(
   config: {
     name: string;
     version?: number;
     partialize?: (state: any) => any;
-    onHydrate?: (set: (partial: any) => void) => void;
+    onHydrate?: (set: (partial: any) => void, get: () => any) => void;
     /** Minimum ms between AsyncStorage writes (default 300). 0 = no debounce. */
     debounceMs?: number;
+    getStorageKeySuffix?: () => string | null | undefined;
   },
   stateCreator: (set: any, get: any, store: any) => S
 ): (set: any, get: any, store: any) => S {
@@ -17,29 +34,41 @@ export function persist<S extends object>(
     const initialState = stateCreator(set, get, store);
 
     if (isClient) {
-      const key = `brainrot_${config.name}`;
+      const getKey = () => {
+        const suffix = config.getStorageKeySuffix?.();
+        return `brainrot_${config.name}${suffix ? `_${suffix}` : ''}`;
+      };
       const debounceMs = config.debounceMs ?? 300;
       let writeTimer: ReturnType<typeof setTimeout> | null = null;
+      let hydratedKey: string | null = null;
 
-      AsyncStorage.getItem(key)
-        .then((value) => {
-          if (value) {
-            try {
-              const parsed = JSON.parse(value);
-              if (parsed.version === (config.version || 1)) {
-                const toMerge = config.partialize
-                  ? config.partialize(parsed.data)
-                  : parsed.data;
-                set(toMerge);
-              }
-            } catch {
-              // ignore corrupted data
-            }
-          }
-        })
-        .finally(() => {
-          config.onHydrate?.(set);
+      const hydrateFromKey = (key: string, shouldNotify = false) => {
+        hydratedKey = key;
+        AsyncStorage.getItem(key).then((value) => {
+          if (hydratedKey !== key) return;
+          const data = value ? parsePersistedValue(value) : null;
+          const state = data?.version === (config.version || 1)
+            ? data.data
+            : initialState;
+          const toMerge = config.partialize
+            ? config.partialize(state)
+            : state;
+          set(toMerge);
+        }).finally(() => {
+          if (shouldNotify && hydratedKey === key) config.onHydrate?.(set, get);
         });
+      };
+
+      const parsePersistedValue = (value: string) => {
+        try {
+          return JSON.parse(value);
+        } catch {
+          // ignore corrupted data
+          return null;
+        }
+      };
+
+      hydrateFromKey(getKey(), true);
 
       store.subscribe(() => {
         if (writeTimer) clearTimeout(writeTimer);
@@ -57,15 +86,22 @@ export function persist<S extends object>(
             ? config.partialize(currentState)
             : currentState;
           AsyncStorage.setItem(
-            key,
+            getKey(),
             JSON.stringify({ version: config.version || 1, data: toStore })
           );
         } catch {
           // serialization can throw for circular refs etc.
         }
       }
+
+      if (config.getStorageKeySuffix) {
+        suffixListeners.add(() => {
+          const key = getKey();
+          if (hydratedKey !== key) hydrateFromKey(key);
+        });
+      }
     } else {
-      config.onHydrate?.(set);
+      config.onHydrate?.(set, get);
     }
 
     return initialState;

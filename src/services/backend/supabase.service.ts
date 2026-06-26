@@ -18,6 +18,7 @@ import {
   AccountabilityCircle,
   Subscription,
   NotificationSettings,
+  AuthResult,
   AdminOverview,
   AdminUserSummary,
   AdminSubscriptionSummary,
@@ -69,6 +70,25 @@ export class SupabaseBackendService implements IBackendService {
   }
 
   // Auth
+  async signUpWithEmail(name: string, email: string, password: string, user: User): Promise<AuthResult> {
+    const synced = await this.syncUser(user.clerkId, { ...user, name, email });
+    return { user: synced, token: '' };
+  }
+
+  async signInWithEmail(email: string, _password: string): Promise<AuthResult> {
+    const results = await supabaseRequest<User[]>('/users', {
+      method: 'GET',
+      query: { email: `eq.${email}`, select: '*' },
+    });
+    if (!results[0]) throw new Error('Invalid email or password');
+    return { user: results[0], token: '' };
+  }
+
+  async signInWithOAuth(_provider: 'google' | 'apple', _token: string, user: User): Promise<AuthResult> {
+    const synced = await this.syncUser(user.clerkId, user);
+    return { user: synced, token: '' };
+  }
+
   async syncUser(clerkId: string, data: Partial<User>): Promise<User> {
     return supabaseRequest<User>('/users', {
       method: 'POST',

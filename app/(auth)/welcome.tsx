@@ -20,7 +20,7 @@ export default function WelcomeScreen() {
 
   const handleGetStarted = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/(auth)/quiz');
+    router.push('/(auth)/sign-up');
   };
 
   const handleSignIn = () => {

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, TextInput, Modal, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -14,6 +14,7 @@ import { useTaskStore } from '../../src/stores/taskStore';
 import { useXPStore } from '../../src/stores/xpStore';
 import { useStreakStore } from '../../src/stores/streakStore';
 import { generateDayPlan, DayPlanBlock } from '../../src/services/aiService';
+import { useAuthStore } from '../../src/stores/authStore';
 
 type EnergyLevel = 'morning' | 'afternoon' | 'evening';
 
@@ -35,6 +36,7 @@ export default function TasksScreen() {
   const addTask = useTaskStore((s) => s.addTask);
   const completeTask = useTaskStore((s) => s.completeTask);
   const abandonTask = useTaskStore((s) => s.abandonTask);
+  const userId = useAuthStore((s) => s.user?.id);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newPriority, setNewPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
@@ -46,10 +48,11 @@ export default function TasksScreen() {
   const [energyLevel, setEnergyLevel] = useState<EnergyLevel>('morning');
 
   const handleAddTask = () => {
-    if (!newTitle.trim()) return;
+    Keyboard.dismiss();
+    if (!newTitle.trim() || !userId) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     addTask({
-      userId: 'current_user',
+      userId,
       title: newTitle.trim(),
       priority: newPriority,
       isEatTheFrog: false,
@@ -57,6 +60,12 @@ export default function TasksScreen() {
       isRecurring: false,
       dueDate: new Date().toISOString(),
     });
+    setNewTitle('');
+    setShowAddModal(false);
+  };
+
+  const handleCancelAddTask = () => {
+    Keyboard.dismiss();
     setNewTitle('');
     setShowAddModal(false);
   };
@@ -80,18 +89,24 @@ export default function TasksScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setEnergyLevel(energy);
     setPlanLoading(true);
-    const pending = useTaskStore.getState().tasks.filter((t) => t.status === 'pending');
-    const result = await generateDayPlan(
-      pending.map((t) => ({
-        title: t.title,
-        priority: t.priority,
-        estimatedMinutes: t.estimatedMinutes ?? 30,
-      })),
-      { energyLevel: energy, workHours: 8 }
-    );
-    setPlanSchedule(result.schedule);
-    setPlanOffline(result.isOffline);
-    setPlanLoading(false);
+    try {
+      const pending = useTaskStore.getState().tasks.filter((t) => t.status === 'pending');
+      const result = await generateDayPlan(
+        pending.map((t) => ({
+          title: t.title,
+          priority: t.priority,
+          estimatedMinutes: t.estimatedMinutes ?? 30,
+        })),
+        { energyLevel: energy, workHours: 8 }
+      );
+      setPlanSchedule(result.schedule);
+      setPlanOffline(result.isOffline);
+    } catch {
+      setPlanSchedule([]);
+      setPlanOffline(true);
+    } finally {
+      setPlanLoading(false);
+    }
   };
 
   const openPlanModal = () => {
@@ -190,8 +205,12 @@ export default function TasksScreen() {
         )}
       </ScrollView>
 
-      <Modal visible={showAddModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+      <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={handleCancelAddTask}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Spacing.md}
+        >
           <Animated.View entering={FadeInLeft.duration(300)} style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('tasks.newTask')}</Text>
             <TextInput
@@ -217,11 +236,11 @@ export default function TasksScreen() {
               ))}
             </View>
             <View style={styles.modalActions}>
-              <Button title={t('common.cancel')} onPress={() => setShowAddModal(false)} variant="ghost" size="md" />
+              <Button title={t('common.cancel')} onPress={handleCancelAddTask} variant="ghost" size="md" />
               <Button title={t('tasks.addTask')} onPress={handleAddTask} size="md" />
             </View>
           </Animated.View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={showPlanModal} animationType="slide" transparent>

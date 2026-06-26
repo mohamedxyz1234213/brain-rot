@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { AppLimit, ScreenTimeLog } from '../services/backend/interface';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 import { backendService } from '../services/backend';
 
 interface ScreenTimeState {
@@ -15,6 +15,7 @@ interface ScreenTimeState {
   calculateTotalMinutes: () => number;
   getOverageApps: () => AppLimit[];
   setLimits: (limits: AppLimit[]) => void;
+  resetScreenTime: () => void;
   syncToday: (userId: string) => Promise<void>;
 }
 
@@ -24,6 +25,7 @@ export const useScreenTimeStore = create<ScreenTimeState>()(
   persist(
     {
       name: 'screen_time',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state: any) => ({ limits: state.limits }),
     },
     (set, get) => ({
@@ -71,6 +73,10 @@ export const useScreenTimeStore = create<ScreenTimeState>()(
 
       setLimits: (limits) => {
         set({ limits });
+      },
+
+      resetScreenTime: () => {
+        set({ logs: [], limits: [], totalMinutesToday: 0, isLoading: false });
       },
 
       syncToday: async (userId) => {

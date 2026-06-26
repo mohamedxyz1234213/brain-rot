@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
 type Level = 'Zombie' | 'Waking Up' | 'Struggling' | 'Recovering' | 'Restoring' | 'Thriving' | 'Ascended';
 
@@ -69,6 +69,7 @@ interface XPState {
   addXP: (amount: number, reason: string) => void;
   deductXP: (amount: number, reason: string) => void;
   setXP: (xp: number) => void;
+  resetXP: () => void;
 }
 
 export const XP_REWARDS_CONST = XP_REWARDS;
@@ -78,6 +79,7 @@ export const useXPStore = create<XPState>()(
   persist(
     {
       name: 'xp',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
     },
     (set, get) => ({
       xp: 0,
@@ -116,6 +118,10 @@ export const useXPStore = create<XPState>()(
       setXP: (xp) => {
         const levelInfo = getLevelInfo(xp);
         set({ xp, level: levelInfo.name, levelInfo });
+      },
+
+      resetXP: () => {
+        set({ xp: 0, level: 'Zombie', levelInfo: getLevelInfo(0), history: [] });
       },
     })
   )

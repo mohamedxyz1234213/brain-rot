@@ -1,7 +1,34 @@
 import { create } from 'zustand';
 import { User } from '../services/backend/interface';
 import { backendService, setBackendAuthToken } from '../services/backend';
-import { persist } from '../lib/persistence';
+import { persist, setActiveUserStorageSuffix } from '../lib/persistence';
+import { useBrainScoreStore } from './brainScoreStore';
+import { useScreenTimeStore } from './screenTimeStore';
+import { useTaskStore } from './taskStore';
+import { useXPStore } from './xpStore';
+import { useFocusStore } from './focusStore';
+import { useReligionStore } from './religionStore';
+import { useRoastStore } from './roastStore';
+import { useStreakStore } from './streakStore';
+import { useSubscriptionStore } from './subscriptionStore';
+import { useGamificationStore } from './gamificationStore';
+import { useDrivingStore } from './drivingStore';
+import { useAccountabilityStore } from './accountabilityStore';
+
+function resetLocalUserState() {
+  useBrainScoreStore.getState().resetScores();
+  useScreenTimeStore.getState().resetScreenTime();
+  useTaskStore.getState().resetTasks();
+  useXPStore.getState().resetXP();
+  useFocusStore.getState().resetFocus();
+  useReligionStore.getState().resetReligion();
+  useRoastStore.getState().resetRoasts();
+  useStreakStore.getState().resetStreaks();
+  useSubscriptionStore.getState().resetSubscription();
+  useGamificationStore.getState().resetGamification();
+  useDrivingStore.getState().resetDriving();
+  useAccountabilityStore.getState().resetAccountability();
+}
 
 interface AuthState {
   user: User | null;
@@ -12,6 +39,7 @@ interface AuthState {
   setUser: (user: User | null) => void;
   setAuthToken: (token: string | null) => void;
   setLoading: (loading: boolean) => void;
+  completeAuth: (user: User, token?: string | null) => void;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
   syncCurrentUser: () => Promise<void>;
@@ -22,11 +50,17 @@ export const useAuthStore = create<AuthState>()(
   persist(
     {
       name: 'auth',
+      version: 2,
       partialize: (state) => ({
         user: state.user,
+        authToken: state.authToken,
         isAuthenticated: state.isAuthenticated,
       }),
-      onHydrate: (set) => set({ isHydrated: true }),
+      onHydrate: (set, get) => {
+        const user = get().user;
+        setActiveUserStorageSuffix(user?.id);
+        set({ isHydrated: true });
+      },
     },
     (set, get) => ({
       user: null,
@@ -37,6 +71,7 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user) => {
         set({ user, isAuthenticated: !!user });
+        setActiveUserStorageSuffix(user?.id);
       },
 
       setAuthToken: (token) => {
@@ -48,9 +83,18 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: loading });
       },
 
+      completeAuth: (user, token = null) => {
+        setActiveUserStorageSuffix(user.id);
+        resetLocalUserState();
+        set({ user, authToken: token, isAuthenticated: true, isLoading: false });
+        setBackendAuthToken(token);
+      },
+
       logout: () => {
         set({ user: null, authToken: null, isAuthenticated: false });
         setBackendAuthToken(null);
+        setActiveUserStorageSuffix(null);
+        resetLocalUserState();
       },
 
       updateProfile: (data) => {
@@ -64,10 +108,13 @@ export const useAuthStore = create<AuthState>()(
 
       syncCurrentUser: async () => {
         const current = get().user;
-        if (!current) return;
+        const token = get().authToken;
+        if (!current || !token) return;
+        setBackendAuthToken(token);
         set({ isLoading: true });
         try {
           const synced = await backendService.syncUser(current.clerkId, current);
+          setActiveUserStorageSuffix(synced.id);
           set({ user: synced, isAuthenticated: true, isLoading: false });
         } catch (error) {
           console.warn('user sync failed', error);

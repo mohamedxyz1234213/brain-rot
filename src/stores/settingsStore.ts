@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
 interface SettingsState {
   language: 'en' | 'ar';
@@ -41,6 +41,7 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     {
       name: 'settings',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
     },
     (set) => ({
       language: 'en',

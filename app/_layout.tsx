@@ -1,5 +1,5 @@
 import { useFonts } from 'expo-font';
-import { Stack, router, usePathname } from 'expo-router';
+import { Stack, router, usePathname, useRootNavigationState } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Text as RNText, TextInput as RNTextInput } from 'react-native';
@@ -29,6 +29,12 @@ import { useRoastStore } from '../src/stores/roastStore';
 import { generateRoast } from '../src/services/aiService';
 import { useSubscriptionStore } from '../src/stores/subscriptionStore';
 import { useBrainScoreStore } from '../src/stores/brainScoreStore';
+import { useXPStore } from '../src/stores/xpStore';
+import { useFocusStore } from '../src/stores/focusStore';
+import { useStreakStore } from '../src/stores/streakStore';
+import { useGamificationStore } from '../src/stores/gamificationStore';
+import { useDrivingStore } from '../src/stores/drivingStore';
+import { useAccountabilityStore } from '../src/stores/accountabilityStore';
 
 import '../src/i18n';
 
@@ -44,12 +50,29 @@ Notifications.setNotificationHandler({
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
+  initialRouteName: '(auth)',
 };
 
 SplashScreen.preventAutoHideAsync();
 
 let lastBlockedOverageKey: string | null = null;
+let lastBootSyncedUserId: string | null = null;
+let lastLocalStateUserId: string | null = null;
+
+function resetLocalUserState() {
+  useBrainScoreStore.getState().resetScores();
+  useScreenTimeStore.getState().resetScreenTime();
+  useTaskStore.getState().resetTasks();
+  useXPStore.getState().resetXP();
+  useFocusStore.getState().resetFocus();
+  useReligionStore.getState().resetReligion();
+  useRoastStore.getState().resetRoasts();
+  useStreakStore.getState().resetStreaks();
+  useSubscriptionStore.getState().resetSubscription();
+  useGamificationStore.getState().resetGamification();
+  useDrivingStore.getState().resetDriving();
+  useAccountabilityStore.getState().resetAccountability();
+}
 
 // Make Inter the default body font app-wide, without editing every Text style.
 // Per-component styles that set their own fontFamily still win.
@@ -71,10 +94,28 @@ export default function RootLayout() {
   const dailyRoastEnabled = useSettingsStore((s) => s.dailyRoastEnabled);
   const userName = useAuthStore((s) => s.user?.name);
   const userId = useAuthStore((s) => s.user?.id);
+  const authToken = useAuthStore((s) => s.authToken);
   const calculationMethod = useReligionStore((s) => s.selectedCalculationMethod);
   const prayerLogs = useReligionStore((s) => s.prayerLogs);
   const regionOverride = useSettingsStore((s) => s.regionOverride);
   const pathname = usePathname();
+  const rootNavigationState = useRootNavigationState();
+  const navigationReady = !!rootNavigationState?.key;
+
+  const [loaded, error] = useFonts({
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    PlayfairDisplay_600SemiBold,
+    PlayfairDisplay_700Bold,
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold,
+  });
+
+  if (loaded) applyDefaultFont();
 
   useEffect(() => {
     applyLanguage(language);
@@ -100,22 +141,23 @@ export default function RootLayout() {
   // window is closing within 30 min — if so, navigate into the prayer-block
   // modal. Re-pushes if the user closes it without marking.
   useEffect(() => {
-    if (religion !== 'muslim') return;
+    if (!loaded || !navigationReady || religion !== 'muslim') return;
     const check = () => {
       const times = getPrayerTimes(calculationMethod);
       const logs = useReligionStore.getState().prayerLogs;
       const offender = evaluatePrayerBlock(times, logs, 30);
-      if (offender && pathname !== '/prayer-block') {
+      const alreadyBlocking = pathname === '/prayer-block' || pathname === '/(modals)/prayer-block';
+      if (offender && !alreadyBlocking) {
         router.push({ pathname: '/(modals)/prayer-block', params: { prayer: offender } });
       }
     };
     check();
     const t = setInterval(check, 30_000);
     return () => clearInterval(t);
-  }, [calculationMethod, pathname, prayerLogs, religion]);
+  }, [calculationMethod, loaded, navigationReady, pathname, prayerLogs, religion]);
 
   useEffect(() => {
-    if (!dailyRoastEnabled) return;
+    if (!loaded || !navigationReady || !dailyRoastEnabled) return;
     const pending = useTaskStore.getState().tasks.filter((t) => t.status === 'pending').length;
     const topLog = useScreenTimeStore.getState().logs.sort((a, b) => b.minutesUsed - a.minutesUsed)[0];
     scheduleDailyRoasts({
@@ -165,9 +207,9 @@ export default function RootLayout() {
       const result = await generateRoast(persona, 'app_limit', {
         userName: userName ?? 'there',
         screenTimeToday: screenTime.totalMinutesToday,
-        screenTimeLimit: screenTime.limits.reduce((sum, limit) => sum + limit.dailyLimitMinutes, 0) || 180,
+        screenTimeLimit: screenTime.limits.reduce((sum, limit) => sum + limit.dailyLimitMinutes, 0),
         tasksCompleted: taskState.tasks.filter((task) => task.status === 'completed').length,
-        tasksTotal: Math.max(taskState.tasks.length, 1),
+        tasksTotal: taskState.tasks.length,
         topWastedApp: overage.appName,
         topWastedMinutes: overageMinutes,
         blockedAttempts: 1,
@@ -194,30 +236,27 @@ export default function RootLayout() {
     checkUsage();
     const t = setInterval(checkUsage, 60_000);
     return () => clearInterval(t);
-  }, [language, dailyRoastEnabled, userName, pathname]);
+  }, [language, dailyRoastEnabled, userName, pathname, loaded, navigationReady]);
+
+  useEffect(() => {
+    if (!authToken) return;
+    useAuthStore.getState().setAuthToken(authToken);
+  }, [authToken]);
 
   useEffect(() => {
     if (!userId) return;
+    if (!authToken) return;
+    if (lastLocalStateUserId !== userId) {
+      lastLocalStateUserId = userId;
+      resetLocalUserState();
+    }
+    if (lastBootSyncedUserId === userId) return;
+    lastBootSyncedUserId = userId;
     useAuthStore.getState().syncCurrentUser();
     useSubscriptionStore.getState().refreshSubscription(userId);
     useScreenTimeStore.getState().syncToday(userId);
     useBrainScoreStore.getState().syncScores(userId);
-  }, [userId]);
-
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    PlayfairDisplay_600SemiBold,
-    PlayfairDisplay_700Bold,
-    SpaceGrotesk_500Medium,
-    SpaceGrotesk_600SemiBold,
-    SpaceGrotesk_700Bold,
-  });
-
-  if (loaded) applyDefaultFont();
+  }, [userId, authToken]);
 
   useEffect(() => {
     if (error) throw error;

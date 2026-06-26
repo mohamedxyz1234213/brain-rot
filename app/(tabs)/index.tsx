@@ -101,22 +101,27 @@ export default function DashboardScreen() {
 
   const refreshSuggestion = useCallback(async () => {
     const pending = useTaskStore.getState().tasks.filter((t) => t.status === 'pending');
-    if (!pending.length) { setSuggestion(null); return; }
+    if (!pending.length) { setSuggestion(null); setLoadingSuggestion(false); return; }
     setLoadingSuggestion(true);
-    const hour = new Date().getHours();
-    const res = await suggestNextTask(
-      pending.map((t) => ({
-        id: t.id,
-        title: t.title,
-        priority: t.priority,
-        estimatedMinutes: t.estimatedMinutes,
-        isEatTheFrog: t.isEatTheFrog,
-        postponeCount: t.postponeCount,
-      })),
-      { currentHour: hour, lang }
-    );
-    setSuggestion(res);
-    setLoadingSuggestion(false);
+    try {
+      const hour = new Date().getHours();
+      const res = await suggestNextTask(
+        pending.map((t) => ({
+          id: t.id,
+          title: t.title,
+          priority: t.priority,
+          estimatedMinutes: t.estimatedMinutes,
+          isEatTheFrog: t.isEatTheFrog,
+          postponeCount: t.postponeCount,
+        })),
+        { currentHour: hour, lang }
+      );
+      setSuggestion(res);
+    } catch {
+      setSuggestion(null);
+    } finally {
+      setLoadingSuggestion(false);
+    }
   }, [lang]);
 
   useEffect(() => { refreshSuggestion(); }, [refreshSuggestion, tasks.length]);
@@ -130,8 +135,20 @@ export default function DashboardScreen() {
   useEffect(() => {
     const allTasks = useTaskStore.getState().tasks;
     const done = allTasks.filter((t) => t.status === 'completed').length;
-    const stLimit =
-      useScreenTimeStore.getState().limits.reduce((s, l) => s + l.dailyLimitMinutes, 0) || 180;
+    const limits = useScreenTimeStore.getState().limits;
+    const hasScoreInput =
+      totalMinutes > 0 ||
+      totalFocusMinutes > 0 ||
+      completedToday > 0 ||
+      prayerCount > 0 ||
+      allTasks.length > 0;
+
+    if (!hasScoreInput) {
+      useBrainScoreStore.getState().resetScores();
+      return;
+    }
+
+    const stLimit = limits.reduce((s, l) => s + l.dailyLimitMinutes, 0);
     const focusMin = useFocusStore.getState().totalFocusMinutesToday;
     const religionEnabled = useSettingsStore.getState().religionEnabled;
     const day = todayKey();
@@ -144,7 +161,7 @@ export default function DashboardScreen() {
       screenTimeMinutes: totalMinutes,
       screenTimeLimit: stLimit,
       tasksCompleted: done,
-      tasksTotal: Math.max(allTasks.length, 1),
+      tasksTotal: allTasks.length,
       focusSessions: focusMin >= 50 ? 2 : focusMin > 0 ? 1 : 0,
       prayersCompleted: prayed,
       prayersTotal: 5,
@@ -161,22 +178,36 @@ export default function DashboardScreen() {
     const stMinutes = useScreenTimeStore.getState().calculateTotalMinutes();
     const allTasks = useTaskStore.getState().tasks;
     const done = allTasks.filter((t) => t.status === 'completed').length;
-    const stLimit =
-      useScreenTimeStore.getState().limits.reduce((s, l) => s + l.dailyLimitMinutes, 0) || 180;
+    const limits = useScreenTimeStore.getState().limits;
     const focusMin = useFocusStore.getState().totalFocusMinutesToday;
-    const religionEnabled = useSettingsStore.getState().religionEnabled;
     const day = todayKey();
     const prayed = useReligionStore
       .getState()
       .prayerLogs.filter(
         (l) => l.date.startsWith(day) && (l.status === 'on_time' || l.status === 'late')
       ).length;
+    const hasScoreInput =
+      stMinutes > 0 ||
+      focusMin > 0 ||
+      done > 0 ||
+      prayed > 0 ||
+      allTasks.length > 0;
+
+    if (!hasScoreInput) {
+      useBrainScoreStore.getState().resetScores();
+      refreshSuggestion();
+      setRefreshing(false);
+      return;
+    }
+
+    const stLimit = limits.reduce((s, l) => s + l.dailyLimitMinutes, 0);
+    const religionEnabled = useSettingsStore.getState().religionEnabled;
 
     useBrainScoreStore.getState().calculateScore({
       screenTimeMinutes: stMinutes,
       screenTimeLimit: stLimit,
       tasksCompleted: done,
-      tasksTotal: Math.max(allTasks.length, 1),
+      tasksTotal: allTasks.length,
       focusSessions: focusMin >= 50 ? 2 : focusMin > 0 ? 1 : 0,
       prayersCompleted: prayed,
       prayersTotal: 5,

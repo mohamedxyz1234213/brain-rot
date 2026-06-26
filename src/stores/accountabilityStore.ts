@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
+import { useAuthStore } from './authStore';
 
 interface AccountabilityCircle {
   id: string;
@@ -44,14 +45,17 @@ interface AccountabilityState {
   leaveCircle: (circleId: string) => void;
   joinChallenge: (challengeId: string) => void;
   setLeaderboard: (entries: LeaderboardEntry[]) => void;
+  resetAccountability: () => void;
 }
 
 const generateId = () => `circle_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+const getLocalUserId = () => useAuthStore.getState().user?.id ?? 'local_user';
 
 export const useAccountabilityStore = create<AccountabilityState>()(
   persist(
     {
       name: 'accountability',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state: any) => ({
         circles: state.circles,
         challenges: state.challenges,
@@ -64,11 +68,12 @@ export const useAccountabilityStore = create<AccountabilityState>()(
       isLoading: false,
 
       addCircle: (name) => {
+        const userId = getLocalUserId();
         const circle: AccountabilityCircle = {
           id: generateId(),
           name,
-          ownerId: 'current_user',
-          memberIds: ['current_user'],
+          ownerId: userId,
+          memberIds: [userId],
           maxMembers: 8,
           createdAt: new Date().toISOString(),
         };
@@ -76,17 +81,19 @@ export const useAccountabilityStore = create<AccountabilityState>()(
       },
 
       joinCircle: (circleId) => {
+        const userId = getLocalUserId();
         set({
           circles: get().circles.map((c: AccountabilityCircle) =>
-            c.id === circleId ? { ...c, memberIds: [...c.memberIds, 'current_user'] } : c
+            c.id === circleId && !c.memberIds.includes(userId) ? { ...c, memberIds: [...c.memberIds, userId] } : c
           ),
         });
       },
 
       leaveCircle: (circleId) => {
+        const userId = getLocalUserId();
         set({
           circles: get().circles.map((c: AccountabilityCircle) =>
-            c.id === circleId ? { ...c, memberIds: c.memberIds.filter((m: string) => m !== 'current_user') } : c
+            c.id === circleId ? { ...c, memberIds: c.memberIds.filter((m: string) => m !== userId) } : c
           ),
         });
       },
@@ -101,6 +108,10 @@ export const useAccountabilityStore = create<AccountabilityState>()(
 
       setLeaderboard: (entries) => {
         set({ leaderboard: entries });
+      },
+
+      resetAccountability: () => {
+        set({ circles: [], challenges: [], leaderboard: [], isLoading: false });
       },
     })
   )

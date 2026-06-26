@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 import { backendService } from '../services/backend';
 import { Subscription } from '../services/backend/interface';
 
@@ -14,6 +14,7 @@ interface SubscriptionState {
   syncSubscription: (userId: string) => Promise<void>;
   refreshSubscription: (userId: string) => Promise<void>;
   checkFeatureAccess: (feature: string) => boolean;
+  resetSubscription: () => void;
 }
 
 const TIER_FEATURES: Record<SubscriptionState['tier'], string[]> = {
@@ -47,6 +48,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
   persist(
     {
       name: 'subscription',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state) => ({ tier: state.tier, isActive: state.isActive, subscription: state.subscription }),
     },
     (set, get) => ({
@@ -94,6 +96,10 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       checkFeatureAccess: (feature) => {
         const { tier } = get();
         return TIER_FEATURES[tier as SubscriptionState['tier']]?.includes(feature) ?? false;
+      },
+
+      resetSubscription: () => {
+        set({ tier: 'free', isActive: false, isLoading: false, subscription: null });
       },
     })
   )

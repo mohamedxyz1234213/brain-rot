@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Task } from '../services/backend/interface';
-import { persist } from '../lib/persistence';
+import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
 type TaskTab = 'today' | 'upcoming' | 'completed' | 'abandoned';
 
@@ -20,6 +20,7 @@ interface TaskState {
   getEatTheFrogTask: () => Task | undefined;
   getTaskUnlockerTasks: () => Task[];
   clearError: () => void;
+  resetTasks: () => void;
 }
 
 const generateId = () => `task_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -28,6 +29,7 @@ export const useTaskStore = create<TaskState>()(
   persist(
     {
       name: 'tasks',
+      getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state: any) => ({
         tasks: state.tasks,
         activeTab: state.activeTab,
@@ -133,6 +135,10 @@ export const useTaskStore = create<TaskState>()(
 
       clearError: () => {
         set({ error: null });
+      },
+
+      resetTasks: () => {
+        set({ tasks: [], activeTab: 'today', isLoading: false, error: null });
       },
     })
   )

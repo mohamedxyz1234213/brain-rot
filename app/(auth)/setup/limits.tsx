@@ -10,6 +10,7 @@ import { Card } from '../../../src/components/ui/Card';
 import { Button } from '../../../src/components/ui/Button';
 import { useScreenTimeStore } from '../../../src/stores/screenTimeStore';
 import { useSettingsStore } from '../../../src/stores/settingsStore';
+import { useAuthStore } from '../../../src/stores/authStore';
 
 const POPULAR_APPS = [
   { bundleId: 'com.zhiliaoapp.musically', name: 'TikTok', icon: 'musical-notes-outline' },
@@ -25,6 +26,7 @@ const POPULAR_APPS = [
 export default function SetupLimitsScreen() {
   const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
   const [limits, setLimits] = useState<Record<string, number>>({});
+  const userId = useAuthStore((s) => s.user?.id);
 
   const toggleApp = (bundleId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -42,10 +44,12 @@ export default function SetupLimitsScreen() {
   const handleContinue = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const addLimit = useScreenTimeStore.getState().addLimit;
-    for (const bundleId of selectedApps) {
-      const app = POPULAR_APPS.find((a) => a.bundleId === bundleId);
-      if (app) {
-        addLimit({ userId: 'current_user', appBundleId: app.bundleId, appName: app.name, dailyLimitMinutes: limits[bundleId] ?? 30, isEnabled: true, isHardBlock: false });
+    if (userId) {
+      for (const bundleId of selectedApps) {
+        const app = POPULAR_APPS.find((a) => a.bundleId === bundleId);
+        if (app) {
+          addLimit({ userId, appBundleId: app.bundleId, appName: app.name, dailyLimitMinutes: limits[bundleId] ?? 30, isEnabled: true, isHardBlock: false });
+        }
       }
     }
     const religion = useSettingsStore.getState().religion;
