@@ -27,6 +27,7 @@ import Animated, {
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeScreen } from '../ui/SafeScreen';
+import { AnimatedLogo } from '../ui/AnimatedLogo';
 import { ANIMATION, Colors, Glass, Gradients, Layout, LetterSpacing, Radius, Shadow, Spacing, Typography } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { useXPStore } from '../../stores/xpStore';
@@ -229,7 +230,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
             <LinearGradient colors={[...Gradients.hero] as unknown as [string, string, string]} style={styles.heroGradient}>
               <View style={styles.brandRow}>
                 <View style={styles.logoMark}>
-                  <Ionicons name="scan-outline" size={22} color={Colors.TEXT_ON_PRIMARY} />
+                  <AnimatedLogo size={42} animated={false} />
                 </View>
                 <Text style={styles.brandText}>BRAINROT HEALER</Text>
               </View>

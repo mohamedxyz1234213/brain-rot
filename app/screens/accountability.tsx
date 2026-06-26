@@ -1,9 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Sizing } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
+import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
+import { AvatarDisplay } from '../../src/components/ui/AvatarDisplay';
+import { useRefreshAll } from '../../src/hooks/useRefreshAll';
 import { useAccountabilityStore } from '../../src/stores/accountabilityStore';
 
 export default function AccountabilityScreen() {
@@ -13,12 +16,20 @@ export default function AccountabilityScreen() {
     leaderboard,
     joinChallenge,
   } = useAccountabilityStore();
+  const refreshAll = useRefreshAll();
+  const fetchChallenges = useAccountabilityStore((s) => s.fetchChallenges);
+  const fetchCircles = useAccountabilityStore((s) => s.fetchCircles);
+
+  useEffect(() => {
+    fetchChallenges();
+    fetchCircles();
+  }, [fetchChallenges, fetchCircles]);
 
   return (
     <SafeScreen>
       <ScreenHeader title="Accountability" onBack={() => router.back()} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
+      <PullToRefresh onRefresh={refreshAll} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>My Circles</Text>
@@ -81,18 +92,18 @@ export default function AccountabilityScreen() {
           <Text style={styles.sectionTitle}>Leaderboard</Text>
           {leaderboard.map((entry) => (
             <View key={entry.userId} style={styles.leaderRow}>
-              <Text style={styles.rank}>#{entry.rank}</Text>
+              <AvatarDisplay avatarId={entry.avatar} size={36} />
               <View style={styles.leaderInfo}>
                 <Text style={styles.leaderName}>{entry.name}</Text>
                 <Text style={styles.leaderMeta}>
-                  Streak: {entry.streak} days - Score: {entry.score}
+                  Streak: {entry.streak} days · Score: {entry.score}
                 </Text>
               </View>
               <Text style={styles.leaderScore}>{entry.score}</Text>
             </View>
           ))}
         </View>
-      </ScrollView>
+      </PullToRefresh>
     </SafeScreen>
   );
 }

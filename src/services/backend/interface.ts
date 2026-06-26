@@ -143,6 +143,47 @@ export interface AccountabilityCircle {
   createdAt: string;
 }
 
+export type ChallengeType = 'app_block' | 'screen_time_reduce' | 'no_social' | 'prayer' | 'focus_hours' | 'task_completion' | 'custom';
+
+export interface ChallengeConfig {
+  /** Target app bundle ID for app_block / screen_time_reduce */
+  targetAppBundleId?: string;
+  /** Target app display name */
+  targetAppName?: string;
+  /** Original daily limit in minutes before challenge (screen_time_reduce) */
+  originalLimitMinutes?: number;
+  /** Reduced daily limit in minutes during challenge (screen_time_reduce) */
+  challengeLimitMinutes?: number;
+  /** List of social app bundle IDs to block (no_social) */
+  blockedAppIds?: string[];
+  /** Required prayers per day (prayer) */
+  requiredPrayers?: string[];
+  /** Required focus hours per day (focus_hours) */
+  requiredFocusHours?: number;
+  /** Required task completions (task_completion) */
+  requiredTaskCount?: number;
+  /** Custom challenge instructions */
+  customInstructions?: string;
+}
+
+export interface Challenge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  challengeType: ChallengeType;
+  difficulty: 'easy' | 'medium' | 'hard' | 'extreme' | 'legendary';
+  durationDays: number;
+  rewardXp: number;
+  maxParticipants?: number;
+  participantCount: number;
+  joinedUserIds: string[];
+  config: ChallengeConfig;
+  rules?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface Subscription {
   id: string;
   userId: string;
@@ -274,6 +315,10 @@ export interface IBackendService {
   createCircle(circle: Omit<AccountabilityCircle, 'id' | 'createdAt'>): Promise<AccountabilityCircle>;
   joinCircle(circleId: string, userId: string): Promise<AccountabilityCircle>;
   leaveCircle(circleId: string, userId: string): Promise<void>;
+
+  // Challenges
+  getChallenges(): Promise<Challenge[]>;
+  joinChallenge(challengeId: string, userId: string): Promise<Challenge>;
 
   // Subscriptions
   getSubscription(userId: string): Promise<Subscription | null>;

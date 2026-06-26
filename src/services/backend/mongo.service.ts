@@ -16,6 +16,7 @@ import {
   Streak,
   BrainScore,
   AccountabilityCircle,
+  Challenge,
   Subscription,
   NotificationSettings,
   AuthResult,
@@ -282,6 +283,18 @@ export class MongoBackendService implements IBackendService {
     return request<NotificationSettings>(`/notifications/settings/${userId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
+    });
+  }
+
+  // Challenges
+  async getChallenges(): Promise<Challenge[]> {
+    return request<Challenge[]>('/challenges');
+  }
+
+  async joinChallenge(challengeId: string, userId: string): Promise<Challenge> {
+    return request<Challenge>(`/challenges/${challengeId}/join`, {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
     });
   }
 

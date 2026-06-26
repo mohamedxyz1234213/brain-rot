@@ -16,6 +16,7 @@ import {
   Streak,
   BrainScore,
   AccountabilityCircle,
+  Challenge,
   Subscription,
   NotificationSettings,
   AuthResult,
@@ -367,6 +368,29 @@ export class SupabaseBackendService implements IBackendService {
     return supabaseRequest<NotificationSettings>(`/notification_settings?user_id=eq.${userId}`, {
       method: 'PATCH',
       body: JSON.stringify(this.toSnakeCase(data)),
+    });
+  }
+
+  // Challenges
+  async getChallenges(): Promise<Challenge[]> {
+    return supabaseRequest<Challenge[]>('/challenges', {
+      method: 'GET',
+      query: { is_active: 'eq.true', select: '*', order: 'created_at.desc' },
+    });
+  }
+
+  async joinChallenge(challengeId: string, userId: string): Promise<Challenge> {
+    // Fetch current challenge, append userId, update
+    const results = await supabaseRequest<Challenge[]>(`/challenges?id=eq.${challengeId}`, {
+      method: 'GET',
+      query: { select: '*' },
+    });
+    const ch = results[0];
+    if (!ch) throw new Error('Challenge not found');
+    const joined = [...(ch.joinedUserIds || []), userId];
+    return supabaseRequest<Challenge>(`/challenges?id=eq.${challengeId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ joined_user_ids: joined, participant_count: joined.length }),
     });
   }
 

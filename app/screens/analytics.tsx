@@ -1,15 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Typography, Spacing, Radius, Shadow, Layout, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 import { useBrainScoreStore } from '../../src/stores/brainScoreStore';
 import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
+import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
+import { useRefreshAll } from '../../src/hooks/useRefreshAll';
 import { useSettingsStore } from '../../src/stores/settingsStore';
 
 export default function AnalyticsScreen() {
   const scores = useBrainScoreStore((s) => s.scores);
   const totalMinutes = useScreenTimeStore((s) => s.totalMinutesToday);
+  const refreshAll = useRefreshAll();
   const hourlyRate = useSettingsStore((s) => s.hourlyRate);
 
   const hasHistory = scores.length > 0;
@@ -22,7 +25,7 @@ export default function AnalyticsScreen() {
   return (
     <SafeScreen>
       <ScreenHeader title="Analytics" subtitle="Your recovery journey in numbers" onBack={() => router.back()} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
+      <PullToRefresh onRefresh={refreshAll} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>Brain Score</Text>
           {hasHistory ? (
@@ -67,7 +70,7 @@ export default function AnalyticsScreen() {
           <Text style={styles.costAmount}>${monthlyCost.toFixed(2)}</Text>
           <Text style={styles.costSubtext}>projected over a month at today's pace</Text>
         </View>
-      </ScrollView>
+      </PullToRefresh>
     </SafeScreen>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -12,6 +12,9 @@ import { useReligionStore, PrayerName, PrayerStatus } from '../../src/stores/rel
 import { useStreakStore } from '../../src/stores/streakStore';
 import { useXPStore } from '../../src/stores/xpStore';
 import { useSettingsStore } from '../../src/stores/settingsStore';
+import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
+import { useRefreshAll } from '../../src/hooks/useRefreshAll';
+import { AnimatedSvgIllustration } from '../../src/components/ui/AnimatedSvgIllustration';
 import { adhkar } from '../../src/data/adhkar';
 import { getPrayerTimes } from '../../src/services/prayerTimes';
 
@@ -36,6 +39,7 @@ export default function ReligionScreen() {
   const method = useReligionStore((s) => s.selectedCalculationMethod);
   const dhikrSessions = useReligionStore((s) => s.dhikrSessions);
   const [todayStatuses, setTodayStatuses] = useState<Record<PrayerName, PrayerStatus>>({} as any);
+  const refreshAll = useRefreshAll();
 
   const DHIKR_TARGET = 33;
   const activeDhikr = dhikrSessions[dhikrSessions.length - 1];
@@ -107,7 +111,7 @@ export default function ReligionScreen() {
   return (
     <SafeScreen tabBarSpacing>
       <TabHeader eyebrow={t('religion.methodLabel', { method })} title={t('religion.prayerTracker')} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <PullToRefresh showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} onRefresh={refreshAll}>
         <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)}>
           {prayers.map((prayer, index) => (
             <Animated.View key={prayer} entering={FadeInDown.duration(300).delay(index * ANIMATION.stagger)}>
@@ -182,12 +186,17 @@ export default function ReligionScreen() {
 
         <Animated.View entering={FadeInDown.duration(500).delay(400)}>
           <Card glass style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>{t('religion.fasting')}</Text>
-            <Text style={styles.fastingText}>{t('religion.fastingDesc')}</Text>
+            <View style={styles.fastingHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sectionTitle}>{t('religion.fasting')}</Text>
+                <Text style={styles.fastingText}>{t('religion.fastingDesc')}</Text>
+              </View>
+              <AnimatedSvgIllustration illustrationKey="man-drinking-water" width={80} variant="breathe" delay={400} />
+            </View>
             <Button title={t('religion.logFast')} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }} size="sm" />
           </Card>
         </Animated.View>
-      </ScrollView>
+      </PullToRefresh>
     </SafeScreen>
   );
 }
@@ -217,5 +226,6 @@ const styles = StyleSheet.create({
   dhikrDots: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.xs, marginTop: Spacing.md },
   dhikrDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.BORDER },
   dhikrDotActive: { width: 18, backgroundColor: Colors.PRIMARY },
+  fastingHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   fastingText: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.md, lineHeight: Typography.lineHeight.normal },
 });

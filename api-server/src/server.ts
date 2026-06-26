@@ -122,8 +122,10 @@ async function seedAdmin() {
   });
 }
 
+// ──────────────────── Health ────────────────────
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
+// ──────────────────── Auth ────────────────────
 app.post('/api/admin/auth/sign-in', async (req, res) => {
   const parsed = z.object({ email: z.string().email(), password: z.string().min(1) }).safeParse(req.body);
   if (!parsed.success) return res.status(400).send('Invalid credentials payload');
@@ -200,6 +202,7 @@ app.post('/api/auth/oauth', async (req, res) => {
   res.json({ user: publicUser, token: createToken({ id: String(publicUser.id), email: String(user.email), role: 'user' }) });
 });
 
+// ──────────────────── Users ────────────────────
 app.post('/api/users/sync', async (req, res) => {
   const parsed = userSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).send(parsed.error.message);
@@ -225,6 +228,7 @@ app.patch('/api/users/:userId', async (req, res) => {
   res.json(user ? publicId(user as WithId<Record<string, unknown>>) : null);
 });
 
+// ──────────────────── Screen Time ────────────────────
 app.get('/api/screen-time/:userId', async (req, res) => {
   const logs = await db.collection('screen_time_logs').find({ userId: req.params.userId, date: req.query.date }).toArray();
   res.json(logs.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
@@ -236,6 +240,7 @@ app.post('/api/screen-time', async (req, res) => {
   res.json({ ...doc, id: String(result.insertedId) });
 });
 
+// ──────────────────── App Limits ────────────────────
 app.get('/api/app-limits/:userId', async (req, res) => {
   const limits = await db.collection('app_limits').find({ userId: req.params.userId }).toArray();
   res.json(limits.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
@@ -258,6 +263,127 @@ app.delete('/api/app-limits/:limitId', async (req, res) => {
   res.status(204).end();
 });
 
+// ──────────────────── Tasks ────────────────────
+app.get('/api/tasks/:userId', async (req, res) => {
+  const filter: Record<string, unknown> = { userId: req.params.userId };
+  if (req.query.status) filter.status = req.query.status;
+  const tasks = await db.collection('tasks').find(filter).sort({ createdAt: -1 }).toArray();
+  res.json(tasks.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+app.post('/api/tasks', async (req, res) => {
+  const now = new Date().toISOString();
+  const doc = { ...req.body, createdAt: now, updatedAt: now };
+  const result = await db.collection('tasks').insertOne(doc);
+  res.json({ ...doc, id: String(result.insertedId) });
+});
+
+app.patch('/api/tasks/:taskId', async (req, res) => {
+  await db.collection('tasks').updateOne({ _id: objectId(req.params.taskId) }, { $set: { ...req.body, updatedAt: new Date().toISOString() } });
+  const task = await db.collection('tasks').findOne({ _id: objectId(req.params.taskId) });
+  res.json(publicId(task as WithId<Record<string, unknown>>));
+});
+
+app.delete('/api/tasks/:taskId', async (req, res) => {
+  await db.collection('tasks').deleteOne({ _id: objectId(req.params.taskId) });
+  res.status(204).end();
+});
+
+// ──────────────────── Focus Sessions ────────────────────
+app.get('/api/focus-sessions/:userId', async (req, res) => {
+  const filter: Record<string, unknown> = { userId: req.params.userId };
+  if (req.query.date) filter.startedAt = { $regex: String(req.query.date) };
+  const sessions = await db.collection('focus_sessions').find(filter).sort({ startedAt: -1 }).toArray();
+  res.json(sessions.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+app.post('/api/focus-sessions', async (req, res) => {
+  const doc = { ...req.body, createdAt: new Date().toISOString() };
+  const result = await db.collection('focus_sessions').insertOne(doc);
+  res.json({ ...doc, id: String(result.insertedId) });
+});
+
+app.patch('/api/focus-sessions/:sessionId', async (req, res) => {
+  await db.collection('focus_sessions').updateOne({ _id: objectId(req.params.sessionId) }, { $set: req.body });
+  const session = await db.collection('focus_sessions').findOne({ _id: objectId(req.params.sessionId) });
+  res.json(publicId(session as WithId<Record<string, unknown>>));
+});
+
+// ──────────────────── Roasts ────────────────────
+app.get('/api/roasts/:userId', async (req, res) => {
+  const limit = Number(req.query.limit || 10);
+  const roasts = await db.collection('roast_logs').find({ userId: req.params.userId }).sort({ createdAt: -1 }).limit(limit).toArray();
+  res.json(roasts.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+app.post('/api/roasts', async (req, res) => {
+  const doc = { ...req.body, createdAt: new Date().toISOString() };
+  const result = await db.collection('roast_logs').insertOne(doc);
+  res.json({ ...doc, id: String(result.insertedId) });
+});
+
+// ──────────────────── Prayers ────────────────────
+app.get('/api/prayers/:userId', async (req, res) => {
+  const filter: Record<string, unknown> = { userId: req.params.userId };
+  if (req.query.date) filter.date = req.query.date;
+  const logs = await db.collection('prayer_logs').find(filter).sort({ date: -1 }).toArray();
+  res.json(logs.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+app.post('/api/prayers', async (req, res) => {
+  const doc = { ...req.body, createdAt: new Date().toISOString() };
+  const result = await db.collection('prayer_logs').insertOne(doc);
+  res.json({ ...doc, id: String(result.insertedId) });
+});
+
+// ──────────────────── Quran Progress ────────────────────
+app.get('/api/quran/:userId', async (req, res) => {
+  const progress = await db.collection('quran_progress').findOne({ userId: req.params.userId });
+  res.json(progress ? publicId(progress as WithId<Record<string, unknown>>) : null);
+});
+
+app.patch('/api/quran/:userId', async (req, res) => {
+  const now = new Date().toISOString();
+  await db.collection('quran_progress').updateOne(
+    { userId: req.params.userId },
+    { $set: { ...req.body, updatedAt: now }, $setOnInsert: { createdAt: now } },
+    { upsert: true }
+  );
+  const progress = await db.collection('quran_progress').findOne({ userId: req.params.userId });
+  res.json(publicId(progress as WithId<Record<string, unknown>>));
+});
+
+// ──────────────────── Streaks ────────────────────
+app.get('/api/streaks/:userId', async (req, res) => {
+  const streaks = await db.collection('streaks').find({ userId: req.params.userId }).toArray();
+  res.json(streaks.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+app.patch('/api/streaks/:userId/:type', async (req, res) => {
+  const now = new Date().toISOString();
+  await db.collection('streaks').updateOne(
+    { userId: req.params.userId, type: req.params.type },
+    { $set: { ...req.body, updatedAt: now }, $setOnInsert: { createdAt: now } },
+    { upsert: true }
+  );
+  const streak = await db.collection('streaks').findOne({ userId: req.params.userId, type: req.params.type });
+  res.json(publicId(streak as WithId<Record<string, unknown>>));
+});
+
+// ──────────────────── Brain Score ────────────────────
+app.get('/api/brain-score/:userId', async (req, res) => {
+  const limit = Number(req.query.days || 30);
+  const scores = await db.collection('brain_scores').find({ userId: req.params.userId }).sort({ date: -1 }).limit(limit).toArray();
+  res.json(scores.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+app.post('/api/brain-score/:userId/calculate', async (req, res) => {
+  const doc = { ...req.body, userId: req.params.userId, createdAt: new Date().toISOString() };
+  const result = await db.collection('brain_scores').insertOne(doc);
+  res.json({ ...doc, id: String(result.insertedId) });
+});
+
+// ──────────────────── Subscriptions ────────────────────
 app.get('/api/subscriptions/:userId', async (req, res) => {
   const sub = await db.collection('subscriptions').findOne({ userId: req.params.userId });
   res.json(sub ? publicId(sub as WithId<Record<string, unknown>>) : null);
@@ -275,12 +401,81 @@ app.patch('/api/subscriptions/:userId', async (req, res) => {
   res.json(publicId(sub as WithId<Record<string, unknown>>));
 });
 
-app.get('/api/brain-score/:userId', async (req, res) => {
-  const limit = Number(req.query.days || 30);
-  const scores = await db.collection('brain_scores').find({ userId: req.params.userId }).sort({ date: -1 }).limit(limit).toArray();
-  res.json(scores.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+// ──────────────────── Notifications ────────────────────
+app.get('/api/notifications/settings/:userId', async (req, res) => {
+  const settings = await db.collection('notification_settings').findOne({ userId: req.params.userId });
+  res.json(settings ? publicId(settings as WithId<Record<string, unknown>>) : null);
 });
 
+app.patch('/api/notifications/settings/:userId', async (req, res) => {
+  const now = new Date().toISOString();
+  await db.collection('notification_settings').updateOne(
+    { userId: req.params.userId },
+    { $set: { ...req.body, updatedAt: now }, $setOnInsert: { createdAt: now } },
+    { upsert: true }
+  );
+  const settings = await db.collection('notification_settings').findOne({ userId: req.params.userId });
+  res.json(publicId(settings as WithId<Record<string, unknown>>));
+});
+
+// ──────────────────── Accountability Circles ────────────────────
+app.get('/api/circles', async (req, res) => {
+  const userId = req.query.userId as string | undefined;
+  const filter = userId ? { memberIds: userId } : {};
+  const circles = await db.collection('circles').find(filter).sort({ createdAt: -1 }).toArray();
+  res.json(circles.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+app.post('/api/circles', async (req, res) => {
+  const now = new Date().toISOString();
+  const doc = { ...req.body, createdAt: now };
+  const result = await db.collection('circles').insertOne(doc);
+  res.json({ ...doc, id: String(result.insertedId) });
+});
+
+app.post('/api/circles/:circleId/join', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).send('userId required');
+  const circle = await db.collection('circles').findOne({ _id: objectId(req.params.circleId) });
+  if (!circle) return res.status(404).send('Circle not found');
+  const memberIds: string[] = (circle.memberIds as string[]) || [];
+  if (memberIds.includes(userId)) return res.status(409).send('Already a member');
+  if (memberIds.length >= (circle.maxMembers as number || 8)) return res.status(400).send('Circle is full');
+  await db.collection('circles').updateOne({ _id: objectId(req.params.circleId) }, { $addToSet: { memberIds: userId } });
+  const updated = await db.collection('circles').findOne({ _id: objectId(req.params.circleId) });
+  res.json(publicId(updated as WithId<Record<string, unknown>>));
+});
+
+app.post('/api/circles/:circleId/leave', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).send('userId required');
+  await db.collection('circles').updateOne({ _id: objectId(req.params.circleId) }, { $pull: { memberIds: userId } });
+  const updated = await db.collection('circles').findOne({ _id: objectId(req.params.circleId) });
+  res.json(publicId(updated as WithId<Record<string, unknown>>));
+});
+
+// ──────────────────── Challenges (public) ────────────────────
+app.get('/api/challenges', requireAuth, async (_req, res) => {
+  const challenges = await db.collection('challenges').find({ isActive: true }).sort({ createdAt: -1 }).toArray();
+  res.json(challenges.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+app.post('/api/challenges/:id/join', requireAuth, async (req: AuthedRequest, res) => {
+  const challengeId = req.params.id;
+  const userId = req.userId!;
+  const challenge = await db.collection('challenges').findOne({ _id: objectId(challengeId) });
+  if (!challenge) return res.status(404).send('Challenge not found');
+  const joinedUserIds: string[] = (challenge.joinedUserIds as string[]) || [];
+  if (joinedUserIds.includes(userId)) return res.status(409).send('Already joined');
+  await db.collection('challenges').updateOne(
+    { _id: objectId(challengeId) },
+    { $addToSet: { joinedUserIds: userId }, $inc: { participantCount: 1 } }
+  );
+  const updated = await db.collection('challenges').findOne({ _id: objectId(challengeId) });
+  res.json(publicId(updated as WithId<Record<string, unknown>>));
+});
+
+// ──────────────────── Admin ────────────────────
 app.get('/api/admin/dashboard', requireAdmin, async (_req, res) => {
   const [users, subscriptions, traffic, aiRequests, challenges, manualRoasts] = await Promise.all([
     db.collection('users').find().sort({ updatedAt: -1 }).limit(500).toArray(),
@@ -331,7 +526,16 @@ app.get('/api/admin/dashboard', requireAdmin, async (_req, res) => {
 });
 
 app.patch('/api/admin/users/:userId', requireAdmin, async (req, res) => {
-  await db.collection('users').updateOne({ id: req.params.userId }, { $set: { ...req.body, updatedAt: new Date().toISOString() } });
+  const now = new Date().toISOString();
+  await db.collection('users').updateOne({ id: req.params.userId }, { $set: { ...req.body, updatedAt: now } });
+  // Also sync subscription tier to subscriptions collection
+  if (req.body.subscriptionTier) {
+    await db.collection('subscriptions').updateOne(
+      { userId: req.params.userId },
+      { $set: { tier: req.body.subscriptionTier, updatedAt: now }, $setOnInsert: { userId: req.params.userId, createdAt: now, isActive: true } },
+      { upsert: true }
+    );
+  }
   res.json({ ok: true });
 });
 
@@ -343,33 +547,63 @@ app.delete('/api/admin/users/:userId', requireAdmin, async (req, res) => {
     db.collection('screen_time_logs').deleteMany({ userId }),
     db.collection('app_limits').deleteMany({ userId }),
     db.collection('brain_scores').deleteMany({ userId }),
+    db.collection('tasks').deleteMany({ userId }),
+    db.collection('focus_sessions').deleteMany({ userId }),
+    db.collection('prayer_logs').deleteMany({ userId }),
+    db.collection('streaks').deleteMany({ userId }),
+    db.collection('roast_logs').deleteMany({ userId }),
+    db.collection('circles').updateMany({ memberIds: userId } as any, { $pull: { memberIds: userId } } as any),
+    db.collection('challenges').updateMany({ joinedUserIds: userId } as any, { $pull: { joinedUserIds: userId }, $inc: { participantCount: -1 } } as any),
   ]);
   res.status(204).end();
 });
 
 app.patch('/api/admin/subscriptions/:userId', requireAdmin, async (req, res) => {
   const now = new Date().toISOString();
-  await db.collection('subscriptions').updateOne({ userId: req.params.userId }, { $set: withoutCreatedAt({ ...req.body, userId: req.params.userId, updatedAt: now }), $setOnInsert: { createdAt: now } }, { upsert: true });
+  await db.collection('subscriptions').updateOne(
+    { userId: req.params.userId },
+    { $set: withoutCreatedAt({ ...req.body, userId: req.params.userId, updatedAt: now }), $setOnInsert: { createdAt: now } },
+    { upsert: true }
+  );
   if (req.body.tier) await db.collection('users').updateOne({ id: req.params.userId }, { $set: { subscriptionTier: req.body.tier, updatedAt: now } });
   res.json({ ok: true });
 });
 
+// ──────────────────── Admin Challenges ────────────────────
 app.post('/api/admin/challenges', requireAdmin, async (req, res) => {
-  const doc = { ...req.body, createdAt: new Date().toISOString() };
+  const doc = { ...req.body, participantCount: 0, joinedUserIds: [], createdAt: new Date().toISOString() };
   const result = await db.collection('challenges').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
-app.patch('/api/admin/challenges/:id', requireAdmin, async (req, res) => { await db.collection('challenges').updateOne({ _id: objectId(req.params.id) }, { $set: req.body }); res.json({ ok: true }); });
-app.delete('/api/admin/challenges/:id', requireAdmin, async (req, res) => { await db.collection('challenges').deleteOne({ _id: objectId(req.params.id) }); res.status(204).end(); });
 
+app.patch('/api/admin/challenges/:id', requireAdmin, async (req, res) => {
+  await db.collection('challenges').updateOne({ _id: objectId(req.params.id) }, { $set: req.body });
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/challenges/:id', requireAdmin, async (req, res) => {
+  await db.collection('challenges').deleteOne({ _id: objectId(req.params.id) });
+  res.status(204).end();
+});
+
+// ──────────────────── Admin Roasts ────────────────────
 app.post('/api/admin/roasts', requireAdmin, async (req, res) => {
   const doc = { ...req.body, createdAt: new Date().toISOString() };
   const result = await db.collection('manual_roasts').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
-app.patch('/api/admin/roasts/:id', requireAdmin, async (req, res) => { await db.collection('manual_roasts').updateOne({ _id: objectId(req.params.id) }, { $set: req.body }); res.json({ ok: true }); });
-app.delete('/api/admin/roasts/:id', requireAdmin, async (req, res) => { await db.collection('manual_roasts').deleteOne({ _id: objectId(req.params.id) }); res.status(204).end(); });
 
+app.patch('/api/admin/roasts/:id', requireAdmin, async (req, res) => {
+  await db.collection('manual_roasts').updateOne({ _id: objectId(req.params.id) }, { $set: req.body });
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/roasts/:id', requireAdmin, async (req, res) => {
+  await db.collection('manual_roasts').deleteOne({ _id: objectId(req.params.id) });
+  res.status(204).end();
+});
+
+// ──────────────────── Start ────────────────────
 await client.connect();
 await seedAdmin();
 app.listen(PORT, () => console.log(`BrainRot API running on http://localhost:${PORT}/api`));

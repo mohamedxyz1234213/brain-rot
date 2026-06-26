@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
+import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
 
 const ROAST_HISTORY = [
   {
@@ -53,7 +54,7 @@ export default function RoastHistoryScreen() {
     <SafeScreen>
       <ScreenHeader title="Roast History" subtitle="Your Hall of Shame" onBack={() => router.back()} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
+      <PullToRefresh contentContainerStyle={styles.list}>
         {ROAST_HISTORY.map((roast) => (
           <View key={roast.id} style={styles.roastCard}>
             <View style={styles.roastHeader}>
@@ -72,7 +73,7 @@ export default function RoastHistoryScreen() {
             </Pressable>
           </View>
         ))}
-      </ScrollView>
+      </PullToRefresh>
     </SafeScreen>
   );
 }

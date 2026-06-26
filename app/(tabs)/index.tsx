@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { ScoreShowcase } from '../../src/components/domain/ScoreShowcase';
 import { Button } from '../../src/components/ui/Button';
@@ -21,6 +21,10 @@ import { useSettingsStore } from '../../src/stores/settingsStore';
 import { useStreakStore } from '../../src/stores/streakStore';
 import { useTaskStore } from '../../src/stores/taskStore';
 import { useXPStore } from '../../src/stores/xpStore';
+import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
+import { AvatarDisplay } from '../../src/components/ui/AvatarDisplay';
+import { useRefreshAll } from '../../src/hooks/useRefreshAll';
+import { AnimatedSvgIllustration } from '../../src/components/ui/AnimatedSvgIllustration';
 
 const todayKey = () => new Date().toISOString().split('T')[0];
 
@@ -168,55 +172,12 @@ export default function DashboardScreen() {
       sleepHour: 23,
       religionEnabled,
     });
-  }, [totalMinutes, totalFocusMinutes, completedToday, prayerCount, tasks.length]);
+  }, [totalMinutes, totalFocusMinutes, completedToday, prayerCount, tasks.length]);  const refreshAll = useRefreshAll();
 
-  const [refreshing, setRefreshing] = useState(false);
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    const stMinutes = useScreenTimeStore.getState().calculateTotalMinutes();
-    const allTasks = useTaskStore.getState().tasks;
-    const done = allTasks.filter((t) => t.status === 'completed').length;
-    const limits = useScreenTimeStore.getState().limits;
-    const focusMin = useFocusStore.getState().totalFocusMinutesToday;
-    const day = todayKey();
-    const prayed = useReligionStore
-      .getState()
-      .prayerLogs.filter(
-        (l) => l.date.startsWith(day) && (l.status === 'on_time' || l.status === 'late')
-      ).length;
-    const hasScoreInput =
-      stMinutes > 0 ||
-      focusMin > 0 ||
-      done > 0 ||
-      prayed > 0 ||
-      allTasks.length > 0;
-
-    if (!hasScoreInput) {
-      useBrainScoreStore.getState().resetScores();
-      refreshSuggestion();
-      setRefreshing(false);
-      return;
-    }
-
-    const stLimit = limits.reduce((s, l) => s + l.dailyLimitMinutes, 0);
-    const religionEnabled = useSettingsStore.getState().religionEnabled;
-
-    useBrainScoreStore.getState().calculateScore({
-      screenTimeMinutes: stMinutes,
-      screenTimeLimit: stLimit,
-      tasksCompleted: done,
-      tasksTotal: allTasks.length,
-      focusSessions: focusMin >= 50 ? 2 : focusMin > 0 ? 1 : 0,
-      prayersCompleted: prayed,
-      prayersTotal: 5,
-      sleepHour: 23,
-      religionEnabled,
-    });
+  const onRefresh = useCallback(async () => {
+    await refreshAll();
     refreshSuggestion();
-    setRefreshing(false);
-  }, [refreshSuggestion]);
+  }, [refreshAll, refreshSuggestion]);
 
   const handleCompleteFrog = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -248,17 +209,9 @@ export default function DashboardScreen() {
 
   return (
     <SafeScreen tabBarSpacing>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
+      <PullToRefresh
+        onRefresh={onRefresh}
         contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.PRIMARY_LIGHT}
-            colors={[Colors.PRIMARY_LIGHT]}
-          />
-        }
       >
         <View style={[styles.headerBlock, isArabic && styles.rtlBlock]}>
           <View style={[styles.headerTop, isArabic && styles.rowReverse]}>
@@ -268,8 +221,13 @@ export default function DashboardScreen() {
               <Text style={[styles.heroPillText, isArabic && styles.microArabic]}>{t('common.live')}</Text>
             </View>
           </View>
-          <Text style={[styles.headerTitle, isArabic && styles.textArabicRight]} numberOfLines={1}>{greeting}</Text>
-          <Text style={[styles.headerSubtitle, isArabic && styles.textArabicRight]} numberOfLines={1}>{t('dashboard.subtitle')}</Text>
+          <View style={[styles.greetingRow, isArabic && styles.rowReverse]}>
+            <AvatarDisplay avatarId={user?.avatar} size={52} />
+            <View style={styles.greetingTextWrap}>
+              <Text style={[styles.headerTitle, isArabic && styles.textArabicRight]} numberOfLines={1}>{greeting}</Text>
+              <Text style={[styles.headerSubtitle, isArabic && styles.textArabicRight]} numberOfLines={1}>{t('dashboard.subtitle')}</Text>
+            </View>
+          </View>
         </View>
 
         <ScoreShowcase
@@ -316,9 +274,12 @@ export default function DashboardScreen() {
               )}
             </View>
             {!suggestion ? (
-              <Text style={[styles.suggestionEmpty, isArabic && styles.textArabicRight]}>
-                {loadingSuggestion ? t('common.loading') : t('dashboard.aiSuggestionEmpty')}
-              </Text>
+              <>
+                <AnimatedSvgIllustration illustrationKey="avatar-thinking-6" width={120} variant="breathe" delay={200} style={styles.suggestionIllustration} />
+                <Text style={[styles.suggestionEmpty, isArabic && styles.textArabicRight]}>
+                  {loadingSuggestion ? t('common.loading') : t('dashboard.aiSuggestionEmpty')}
+                </Text>
+              </>
             ) : (
               <>
                 <Text style={[styles.suggestionTitle, isArabic && styles.textArabicRight]} numberOfLines={2}>{suggestion.title}</Text>
@@ -415,10 +376,13 @@ export default function DashboardScreen() {
 
         <Animated.View entering={FadeInDown.duration(500).delay(600)} style={styles.sectionBlock}>
           <Card glass style={styles.motivationCard}>
-            <Text style={[styles.motivationText, isArabic && styles.textArabicRight]}>"{t('dashboard.motivation')}"</Text>
+            <View style={styles.motivationInner}>
+              <AnimatedSvgIllustration illustrationKey="man-using-smartphone" width={100} variant="float" delay={800} />
+              <Text style={[styles.motivationText, isArabic && styles.textArabicRight]}>"{t('dashboard.motivation')}"</Text>
+            </View>
           </Card>
         </Animated.View>
-      </ScrollView>
+      </PullToRefresh>
     </SafeScreen>
   );
 }
@@ -451,6 +415,8 @@ const styles = StyleSheet.create({
   headerBlock: { marginBottom: Spacing.lg, paddingHorizontal: Spacing.xs },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.xs },
   headerEyebrow: { flex: 1, marginRight: Spacing.sm, fontSize: Typography.sizes.xs, fontFamily: Typography.families.featureSemi, color: Colors.PRIMARY, letterSpacing: LetterSpacing.wide, textTransform: 'uppercase' },
+  greetingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  greetingTextWrap: { flex: 1 },
   headerTitle: { fontSize: Typography.sizes['3xl'], fontFamily: Typography.families.display, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
   headerSubtitle: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, marginTop: 2 },
   heroPill: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, paddingHorizontal: Spacing.md, paddingVertical: 5, borderRadius: Radius.full, backgroundColor: 'rgba(90,143,123,0.14)', borderWidth: 1, borderColor: 'rgba(90,143,123,0.32)' },
@@ -504,8 +470,10 @@ const styles = StyleSheet.create({
   focusDot: { width: 9, height: 9, borderRadius: Radius.full, backgroundColor: Colors.SUCCESS },
   focusTitle: { fontSize: Typography.sizes.lg, fontFamily: Typography.families.featureSemi, color: Colors.TEXT_PRIMARY },
   focusMode: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs, lineHeight: Typography.lineHeight.normal },
+  suggestionIllustration: { alignSelf: 'center', marginVertical: Spacing.sm },
   motivationCard: { borderColor: 'rgba(40,49,51,0.08)' },
-  motivationText: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.relaxed, fontStyle: 'italic' },
+  motivationInner: { alignItems: 'center', gap: Spacing.md },
+  motivationText: { fontSize: Typography.sizes.md, fontFamily: Typography.families.body, color: Colors.TEXT_PRIMARY, lineHeight: Typography.lineHeight.relaxed, fontStyle: 'italic', textAlign: 'center' },
   appLimitPill: { width: 150, minHeight: 118, padding: Spacing.lg, borderColor: 'rgba(40,49,51,0.08)', ...Shadow.sm },
   appName: { fontSize: Typography.sizes.md, fontFamily: Typography.families.featureSemi, color: Colors.TEXT_PRIMARY, letterSpacing: LetterSpacing.tight },
   appTime: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.body, color: Colors.TEXT_SECONDARY, marginVertical: Spacing.xs },

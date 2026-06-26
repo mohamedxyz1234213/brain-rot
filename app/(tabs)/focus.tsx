@@ -10,9 +10,12 @@ import { Button } from '../../src/components/ui/Button';
 import { CircularProgress } from '../../src/components/ui/CircularProgress';
 import { Card } from '../../src/components/ui/Card';
 import { SafeScreen, TabHeader } from '../../src/components/ui/SafeScreen';
+import { AnimatedSvgIllustration } from '../../src/components/ui/AnimatedSvgIllustration';
 import { useFocusStore, FocusMode } from '../../src/stores/focusStore';
 import { useXPStore } from '../../src/stores/xpStore';
 import { useStreakStore } from '../../src/stores/streakStore';
+import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
+import { useRefreshAll } from '../../src/hooks/useRefreshAll';
 import { useTaskStore } from '../../src/stores/taskStore';
 import { screenTimeModule } from '../../src/native/ScreenTime';
 
@@ -66,6 +69,7 @@ export default function FocusScreen() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(params.taskId ?? pendingTasks[0]?.id ?? null);
   const [isPaused, setIsPaused] = useState(false);
   const [completed, setCompleted] = useState<{ mode: FocusMode; minutes: number; xp: number } | null>(null);
+  const refreshAll = useRefreshAll();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -218,7 +222,7 @@ export default function FocusScreen() {
       <SafeScreen tabBarSpacing>
         <ScrollView contentContainerStyle={styles.timerScroll} showsVerticalScrollIndicator={false}>
           <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.timerContainer}>
-            <Ionicons name="sparkles" size={Sizing.avatarLg} color={Colors.PRIMARY_LIGHT} style={styles.celebrateEmoji} />
+            <AnimatedSvgIllustration illustrationKey="man-sleeping" width={140} variant="breathe" delay={100} style={{ marginBottom: Spacing.md }} />
             <Text style={styles.celebrateTitle}>{t('focus.sessionComplete')}</Text>
             <Text style={styles.celebrateSub} numberOfLines={2}>
               {t('focus.minOf', { minutes: completed.minutes, mode: t(MODES.find((m) => m.id === completed.mode)?.nameKey ?? completed.mode) })}
@@ -251,7 +255,7 @@ export default function FocusScreen() {
         }
       />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
+      <PullToRefresh onRefresh={refreshAll} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration)} style={styles.lockoutBanner}>
           <Ionicons name="shield-checkmark" size={Sizing.iconMd} color={Colors.PRIMARY} />
           <View style={{ flex: 1 }}>
@@ -287,9 +291,8 @@ export default function FocusScreen() {
               })}
             </ScrollView>
           )}
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration).delay(ANIMATION.stagger * 2)} style={styles.modes}>
+        </Animated.View>          <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration).delay(ANIMATION.stagger * 2)} style={styles.modes}>
+          <AnimatedSvgIllustration illustrationKey="man-doing-remote-work-sideways" width={100} variant="float" delay={300} style={{ alignSelf: 'center', marginBottom: Spacing.md }} />
           {MODES.map((mode) => (
             <View key={mode.id} style={styles.modeCardWrap}>
               <Pressable
@@ -314,7 +317,7 @@ export default function FocusScreen() {
             disabled={!selectedTaskId}
           />
         </View>
-      </ScrollView>
+      </PullToRefresh>
     </SafeScreen>
   );
 }

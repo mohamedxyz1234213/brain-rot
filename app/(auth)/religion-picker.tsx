@@ -15,11 +15,7 @@ export default function ReligionPickerScreen() {
     if (!selected) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     useSettingsStore.getState().setReligion(selected);
-    if (selected === 'muslim') {
-      router.push('/setup/religion');
-    } else {
-      router.push('/setup/limits');
-    }
+    router.push('/(auth)/avatar-picker');
   };
 
   return (

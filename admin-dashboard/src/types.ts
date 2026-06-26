@@ -17,6 +17,7 @@ export interface AdminUserSummary {
   id: string;
   name: string;
   email: string;
+  avatar?: string;
   subscriptionTier: SubscriptionTier;
   role?: 'user' | 'admin';
   brainScore: number;
@@ -60,12 +61,34 @@ export interface AdminAIRequest {
   createdAt: string;
 }
 
+export type ChallengeType = 'app_block' | 'screen_time_reduce' | 'no_social' | 'prayer' | 'focus_hours' | 'task_completion' | 'custom';
+
+export interface ChallengeConfig {
+  targetAppBundleId?: string;
+  targetAppName?: string;
+  originalLimitMinutes?: number;
+  challengeLimitMinutes?: number;
+  blockedAppIds?: string[];
+  requiredPrayers?: string[];
+  requiredFocusHours?: number;
+  requiredTaskCount?: number;
+  customInstructions?: string;
+}
+
 export interface AdminChallenge {
   id: string;
   title: string;
   description: string;
-  rewardXp: number;
+  icon: string;
+  challengeType: ChallengeType;
+  difficulty: 'easy' | 'medium' | 'hard' | 'extreme' | 'legendary';
   durationDays: number;
+  rewardXp: number;
+  maxParticipants?: number;
+  participantCount: number;
+  joinedUserIds: string[];
+  config: ChallengeConfig;
+  rules?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -107,5 +130,5 @@ export interface AdminSession {
 
 export type UserUpdateInput = Partial<Pick<AdminUserSummary, 'name' | 'email' | 'subscriptionTier' | 'role' | 'brainScore' | 'xp' | 'streakDays' | 'isBanned'>>;
 export type SubscriptionUpdateInput = Partial<Pick<AdminSubscriptionSummary, 'tier' | 'isActive' | 'expiresAt' | 'revenueCatId'>>;
-export type ChallengeInput = Omit<AdminChallenge, 'id' | 'createdAt'>;
+export type ChallengeInput = Omit<AdminChallenge, 'id' | 'createdAt' | 'joinedUserIds' | 'participantCount'>;
 export type ManualRoastInput = Omit<AdminManualRoast, 'id' | 'createdAt'>;

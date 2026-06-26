@@ -7,6 +7,8 @@ import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 import { resolveTiers, getRegionInfo, TierId, SUPPORTED_REGIONS } from '../../src/services/pricing';
 import { useSettingsStore } from '../../src/stores/settingsStore';
 import { useSubscriptionStore } from '../../src/stores/subscriptionStore';
+import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
+import { useRefreshAll } from '../../src/hooks/useRefreshAll';
 import { useAuthStore } from '../../src/stores/authStore';
 
 interface TierContent {
@@ -90,6 +92,7 @@ export default function SubscriptionScreen() {
   const userId = useAuthStore((s) => s.user?.id);
   const currentTier = useSubscriptionStore((s) => s.tier);
   const setTier = useSubscriptionStore((s) => s.setTier);
+  const refreshAll = useRefreshAll();
   const syncSubscription = useSubscriptionStore((s) => s.syncSubscription);
 
   // Re-resolve whenever the override changes (regionOverride drives the
@@ -101,7 +104,7 @@ export default function SubscriptionScreen() {
   return (
     <SafeScreen>
       <ScreenHeader title="Upgrade Your Brain" subtitle="Choose the plan that fits your recovery journey." onBack={() => router.back()} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
+      <PullToRefresh onRefresh={refreshAll} contentContainerStyle={styles.list}>
 
         <Pressable
           onPress={() => setRegionPickerOpen(true)}
@@ -223,7 +226,7 @@ export default function SubscriptionScreen() {
         <Text style={styles.footnote}>
           Final price is set by the App Store / Play Store at checkout and may differ slightly.
         </Text>
-      </ScrollView>
+      </PullToRefresh>
 
       <Modal
         visible={regionPickerOpen}

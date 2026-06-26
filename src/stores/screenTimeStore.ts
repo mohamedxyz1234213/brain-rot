@@ -41,7 +41,7 @@ export const useScreenTimeStore = create<ScreenTimeState>()(
       },
 
       addLimit: (limitData) => {
-        const limit: AppLimit = { ...limitData, id: generateId(), isEnabled: true, isHardBlock: false };
+        const limit: AppLimit = { ...limitData, id: generateId(), isEnabled: limitData.isEnabled ?? true, isHardBlock: limitData.isHardBlock ?? false };
         set({ limits: [...get().limits, limit] });
       },
 

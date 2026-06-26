@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Switch, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Colors, Typography, Spacing, Radius, Layout } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 import { useSettingsStore } from '../../src/stores/settingsStore';
 import { useReligionStore } from '../../src/stores/religionStore';
+import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
+import { useRefreshAll } from '../../src/hooks/useRefreshAll';
 import { useAuthStore } from '../../src/stores/authStore';
 
 type ToggleItem = { kind: 'toggle'; label: string; value: boolean; onChange: (v: boolean) => void };
@@ -18,6 +20,7 @@ export default function SettingsScreen() {
   const isMuslim = s.religion === 'muslim';
   const quranGoal = useReligionStore((st) => st.quranProgress.dailyPageGoal);
   const updateQuran = useReligionStore((st) => st.updateQuranProgress);
+  const refreshAll = useRefreshAll();
   const logout = useAuthStore((st) => st.logout);
 
   const [local, setLocal] = useState({
@@ -137,7 +140,7 @@ export default function SettingsScreen() {
   return (
     <SafeScreen>
       <ScreenHeader title="Settings" onBack={() => router.back()} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
+      <PullToRefresh onRefresh={refreshAll} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         {sections.map((section) => (
           <View key={section.title} style={styles.section}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
@@ -171,7 +174,7 @@ export default function SettingsScreen() {
             )}
           </View>
         ))}
-      </ScrollView>
+      </PullToRefresh>
     </SafeScreen>
   );
 }

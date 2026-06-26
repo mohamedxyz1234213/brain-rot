@@ -9,7 +9,10 @@ import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { SafeScreen, TabHeader } from '../../src/components/ui/SafeScreen';
+import { AnimatedSvgIllustration } from '../../src/components/ui/AnimatedSvgIllustration';
 import { SkeletonLoader } from '../../src/components/ui/SkeletonLoader';
+import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
+import { useRefreshAll } from '../../src/hooks/useRefreshAll';
 import { useTaskStore } from '../../src/stores/taskStore';
 import { useXPStore } from '../../src/stores/xpStore';
 import { useStreakStore } from '../../src/stores/streakStore';
@@ -45,6 +48,7 @@ export default function TasksScreen() {
   const [planLoading, setPlanLoading] = useState(false);
   const [planSchedule, setPlanSchedule] = useState<DayPlanBlock[]>([]);
   const [planOffline, setPlanOffline] = useState(false);
+  const refreshAll = useRefreshAll();
   const [energyLevel, setEnergyLevel] = useState<EnergyLevel>('morning');
 
   const handleAddTask = () => {
@@ -157,13 +161,18 @@ export default function TasksScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+      <PullToRefresh style={styles.list} contentContainerStyle={styles.listContent} onRefresh={refreshAll}>
         {filteredTasks.length === 0 ? (
           <EmptyState
             icon="clipboard-outline"
             title={t('tasks.noTasks')}
             subtitle={t('tasks.noTasksHint')}
-            action={<Button title={t('tasks.addTask')} onPress={() => setShowAddModal(true)} />}
+            action={
+              <>
+                <AnimatedSvgIllustration illustrationKey="man-studying" width={120} variant="float" delay={100} style={{ marginBottom: Spacing.lg }} />
+                <Button title={t('tasks.addTask')} onPress={() => setShowAddModal(true)} />
+              </>
+            }
           />
         ) : (
           filteredTasks.map((task, i) => (
@@ -203,7 +212,7 @@ export default function TasksScreen() {
             </Animated.View>
           ))
         )}
-      </ScrollView>
+      </PullToRefresh>
 
       <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={handleCancelAddTask}>
         <KeyboardAvoidingView

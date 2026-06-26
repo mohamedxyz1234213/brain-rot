@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -17,9 +17,15 @@ import { useFocusStore } from '../../src/stores/focusStore';
 import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
 import { useSubscriptionStore } from '../../src/stores/subscriptionStore';
 import { useSettingsStore } from '../../src/stores/settingsStore';
+import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
+import { AvatarDisplay } from '../../src/components/ui/AvatarDisplay';
+import { AvatarPicker } from '../../src/components/ui/AvatarPicker';
+import { AnimatedSvgIllustration } from '../../src/components/ui/AnimatedSvgIllustration';
+import { useRefreshAll } from '../../src/hooks/useRefreshAll';
 import { useTaskStore } from '../../src/stores/taskStore';
 import { useRouter } from 'expo-router';
 import { fireRoastNow } from '../../src/services/roastNotificationService';
+import { backendService } from '../../src/services/backend';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -35,6 +41,7 @@ export default function ProfileScreen() {
   const totalScreenMinutes = useScreenTimeStore((s) => s.totalMinutesToday);
   const tier = useSubscriptionStore((s) => s.tier);
   const language = useSettingsStore((s) => s.language);
+  const refreshAll = useRefreshAll();
   const setLanguage = useSettingsStore((s) => s.setLanguage);
 
   const handleLanguage = (next: 'en' | 'ar') => {
@@ -56,6 +63,12 @@ export default function ProfileScreen() {
     });
   };
 
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const handleAvatarSelect = (avatarId: string) => {
+    useAuthStore.getState().updateProfile({ avatar: avatarId });
+    backendService.updateUser(user!.id, { avatar: avatarId }).catch(() => {});
+  };
+
   const handleSignOut = () => {
     logout();
     router.replace('/(auth)/welcome');
@@ -64,18 +77,32 @@ export default function ProfileScreen() {
   return (
     <SafeScreen tabBarSpacing>
       <TabHeader eyebrow={t('profile.yourAccount')} title={t('profile.profile')} />
-      <ScrollView contentContainerStyle={styles.content}>
+      <PullToRefresh onRefresh={refreshAll} contentContainerStyle={styles.content}>
         <Animated.View entering={FadeInDown.duration(400)} style={styles.avatarSection}>
-          <View style={styles.avatarCircle}>
-            <Ionicons name="person" size={Typography.sizes['3xl']} color={Colors.PRIMARY_LIGHT} />
-          </View>
+          <Pressable onPress={() => setAvatarPickerOpen(true)} accessibilityRole="button" accessibilityLabel="Change avatar">
+            <AvatarDisplay
+              avatarId={user?.avatar}
+              size={Sizing.avatarLg}
+              fallback={<Ionicons name="person" size={Typography.sizes['3xl']} color={Colors.PRIMARY_LIGHT} />}
+            />
+          </Pressable>
           <Text style={styles.userName} numberOfLines={1}>{user?.name ?? 'Zombie Brain'}</Text>
           <Text style={styles.userLevel} numberOfLines={1}>{t('dashboard.level', { level })} · {xp} XP</Text>
         </Animated.View>
 
+        <AvatarPicker
+          visible={avatarPickerOpen}
+          selected={user?.avatar ?? null}
+          onSelect={handleAvatarSelect}
+          onClose={() => setAvatarPickerOpen(false)}
+        />
+
         <Animated.View entering={FadeInDown.duration(500).delay(100)}>
           <Card glass style={styles.statsCard}>
-            <Text style={styles.cardTitle}>{t('profile.statsOverview')}</Text>
+            <View style={styles.statsHeader}>
+              <Text style={styles.cardTitle}>{t('profile.statsOverview')}</Text>
+              <AnimatedSvgIllustration illustrationKey="man-doing-gymnastics-at-home" width={60} variant="breathe" delay={200} />
+            </View>
             <View style={styles.statsGrid}>
               <View style={styles.statItem}>
                 <Text style={styles.statLabel}>{t('dashboard.brainScore')}</Text>
@@ -166,7 +193,7 @@ export default function ProfileScreen() {
         <Animated.View entering={FadeInDown.duration(500).delay(400)}>
           <Button title={t('profile.signOut')} onPress={handleSignOut} variant="danger" size="lg" style={styles.signOutBtn} />
         </Animated.View>
-      </ScrollView>
+      </PullToRefresh>
     </SafeScreen>
   );
 }
@@ -174,9 +201,9 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   content: { padding: Spacing.lg, paddingBottom: Spacing['3xl'] },
   avatarSection: { alignItems: 'center', marginBottom: Spacing.xl },
-  avatarCircle: { width: Sizing.avatarLg, height: Sizing.avatarLg, borderRadius: Radius.full, backgroundColor: Colors.SURFACE, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.PRIMARY_LIGHT, ...Shadow.glow },
   userName: { fontSize: Typography.sizes['2xl'], fontFamily: Typography.families.display, color: Colors.TEXT_PRIMARY, marginTop: Spacing.md, letterSpacing: LetterSpacing.tight },
   userLevel: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureMedium, color: Colors.TEXT_SECONDARY, marginTop: Spacing.xs, letterSpacing: 0.3 },
+  statsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.md },
   statsCard: { marginBottom: Spacing.lg },
   cardTitle: { fontSize: Typography.sizes.lg, fontFamily: Typography.families.displaySemi, color: Colors.TEXT_PRIMARY, marginBottom: Spacing.md, letterSpacing: LetterSpacing.tight },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },

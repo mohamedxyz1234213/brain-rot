@@ -7,6 +7,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius, Shadow, Gradients, LetterSpacing } from '../../src/constants/theme';
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
+import { AnimatedLogo } from '../../src/components/ui/AnimatedLogo';
+import { AnimatedSvgIllustration } from '../../src/components/ui/AnimatedSvgIllustration';
 import { useAuthStore } from '../../src/stores/authStore';
 
 export default function WelcomeScreen() {
@@ -31,11 +33,20 @@ export default function WelcomeScreen() {
   return (
     <SafeScreen>
       <Animated.View entering={FadeInDown.duration(600)} style={styles.content}>
-        <LinearGradient colors={[...Gradients.brandDark] as unknown as [string, string]} style={styles.heroOrb}>
-          <Ionicons name="hardware-chip-outline" size={42} color={Colors.TEXT_ON_PRIMARY} />
-        </LinearGradient>
+        <View style={styles.logoWrap}>
+          <AnimatedLogo size={140} />
+        </View>
         <Text style={styles.title}>BrainRot</Text>
         <Text style={styles.subtitle}>Recover from social media addiction. Get roasted. بنعالجك.</Text>
+
+        <Animated.View entering={FadeInDown.duration(600).delay(300)} style={styles.heroIllustration}>
+          <AnimatedSvgIllustration
+            illustrationKey="avatar-thinking-6"
+            width={180}
+            variant="float"
+            delay={500}
+          />
+        </Animated.View>
 
         <View style={styles.features}>
           <Animated.View entering={FadeInDown.duration(400).delay(200)}>
@@ -76,9 +87,10 @@ function FeatureRow({ icon, text }: { icon: React.ComponentProps<typeof Ionicons
 
 const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: 'center', padding: Spacing.xl },
-  heroOrb: { width: 112, height: 112, borderRadius: Radius.full, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.lg, ...Shadow.glow },
+  logoWrap: { alignSelf: 'center', marginBottom: Spacing.lg, width: 140, height: 140 },
   title: { fontSize: Typography.sizes['3xl'], fontWeight: 700, color: Colors.TEXT_PRIMARY, textAlign: 'center', marginBottom: Spacing.sm, letterSpacing: LetterSpacing.tight },
   subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, textAlign: 'center', lineHeight: Typography.lineHeight.normal, marginBottom: Spacing['2xl'] },
+  heroIllustration: { alignItems: 'center', marginBottom: Spacing.lg },
   features: { marginBottom: Spacing['2xl'] },
   featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md, backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.BORDER },
   featureIcon: { marginRight: Spacing.md },
