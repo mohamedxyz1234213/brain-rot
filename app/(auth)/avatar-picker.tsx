@@ -9,7 +9,6 @@ import { Colors, Typography, Spacing, Radius, Shadow, LetterSpacing } from '../.
 import { SafeScreen } from '../../src/components/ui/SafeScreen';
 import { AVATARS, AVATAR_IDS } from '../../src/data/avatars';
 import { useAuthStore } from '../../src/stores/authStore';
-import { useSettingsStore } from '../../src/stores/settingsStore';
 import { backendService } from '../../src/services/backend';
 
 const LABELS: Record<string, string> = {
@@ -50,23 +49,8 @@ export default function AvatarPickerScreen() {
       backendService.updateUser(user.id, { avatar: selected }).catch(() => {});
     }
 
-    // Navigate to setup flow based on religion choice
-    const religion = useSettingsStore.getState().religion;
-    if (religion === 'muslim') {
-      router.push('/setup/religion');
-    } else {
-      router.push('/setup/limits');
-    }
-  };
-
-  const handleSkip = () => {
-    Haptics.selectionAsync();
-    const religion = useSettingsStore.getState().religion;
-    if (religion === 'muslim') {
-      router.push('/setup/religion');
-    } else {
-      router.push('/setup/limits');
-    }
+    // Navigate to religion picker (next step in onboarding)
+    router.replace('/(auth)/religion-picker');
   };
 
   return (
@@ -127,12 +111,8 @@ export default function AvatarPickerScreen() {
           accessibilityLabel="Continue"
         >
           <Text style={styles.continueBtnText}>
-            {selected ? 'Continue' : 'Pick an avatar'}
+            {selected ? 'Continue' : 'Pick an avatar to continue'}
           </Text>
-        </Pressable>
-
-        <Pressable style={styles.skipBtn} onPress={handleSkip} accessibilityRole="button" accessibilityLabel="Skip">
-          <Text style={styles.skipBtnText}>Skip for now</Text>
         </Pressable>
       </View>
     </SafeScreen>
@@ -239,12 +219,5 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.lg,
     fontWeight: '600',
   },
-  skipBtn: {
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-  },
-  skipBtnText: {
-    color: Colors.TEXT_SECONDARY,
-    fontSize: Typography.sizes.md,
-  },
+
 });

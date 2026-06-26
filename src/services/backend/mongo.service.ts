@@ -35,6 +35,7 @@ function authHeaders(): Record<string, string> {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const method = (options?.method ?? 'GET').toUpperCase();
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
@@ -45,6 +46,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
+    // Gracefully handle 404s on GET requests (endpoint may not be deployed yet)
+    if (response.status === 404 && method === 'GET') {
+      return [] as unknown as T;
+    }
     const error = await response.text();
     throw new Error(`API Error ${response.status}: ${error}`);
   }

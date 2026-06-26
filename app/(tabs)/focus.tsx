@@ -291,8 +291,13 @@ export default function FocusScreen() {
               })}
             </ScrollView>
           )}
-        </Animated.View>          <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration).delay(ANIMATION.stagger * 2)} style={styles.modes}>
-          <AnimatedSvgIllustration illustrationKey="man-doing-remote-work-sideways" width={100} variant="float" delay={300} style={{ alignSelf: 'center', marginBottom: Spacing.md }} />
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration).delay(ANIMATION.stagger * 2)}>
+          <AnimatedSvgIllustration illustrationKey="man-doing-remote-work-sideways" width={100} variant="none" delay={300} style={{ alignSelf: 'center', marginBottom: Spacing.md }} />
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.duration(ANIMATION.entrance.duration).delay(ANIMATION.stagger * 3)} style={styles.modes}>
           {MODES.map((mode) => (
             <View key={mode.id} style={styles.modeCardWrap}>
               <Pressable

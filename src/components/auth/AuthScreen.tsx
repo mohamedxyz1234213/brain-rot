@@ -142,7 +142,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     useAuthStore.getState().completeAuth(result.user, result.token);
     if (isSignUp) {
       useXPStore.getState().addXP(50, `${provider} account created`);
-      router.replace('/(auth)/religion-picker');
+      router.replace('/(auth)/avatar-picker');
     } else {
       useXPStore.getState().setXP(0);
       router.replace('/(tabs)');

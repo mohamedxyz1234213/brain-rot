@@ -2,6 +2,8 @@ import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
 import { MongoClient, ObjectId, WithId } from 'mongodb';
 import { z } from 'zod';
@@ -27,8 +29,41 @@ const app = express();
 const client = new MongoClient(mongoUri);
 const db = client.db(MONGODB_DB);
 
+app.use(helmet());
 app.use(express.json({ limit: '1mb' }));
 app.use(cors({ origin: (process.env.CORS_ORIGIN || '').split(',').filter(Boolean), credentials: true }));
+
+// Rate limiting
+const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true, legacyHeaders: false, message: 'Too many requests, please try again later.' });
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: 'Too many auth attempts, please try again later.' });
+app.use('/api/', generalLimiter);
+app.use('/api/auth/', authLimiter);
+app.use('/api/admin/auth/', authLimiter);
+
+// Sanitize MongoDB queries to prevent NoSQL injection
+function sanitize<T>(obj: T): T {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitize) as T;
+  if (obj instanceof Date) return obj;
+  const clean: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    if (key.startsWith('$')) continue;
+    if (value && typeof value === 'object') {
+      clean[key] = sanitize(value);
+    } else {
+      clean[key] = value;
+    }
+  }
+  return clean as T;
+}
+
+// Auth middleware that also sets userId
+function requireAuthUser(req: AuthedRequest, res: Response, next: NextFunction) {
+  requireAuth(req, res, () => {
+    if (!req.userId) return res.status(401).send('Missing user context');
+    next();
+  });
+}
 
 type AuthedRequest = Request & { admin?: { id: string; email: string; role: 'admin' }; userId?: string };
 
@@ -86,8 +121,10 @@ function publicId(doc: WithId<Record<string, unknown>>) {
   return { ...doc, id: String(doc._id), _id: undefined };
 }
 
-function objectId(value: string | string[]) {
-  return new ObjectId(Array.isArray(value) ? value[0] : value);
+function objectId(value: string | string[]): ObjectId {
+  const str = Array.isArray(value) ? value[0] : value;
+  if (!ObjectId.isValid(str)) throw new Error('Invalid ObjectId');
+  return new ObjectId(str);
 }
 
 function withoutCreatedAt<T extends Record<string, unknown>>(value: T) {
@@ -222,8 +259,14 @@ app.get('/api/users/:userId', async (req, res) => {
   res.json(user ? publicId(user as WithId<Record<string, unknown>>) : null);
 });
 
-app.patch('/api/users/:userId', async (req, res) => {
-  await db.collection('users').updateOne({ id: req.params.userId }, { $set: { ...req.body, updatedAt: new Date().toISOString() } });
+app.patch('/api/users/:userId', requireAuthUser, async (req: AuthedRequest, res) => {
+  if (req.params.userId !== req.userId) return res.status(403).send('Forbidden');
+  const allowed = ['name', 'avatar', 'language', 'roastPersona', 'religion', 'religionEnabled'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in req.body) filtered[key] = req.body[key];
+  }
+  await db.collection('users').updateOne({ id: req.params.userId }, { $set: { ...sanitize(filtered), updatedAt: new Date().toISOString() } });
   const user = await db.collection('users').findOne({ id: req.params.userId });
   res.json(user ? publicId(user as WithId<Record<string, unknown>>) : null);
 });
@@ -234,8 +277,11 @@ app.get('/api/screen-time/:userId', async (req, res) => {
   res.json(logs.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
 });
 
-app.post('/api/screen-time', async (req, res) => {
-  const doc = { ...req.body, createdAt: new Date().toISOString() };
+app.post('/api/screen-time', requireAuthUser, async (req, res) => {
+  const allowed = ['userId', 'date', 'appName', 'appBundleId', 'minutesUsed', 'blockedAttempts'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) { if (key in req.body) filtered[key] = req.body[key]; }
+  const doc = { ...sanitize(filtered), createdAt: new Date().toISOString() };
   const result = await db.collection('screen_time_logs').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
@@ -246,19 +292,27 @@ app.get('/api/app-limits/:userId', async (req, res) => {
   res.json(limits.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
 });
 
-app.post('/api/app-limits', async (req, res) => {
-  const doc = { ...req.body, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+app.post('/api/app-limits', requireAuthUser, async (req, res) => {
+  const allowed = ['userId', 'appBundleId', 'appName', 'dailyLimitMinutes', 'isHardBlock', 'isEnabled'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) { if (key in req.body) filtered[key] = req.body[key]; }
+  const doc = { ...sanitize(filtered), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   const result = await db.collection('app_limits').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
 
-app.patch('/api/app-limits/:limitId', async (req, res) => {
-  await db.collection('app_limits').updateOne({ _id: objectId(req.params.limitId) }, { $set: { ...req.body, updatedAt: new Date().toISOString() } });
+app.patch('/api/app-limits/:limitId', requireAuthUser, async (req, res) => {
+  const allowed = ['appName', 'dailyLimitMinutes', 'isHardBlock', 'isEnabled'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in req.body) filtered[key] = req.body[key];
+  }
+  await db.collection('app_limits').updateOne({ _id: objectId(req.params.limitId) }, { $set: { ...sanitize(filtered), updatedAt: new Date().toISOString() } });
   const limit = await db.collection('app_limits').findOne({ _id: objectId(req.params.limitId) });
   res.json(publicId(limit as WithId<Record<string, unknown>>));
 });
 
-app.delete('/api/app-limits/:limitId', async (req, res) => {
+app.delete('/api/app-limits/:limitId', requireAuthUser, async (req, res) => {
   await db.collection('app_limits').deleteOne({ _id: objectId(req.params.limitId) });
   res.status(204).end();
 });
@@ -271,20 +325,28 @@ app.get('/api/tasks/:userId', async (req, res) => {
   res.json(tasks.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
 });
 
-app.post('/api/tasks', async (req, res) => {
+app.post('/api/tasks', requireAuthUser, async (req, res) => {
+  const allowed = ['userId', 'title', 'description', 'priority', 'category', 'isEatTheFrog', 'estimatedMinutes', 'status'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) { if (key in req.body) filtered[key] = req.body[key]; }
   const now = new Date().toISOString();
-  const doc = { ...req.body, createdAt: now, updatedAt: now };
+  const doc = { ...sanitize(filtered), createdAt: now, updatedAt: now };
   const result = await db.collection('tasks').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
 
-app.patch('/api/tasks/:taskId', async (req, res) => {
-  await db.collection('tasks').updateOne({ _id: objectId(req.params.taskId) }, { $set: { ...req.body, updatedAt: new Date().toISOString() } });
+app.patch('/api/tasks/:taskId', requireAuthUser, async (req, res) => {
+  const allowed = ['title', 'description', 'priority', 'status', 'isEatTheFrog', 'category', 'estimatedMinutes'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in req.body) filtered[key] = req.body[key];
+  }
+  await db.collection('tasks').updateOne({ _id: objectId(req.params.taskId) }, { $set: { ...sanitize(filtered), updatedAt: new Date().toISOString() } });
   const task = await db.collection('tasks').findOne({ _id: objectId(req.params.taskId) });
   res.json(publicId(task as WithId<Record<string, unknown>>));
 });
 
-app.delete('/api/tasks/:taskId', async (req, res) => {
+app.delete('/api/tasks/:taskId', requireAuthUser, async (req, res) => {
   await db.collection('tasks').deleteOne({ _id: objectId(req.params.taskId) });
   res.status(204).end();
 });
@@ -297,14 +359,22 @@ app.get('/api/focus-sessions/:userId', async (req, res) => {
   res.json(sessions.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
 });
 
-app.post('/api/focus-sessions', async (req, res) => {
-  const doc = { ...req.body, createdAt: new Date().toISOString() };
+app.post('/api/focus-sessions', requireAuthUser, async (req, res) => {
+  const allowed = ['userId', 'taskId', 'mode', 'targetMinutes', 'startedAt'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) { if (key in req.body) filtered[key] = req.body[key]; }
+  const doc = { ...sanitize(filtered), createdAt: new Date().toISOString() };
   const result = await db.collection('focus_sessions').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
 
-app.patch('/api/focus-sessions/:sessionId', async (req, res) => {
-  await db.collection('focus_sessions').updateOne({ _id: objectId(req.params.sessionId) }, { $set: req.body });
+app.patch('/api/focus-sessions/:sessionId', requireAuthUser, async (req, res) => {
+  const allowed = ['endedAt', 'actualMinutes', 'distractionCount', 'completed'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in req.body) filtered[key] = req.body[key];
+  }
+  await db.collection('focus_sessions').updateOne({ _id: objectId(req.params.sessionId) }, { $set: sanitize(filtered) });
   const session = await db.collection('focus_sessions').findOne({ _id: objectId(req.params.sessionId) });
   res.json(publicId(session as WithId<Record<string, unknown>>));
 });
@@ -316,8 +386,11 @@ app.get('/api/roasts/:userId', async (req, res) => {
   res.json(roasts.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
 });
 
-app.post('/api/roasts', async (req, res) => {
-  const doc = { ...req.body, createdAt: new Date().toISOString() };
+app.post('/api/roasts', requireAuthUser, async (req, res) => {
+  const allowed = ['userId', 'text', 'persona', 'trigger', 'app'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) { if (key in req.body) filtered[key] = req.body[key]; }
+  const doc = { ...sanitize(filtered), createdAt: new Date().toISOString() };
   const result = await db.collection('roast_logs').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
@@ -330,8 +403,11 @@ app.get('/api/prayers/:userId', async (req, res) => {
   res.json(logs.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
 });
 
-app.post('/api/prayers', async (req, res) => {
-  const doc = { ...req.body, createdAt: new Date().toISOString() };
+app.post('/api/prayers', requireAuthUser, async (req, res) => {
+  const allowed = ['userId', 'name', 'date', 'status', 'time'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) { if (key in req.body) filtered[key] = req.body[key]; }
+  const doc = { ...sanitize(filtered), createdAt: new Date().toISOString() };
   const result = await db.collection('prayer_logs').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
@@ -342,11 +418,17 @@ app.get('/api/quran/:userId', async (req, res) => {
   res.json(progress ? publicId(progress as WithId<Record<string, unknown>>) : null);
 });
 
-app.patch('/api/quran/:userId', async (req, res) => {
+app.patch('/api/quran/:userId', requireAuthUser, async (req: AuthedRequest, res) => {
+  if (req.params.userId !== req.userId) return res.status(403).send('Forbidden');
   const now = new Date().toISOString();
+  const allowed = ['currentJuz', 'currentPage', 'lastReadAt'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in req.body) filtered[key] = req.body[key];
+  }
   await db.collection('quran_progress').updateOne(
     { userId: req.params.userId },
-    { $set: { ...req.body, updatedAt: now }, $setOnInsert: { createdAt: now } },
+    { $set: { ...sanitize(filtered), updatedAt: now }, $setOnInsert: { createdAt: now } },
     { upsert: true }
   );
   const progress = await db.collection('quran_progress').findOne({ userId: req.params.userId });
@@ -359,11 +441,17 @@ app.get('/api/streaks/:userId', async (req, res) => {
   res.json(streaks.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
 });
 
-app.patch('/api/streaks/:userId/:type', async (req, res) => {
+app.patch('/api/streaks/:userId/:type', requireAuthUser, async (req: AuthedRequest, res) => {
+  if (req.params.userId !== req.userId) return res.status(403).send('Forbidden');
   const now = new Date().toISOString();
+  const allowed = ['count', 'lastDate'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in req.body) filtered[key] = req.body[key];
+  }
   await db.collection('streaks').updateOne(
     { userId: req.params.userId, type: req.params.type },
-    { $set: { ...req.body, updatedAt: now }, $setOnInsert: { createdAt: now } },
+    { $set: { ...sanitize(filtered), updatedAt: now }, $setOnInsert: { createdAt: now } },
     { upsert: true }
   );
   const streak = await db.collection('streaks').findOne({ userId: req.params.userId, type: req.params.type });
@@ -377,8 +465,12 @@ app.get('/api/brain-score/:userId', async (req, res) => {
   res.json(scores.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
 });
 
-app.post('/api/brain-score/:userId/calculate', async (req, res) => {
-  const doc = { ...req.body, userId: req.params.userId, createdAt: new Date().toISOString() };
+app.post('/api/brain-score/:userId/calculate', requireAuthUser, async (req: AuthedRequest, res) => {
+  if (req.params.userId !== req.userId) return res.status(403).send('Forbidden');
+  const allowed = ['date', 'score', 'breakdown'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) { if (key in req.body) filtered[key] = req.body[key]; }
+  const doc = { ...sanitize(filtered), userId: req.params.userId, createdAt: new Date().toISOString() };
   const result = await db.collection('brain_scores').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
@@ -389,11 +481,12 @@ app.get('/api/subscriptions/:userId', async (req, res) => {
   res.json(sub ? publicId(sub as WithId<Record<string, unknown>>) : null);
 });
 
-app.patch('/api/subscriptions/:userId', async (req, res) => {
+app.patch('/api/subscriptions/:userId', requireAuthUser, async (req: AuthedRequest, res) => {
+  if (req.params.userId !== req.userId) return res.status(403).send('Forbidden');
   const now = new Date().toISOString();
   await db.collection('subscriptions').updateOne(
     { userId: req.params.userId },
-    { $set: withoutCreatedAt({ ...req.body, userId: req.params.userId, updatedAt: now }), $setOnInsert: { createdAt: now } },
+    { $set: withoutCreatedAt({ ...sanitize(req.body), userId: req.params.userId, updatedAt: now }), $setOnInsert: { createdAt: now } },
     { upsert: true }
   );
   if (req.body.tier) await db.collection('users').updateOne({ id: req.params.userId }, { $set: { subscriptionTier: req.body.tier, updatedAt: now } });
@@ -407,11 +500,17 @@ app.get('/api/notifications/settings/:userId', async (req, res) => {
   res.json(settings ? publicId(settings as WithId<Record<string, unknown>>) : null);
 });
 
-app.patch('/api/notifications/settings/:userId', async (req, res) => {
+app.patch('/api/notifications/settings/:userId', requireAuthUser, async (req: AuthedRequest, res) => {
+  if (req.params.userId !== req.userId) return res.status(403).send('Forbidden');
   const now = new Date().toISOString();
+  const allowed = ['roastNotifications', 'prayerReminders', 'focusReminders', 'dailyDigest'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in req.body) filtered[key] = req.body[key];
+  }
   await db.collection('notification_settings').updateOne(
     { userId: req.params.userId },
-    { $set: { ...req.body, updatedAt: now }, $setOnInsert: { createdAt: now } },
+    { $set: { ...sanitize(filtered), updatedAt: now }, $setOnInsert: { createdAt: now } },
     { upsert: true }
   );
   const settings = await db.collection('notification_settings').findOne({ userId: req.params.userId });
@@ -426,14 +525,17 @@ app.get('/api/circles', async (req, res) => {
   res.json(circles.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
 });
 
-app.post('/api/circles', async (req, res) => {
+app.post('/api/circles', requireAuthUser, async (req: AuthedRequest, res) => {
+  const allowed = ['name', 'maxMembers'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) { if (key in req.body) filtered[key] = req.body[key]; }
   const now = new Date().toISOString();
-  const doc = { ...req.body, createdAt: now };
+  const doc = { ...sanitize(filtered), ownerId: req.userId, memberIds: [req.userId], createdAt: now };
   const result = await db.collection('circles').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
 
-app.post('/api/circles/:circleId/join', async (req, res) => {
+app.post('/api/circles/:circleId/join', requireAuthUser, async (req, res) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).send('userId required');
   const circle = await db.collection('circles').findOne({ _id: objectId(req.params.circleId) });
@@ -446,7 +548,7 @@ app.post('/api/circles/:circleId/join', async (req, res) => {
   res.json(publicId(updated as WithId<Record<string, unknown>>));
 });
 
-app.post('/api/circles/:circleId/leave', async (req, res) => {
+app.post('/api/circles/:circleId/leave', requireAuthUser, async (req, res) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).send('userId required');
   await db.collection('circles').updateOne({ _id: objectId(req.params.circleId) }, { $pull: { memberIds: userId } });
@@ -527,7 +629,12 @@ app.get('/api/admin/dashboard', requireAdmin, async (_req, res) => {
 
 app.patch('/api/admin/users/:userId', requireAdmin, async (req, res) => {
   const now = new Date().toISOString();
-  await db.collection('users').updateOne({ id: req.params.userId }, { $set: { ...req.body, updatedAt: now } });
+  const allowed = ['name', 'avatar', 'subscriptionTier', 'role', 'brainScore', 'xp', 'level'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in req.body) filtered[key] = req.body[key];
+  }
+  await db.collection('users').updateOne({ id: req.params.userId }, { $set: { ...sanitize(filtered), updatedAt: now } });
   // Also sync subscription tier to subscriptions collection
   if (req.body.subscriptionTier) {
     await db.collection('subscriptions').updateOne(
@@ -560,9 +667,14 @@ app.delete('/api/admin/users/:userId', requireAdmin, async (req, res) => {
 
 app.patch('/api/admin/subscriptions/:userId', requireAdmin, async (req, res) => {
   const now = new Date().toISOString();
+  const allowed = ['tier', 'isActive', 'expiresAt'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in req.body) filtered[key] = req.body[key];
+  }
   await db.collection('subscriptions').updateOne(
     { userId: req.params.userId },
-    { $set: withoutCreatedAt({ ...req.body, userId: req.params.userId, updatedAt: now }), $setOnInsert: { createdAt: now } },
+    { $set: withoutCreatedAt({ ...sanitize(filtered), userId: req.params.userId, updatedAt: now }), $setOnInsert: { createdAt: now } },
     { upsert: true }
   );
   if (req.body.tier) await db.collection('users').updateOne({ id: req.params.userId }, { $set: { subscriptionTier: req.body.tier, updatedAt: now } });
@@ -571,13 +683,16 @@ app.patch('/api/admin/subscriptions/:userId', requireAdmin, async (req, res) => 
 
 // ──────────────────── Admin Challenges ────────────────────
 app.post('/api/admin/challenges', requireAdmin, async (req, res) => {
-  const doc = { ...req.body, participantCount: 0, joinedUserIds: [], createdAt: new Date().toISOString() };
+  const allowed = ['title', 'description', 'icon', 'challengeType', 'difficulty', 'durationDays', 'rewardXp', 'maxParticipants', 'config', 'rules', 'isActive'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) { if (key in req.body) filtered[key] = req.body[key]; }
+  const doc = { ...sanitize(filtered), participantCount: 0, joinedUserIds: [], createdAt: new Date().toISOString() };
   const result = await db.collection('challenges').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
 
 app.patch('/api/admin/challenges/:id', requireAdmin, async (req, res) => {
-  await db.collection('challenges').updateOne({ _id: objectId(req.params.id) }, { $set: req.body });
+  await db.collection('challenges').updateOne({ _id: objectId(req.params.id) }, { $set: sanitize(req.body) });
   res.json({ ok: true });
 });
 
@@ -588,19 +703,29 @@ app.delete('/api/admin/challenges/:id', requireAdmin, async (req, res) => {
 
 // ──────────────────── Admin Roasts ────────────────────
 app.post('/api/admin/roasts', requireAdmin, async (req, res) => {
-  const doc = { ...req.body, createdAt: new Date().toISOString() };
+  const allowed = ['userId', 'text', 'persona', 'trigger'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) { if (key in req.body) filtered[key] = req.body[key]; }
+  const doc = { ...sanitize(filtered), createdAt: new Date().toISOString() };
   const result = await db.collection('manual_roasts').insertOne(doc);
   res.json({ ...doc, id: String(result.insertedId) });
 });
 
 app.patch('/api/admin/roasts/:id', requireAdmin, async (req, res) => {
-  await db.collection('manual_roasts').updateOne({ _id: objectId(req.params.id) }, { $set: req.body });
+  await db.collection('manual_roasts').updateOne({ _id: objectId(req.params.id) }, { $set: sanitize(req.body) });
   res.json({ ok: true });
 });
 
 app.delete('/api/admin/roasts/:id', requireAdmin, async (req, res) => {
   await db.collection('manual_roasts').deleteOne({ _id: objectId(req.params.id) });
   res.status(204).end();
+});
+
+// ──────────────────── Global Error Handler ────────────────────
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  if (err.message === 'Invalid ObjectId') return res.status(400).send('Invalid ID format');
+  console.error('Unhandled error:', err.message);
+  res.status(500).send('Internal server error');
 });
 
 // ──────────────────── Start ────────────────────

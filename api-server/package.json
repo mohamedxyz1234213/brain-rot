@@ -13,6 +13,8 @@
     "cors": "latest",
     "dotenv": "latest",
     "express": "latest",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.2.0",
     "jsonwebtoken": "latest",
     "mongodb": "latest",
     "zod": "latest"
@@ -21,6 +23,8 @@
     "@types/bcryptjs": "latest",
     "@types/cors": "latest",
     "@types/express": "latest",
+    "@types/express-rate-limit": "^5.1.3",
+    "@types/helmet": "^0.0.48",
     "@types/jsonwebtoken": "latest",
     "@types/node": "latest",
     "tsx": "latest",

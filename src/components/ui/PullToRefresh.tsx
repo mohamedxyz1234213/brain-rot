@@ -14,7 +14,7 @@ interface PullToRefreshProps extends ScrollViewProps {
  * Wrap any screen's content in <PullToRefresh onRefresh={...}> instead of <ScrollView>.
  */
 export const PullToRefresh = forwardRef<ScrollView, PullToRefreshProps>(
-  ({ onRefresh, refreshing: externalRefreshing, children, ...scrollViewProps }, ref) => {
+  ({ onRefresh, refreshing: externalRefreshing, children, refreshControl: _ignoredRefreshControl, ...scrollViewProps }, ref) => {
     const [internalRefreshing, setInternalRefreshing] = useState(false);
 
     const isRefreshing = externalRefreshing ?? internalRefreshing;
