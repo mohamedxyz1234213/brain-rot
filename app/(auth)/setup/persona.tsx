@@ -1,44 +1,27 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, Radius } from '../../../src/constants/theme';
-import { Card } from '../../../src/components/ui/Card';
 import { Button } from '../../../src/components/ui/Button';
-import { useSettingsStore } from '../../../src/stores/settingsStore';
 import { useXPStore } from '../../../src/stores/xpStore';
 
 const PERSONAS = [
-  { id: 'egyptian_dad', name: 'Egyptian Dad', icon: 'person-outline', sample: '"أنت مش ابن العيلة، ابن خالتك بقى طبيب وانت بقى... سكران على الموبايل."' },
-  { id: 'egyptian_mom', name: 'Egyptian Mom', icon: 'heart-outline', sample: '"أنا عيني وجعتني من العياط عليك. ده انا ماما ولا ده حياتي كلها حاجة."' },
-  { id: 'future_self', name: 'Future Self (45)', icon: 'time-outline', sample: '"I wish I could tell you to put the phone down. The life you\'re building right now is the one I\'m living."' },
-  { id: 'drill_sergeant', name: 'Drill Sergeant', icon: 'shield-outline', sample: '"DROP THE PHONE AND GIVE ME 20! YOUR DOPAMINE IS COMPROMISED SOLDIER!"' },
-  { id: 'sigmund_freud', name: 'Sigmund Freud', icon: 'hardware-chip-outline', sample: '"Your scrolling is a manifestation of unresolved Oedipal desire for maternal validation."' },
-  { id: 'david_goggins', name: 'David Goggins', icon: 'fitness-outline', sample: '"You\'re staying soft. WHILE YOU SCROLL, I DID 1000 PUSHUPS. STAY HARD."' },
+  { id: 'egyptian_dad', name: 'Egyptian Dad', icon: 'person-outline' },
+  { id: 'egyptian_mom', name: 'Egyptian Mom', icon: 'heart-outline' },
+  { id: 'future_self', name: 'Future Self (45)', icon: 'time-outline' },
+  { id: 'drill_sergeant', name: 'Drill Sergeant', icon: 'shield-outline' },
+  { id: 'sigmund_freud', name: 'Sigmund Freud', icon: 'hardware-chip-outline' },
+  { id: 'david_goggins', name: 'David Goggins', icon: 'fitness-outline' },
 ];
 
 export default function SetupPersonaScreen() {
-  const [selectedPersona, setSelectedPersona] = useState<string>('');
-
-  const handleSelect = (id: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setSelectedPersona(id);
-  };
-
   const handleContinue = () => {
-    if (!selectedPersona) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    useSettingsStore.getState().setRoastPersona(selectedPersona);
     useXPStore.getState().addXP(50, 'Setup completed');
-    router.replace('/(tabs)');
-  };
-
-  const handleSkip = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    useSettingsStore.getState().setRoastPersona('drill_sergeant');
     router.replace('/(tabs)');
   };
 
@@ -46,23 +29,34 @@ export default function SetupPersonaScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <Animated.View entering={FadeInDown.duration(400)}>
-          <Text style={styles.title}>Choose Your Roast Persona</Text>
-          <Text style={styles.subtitle}>Who will roast you when you fail?</Text>
+          <Text style={styles.title}>Roast Personas</Text>
+          <Text style={styles.subtitle}>You'll get roasted by a random persona each time. Mix it up!</Text>
         </Animated.View>
 
-        {PERSONAS.map((persona, i) => (
-          <Animated.View key={persona.id} entering={FadeInDown.duration(300).delay(i * 80)}>
-            <Pressable style={[styles.personaCard, selectedPersona === persona.id && styles.personaCardActive]} onPress={() => handleSelect(persona.id)}>
-              <Ionicons name={persona.icon as React.ComponentProps<typeof Ionicons>['name']} size={32} color={Colors.PRIMARY} style={styles.personaIcon} />
-              <Text style={styles.personaName}>{persona.name}</Text>
-              <Text style={styles.personaSample}>{persona.sample}</Text>
-            </Pressable>
-          </Animated.View>
-        ))}
+        <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.infoCard}>
+          <Ionicons name="shuffle-outline" size={48} color={Colors.PRIMARY} style={styles.shuffleIcon} />
+          <Text style={styles.infoTitle}>Random Mix Mode</Text>
+          <Text style={styles.infoText}>
+            Instead of choosing one persona, you'll get a random mix of all 6 personas. Each roast comes from a different voice to keep you on your toes.
+          </Text>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.duration(400).delay(200)}>
+          <Text style={styles.rosterTitle}>Your Roast Roster</Text>
+          <View style={styles.personaGrid}>
+            {PERSONAS.map((persona, i) => (
+              <Animated.View key={persona.id} entering={FadeInDown.duration(300).delay(i * 60)}>
+                <View style={styles.personaChip}>
+                  <Ionicons name={persona.icon as React.ComponentProps<typeof Ionicons>['name']} size={20} color={Colors.PRIMARY} />
+                  <Text style={styles.personaChipText}>{persona.name}</Text>
+                </View>
+              </Animated.View>
+            ))}
+          </View>
+        </Animated.View>
 
         <View style={styles.actions}>
-          <Button title="ابدأ — بنعالجك" onPress={handleContinue} size="lg" disabled={!selectedPersona} />
-          <Button title="Skip" onPress={handleSkip} variant="ghost" size="md" />
+          <Button title="ابدأ — بنعالجك" onPress={handleContinue} size="lg" />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -74,10 +68,13 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.xl },
   title: { fontSize: Typography.sizes['2xl'], fontWeight: '700', color: Colors.TEXT_ON_SURFACE, marginBottom: Spacing.sm },
   subtitle: { fontSize: Typography.sizes.md, color: Colors.TEXT_SECONDARY, marginBottom: Spacing.xl },
-  personaCard: { backgroundColor: Colors.SURFACE, borderRadius: Radius.lg, padding: Spacing.lg, marginBottom: Spacing.md, borderWidth: 0.5, borderColor: `${Colors.PRIMARY_DARK}44` },
-  personaCardActive: { borderColor: Colors.PRIMARY_LIGHT, borderWidth: 2 },
-  personaIcon: { marginBottom: Spacing.sm },
-  personaName: { fontSize: Typography.sizes.lg, fontWeight: '600', color: Colors.TEXT_ON_SURFACE, marginBottom: Spacing.sm },
-  personaSample: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, lineHeight: 20 },
-  actions: { marginTop: Spacing.xl, gap: Spacing.md },
+  infoCard: { backgroundColor: Colors.SURFACE, borderRadius: Radius.xl, padding: Spacing.xl, marginBottom: Spacing.xl, borderWidth: 1, borderColor: Colors.PRIMARY_LIGHT, alignItems: 'center' },
+  shuffleIcon: { marginBottom: Spacing.md },
+  infoTitle: { fontSize: Typography.sizes.lg, fontWeight: '600', color: Colors.TEXT_ON_SURFACE, marginBottom: Spacing.sm, textAlign: 'center' },
+  infoText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_SECONDARY, lineHeight: 22, textAlign: 'center' },
+  rosterTitle: { fontSize: Typography.sizes.md, fontWeight: '600', color: Colors.TEXT_ON_SURFACE, marginBottom: Spacing.md },
+  personaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  personaChip: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, backgroundColor: Colors.SURFACE, borderRadius: Radius.full, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderWidth: 1, borderColor: Colors.BORDER },
+  personaChipText: { fontSize: Typography.sizes.sm, color: Colors.TEXT_PRIMARY, fontWeight: '500' },
+  actions: { marginTop: Spacing.xl },
 });

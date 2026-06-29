@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { getActiveUserStorageSuffix, persist } from '../lib/persistence';
 
-type RoastPersona = 'egyptian_dad' | 'egyptian_mom' | 'future_self' | 'drill_sergeant' | 'sigmund_freud' | 'david_goggins';
+export type RoastPersona = 'egyptian_dad' | 'egyptian_mom' | 'future_self' | 'drill_sergeant' | 'sigmund_freud' | 'david_goggins';
+
+const ALL_PERSONAS: RoastPersona[] = ['egyptian_dad', 'egyptian_mom', 'future_self', 'drill_sergeant', 'sigmund_freud', 'david_goggins'];
 
 interface RoastEntry {
   id: string;
@@ -15,11 +17,10 @@ interface RoastEntry {
 interface RoastState {
   roasts: RoastEntry[];
   activeRoast: RoastEntry | null;
-  selectedPersona: RoastPersona;
   isLoading: boolean;
   addRoast: (roast: Omit<RoastEntry, 'id' | 'createdAt'>) => void;
   dismissRoast: () => void;
-  setPersona: (persona: RoastPersona) => void;
+  getRandomPersona: () => RoastPersona;
   getLatestRoasts: (limit?: number) => RoastEntry[];
   resetRoasts: () => void;
 }
@@ -33,13 +34,11 @@ export const useRoastStore = create<RoastState>()(
       getStorageKeySuffix: getActiveUserStorageSuffix,
       partialize: (state) => ({
         roasts: state.roasts.slice(0, 10),
-        selectedPersona: state.selectedPersona,
       }),
     },
     (set, get) => ({
       roasts: [],
       activeRoast: null,
-      selectedPersona: 'egyptian_dad',
       isLoading: false,
 
       addRoast: (roastData) => {
@@ -58,8 +57,8 @@ export const useRoastStore = create<RoastState>()(
         set({ activeRoast: null });
       },
 
-      setPersona: (persona) => {
-        set({ selectedPersona: persona });
+      getRandomPersona: () => {
+        return ALL_PERSONAS[Math.floor(Math.random() * ALL_PERSONAS.length)];
       },
 
       getLatestRoasts: (limit = 10) => {
@@ -67,10 +66,10 @@ export const useRoastStore = create<RoastState>()(
       },
 
       resetRoasts: () => {
-        set({ roasts: [], activeRoast: null, selectedPersona: 'egyptian_dad', isLoading: false });
+        set({ roasts: [], activeRoast: null, isLoading: false });
       },
     })
   )
 );
 
-export type { RoastPersona, RoastEntry };
+export type { RoastEntry };

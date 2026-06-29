@@ -1,8 +1,11 @@
 import type {
+  AdminBroadcast,
   AdminChallenge,
   AdminManualRoast,
   AdminPayload,
+  AdminReport,
   AdminSession,
+  BroadcastInput,
   ChallengeInput,
   ManualRoastInput,
   SubscriptionUpdateInput,
@@ -124,4 +127,24 @@ export async function updateManualRoast(id: string, data: Partial<ManualRoastInp
 
 export async function deleteManualRoast(id: string) {
   return request('/admin/roasts/' + encodeURIComponent(id), { method: 'DELETE' });
+}
+
+export async function sendBroadcast(data: BroadcastInput) {
+  return request<AdminBroadcast>('/admin/broadcast', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export async function fetchBroadcasts(): Promise<AdminBroadcast[]> {
+  return request<AdminBroadcast[]>('/admin/broadcasts');
+}
+
+export async function fetchReports(): Promise<AdminReport[]> {
+  return request<AdminReport[]>('/admin/reports');
+}
+
+export async function updateReport(id: string, data: { status: AdminReport['status'] }) {
+  return request<AdminReport>('/admin/reports/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export async function deleteReport(id: string) {
+  return request('/admin/reports/' + encodeURIComponent(id), { method: 'DELETE' });
 }

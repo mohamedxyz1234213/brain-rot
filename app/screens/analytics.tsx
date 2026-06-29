@@ -7,13 +7,11 @@ import { useBrainScoreStore } from '../../src/stores/brainScoreStore';
 import { useScreenTimeStore } from '../../src/stores/screenTimeStore';
 import { PullToRefresh } from '../../src/components/ui/PullToRefresh';
 import { useRefreshAll } from '../../src/hooks/useRefreshAll';
-import { useSettingsStore } from '../../src/stores/settingsStore';
-
 export default function AnalyticsScreen() {
   const scores = useBrainScoreStore((s) => s.scores);
   const totalMinutes = useScreenTimeStore((s) => s.totalMinutesToday);
   const refreshAll = useRefreshAll();
-  const hourlyRate = useSettingsStore((s) => s.hourlyRate);
+  const hourlyRate = 25; // default hourly rate for cost calculation
 
   const hasHistory = scores.length > 0;
   const brainScoreData = hasHistory
@@ -65,7 +63,7 @@ export default function AnalyticsScreen() {
         <View style={styles.costCard}>
           <Text style={styles.costTitle}>Usage Cost Calculator</Text>
           <Text style={styles.costDesc}>
-            At ${hourlyRate}/hour, you spent the equivalent of:
+            At $25/hour, you spent the equivalent of:
           </Text>
           <Text style={styles.costAmount}>${monthlyCost.toFixed(2)}</Text>
           <Text style={styles.costSubtext}>projected over a month at today's pace</Text>

@@ -57,7 +57,6 @@ export function makeAppUser(profile: OAuthProfile): User {
     xp: 0,
     level: 'Zombie',
     streakDays: 0,
-    roastPersona: settings.roastPersona,
     language: settings.language,
     religion: settings.religion,
     religionEnabled: settings.religionEnabled,

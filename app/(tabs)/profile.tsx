@@ -22,9 +22,7 @@ import { AvatarDisplay } from '../../src/components/ui/AvatarDisplay';
 import { AvatarPicker } from '../../src/components/ui/AvatarPicker';
 import { AnimatedSvgIllustration } from '../../src/components/ui/AnimatedSvgIllustration';
 import { useRefreshAll } from '../../src/hooks/useRefreshAll';
-import { useTaskStore } from '../../src/stores/taskStore';
 import { useRouter } from 'expo-router';
-import { fireRoastNow } from '../../src/services/roastNotificationService';
 import { backendService } from '../../src/services/backend';
 
 export default function ProfileScreen() {
@@ -48,19 +46,6 @@ export default function ProfileScreen() {
     if (next === language) return;
     Haptics.selectionAsync();
     setLanguage(next);
-  };
-
-  const handleRoastMeNow = async () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    const pending = useTaskStore.getState().tasks.filter((t) => t.status === 'pending').length;
-    const topLog = useScreenTimeStore.getState().logs.sort((a, b) => b.minutesUsed - a.minutesUsed)[0];
-    await fireRoastNow({
-      lang: language,
-      name: user?.name,
-      pendingTasks: pending,
-      topApp: topLog?.appName,
-      topMinutes: topLog?.minutesUsed,
-    });
   };
 
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
@@ -147,15 +132,6 @@ export default function ProfileScreen() {
                 );
               })}
             </View>
-            <Pressable
-              onPress={handleRoastMeNow}
-              style={styles.roastNowBtn}
-              accessibilityRole="button"
-              accessibilityLabel="Roast me now"
-            >
-              <Ionicons name="flame" size={Sizing.iconSm} color={Colors.DANGER} />
-              <Text style={styles.roastNowText}>{language === 'ar' ? 'حرقني دلوقتي' : 'Roast me now'}</Text>
-            </Pressable>
           </Card>
         </Animated.View>
 
@@ -217,8 +193,6 @@ const styles = StyleSheet.create({
   langBtnActive: { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY, ...Shadow.sm },
   langBtnText: { fontSize: Typography.sizes.md, fontFamily: Typography.families.featureMedium, color: Colors.TEXT_PRIMARY, letterSpacing: 0.2 },
   langBtnTextActive: { color: Colors.TEXT_ON_PRIMARY, fontFamily: Typography.families.featureSemi },
-  roastNowBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, marginTop: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.full, borderWidth: 1, borderColor: 'rgba(184,92,92,0.32)', backgroundColor: Colors.DANGER_LIGHT, minHeight: Sizing.touchTarget },
-  roastNowText: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureSemi, color: Colors.DANGER, letterSpacing: 0.4 },
   subCard: { marginBottom: Spacing.lg },
   subRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   tierBadge: { fontSize: Typography.sizes.sm, fontFamily: Typography.families.featureSemi, color: Colors.TEXT_SECONDARY, letterSpacing: LetterSpacing.wide },

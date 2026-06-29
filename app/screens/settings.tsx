@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Switch, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import { Colors, Typography, Spacing, Radius, Layout } from '../../src/constants/theme';
 import { SafeScreen, ScreenHeader } from '../../src/components/ui';
 import { useSettingsStore } from '../../src/stores/settingsStore';
@@ -16,24 +17,13 @@ type SettingsItem = ToggleItem | NavItem;
 type SettingsSection = { title: string; items: SettingsItem[] };
 
 export default function SettingsScreen() {
+  const { t } = useTranslation();
   const s = useSettingsStore();
   const isMuslim = s.religion === 'muslim';
   const quranGoal = useReligionStore((st) => st.quranProgress.dailyPageGoal);
   const updateQuran = useReligionStore((st) => st.updateQuranProgress);
   const refreshAll = useRefreshAll();
   const logout = useAuthStore((st) => st.logout);
-
-  const [local, setLocal] = useState({
-    smartBlocking: true,
-    doomScrollTax: true,
-    greyscale: false,
-    haptics: true,
-    darkMode: true,
-  });
-  const setLocalKey = (key: keyof typeof local) => (v: boolean) => {
-    Haptics.selectionAsync();
-    setLocal((prev) => ({ ...prev, [key]: v }));
-  };
 
   const bind = (value: boolean, setter: (v: boolean) => void) => (v: boolean) => {
     Haptics.selectionAsync();
@@ -53,12 +43,12 @@ export default function SettingsScreen() {
 
   const confirmDelete = () => {
     Alert.alert(
-      'Delete Account',
-      'This will sign you out and clear your local data. This cannot be undone.',
+      t('settings.deleteAccount'),
+      t('settings.deleteAccountConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: () => {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -72,66 +62,57 @@ export default function SettingsScreen() {
 
   const exportData = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert('Export Data', 'Your data is stored on-device. A shareable export is coming soon.');
+    Alert.alert(t('settings.exportData'), t('settings.exportComingSoon'));
   };
 
   const sections: SettingsSection[] = (() => { const sects: SettingsSection[] = [
     {
-      title: 'App Blocking',
+      title: t('settings.appBlocking'),
       items: [
-        { kind: 'nav', label: 'Manage App Limits', onPress: go('/setup/limits') },
-        { kind: 'toggle', label: 'Smart Blocking (auto-tighten)', value: local.smartBlocking, onChange: setLocalKey('smartBlocking') },
-        { kind: 'toggle', label: 'Doom Scroll Tax', value: local.doomScrollTax, onChange: setLocalKey('doomScrollTax') },
-        { kind: 'toggle', label: 'Greyscale Mode', value: local.greyscale, onChange: setLocalKey('greyscale') },
+        { kind: 'nav', label: t('settings.manageAppLimits'), onPress: go('/setup/limits') },
       ],
     },
     {
-      title: 'Notifications',
+      title: t('settings.notifications'),
       items: [
-        { kind: 'toggle', label: 'Push Notifications', value: s.notificationsEnabled, onChange: bind(s.notificationsEnabled, s.setNotificationsEnabled) },
-        { kind: 'toggle', label: 'Morning Briefing (7am)', value: s.morningBriefingEnabled, onChange: bind(s.morningBriefingEnabled, s.setMorningBriefing) },
-        { kind: 'toggle', label: 'Daily Roast (9pm)', value: s.dailyRoastEnabled, onChange: bind(s.dailyRoastEnabled, s.setDailyRoast) },
-        { kind: 'toggle', label: 'Sleep Reminder (11pm)', value: s.sleepReminderEnabled, onChange: bind(s.sleepReminderEnabled, s.setSleepReminder) },
-        ...(isMuslim ? [{ kind: 'toggle' as const, label: 'Prayer Times', value: s.prayerNotificationsEnabled, onChange: bind(s.prayerNotificationsEnabled, s.setPrayerNotifications) }] : []),
-      ],
-    },
-    {
-      title: 'Roast Settings',
-      items: [
-        { kind: 'nav', label: 'Change Roast Persona', hint: s.roastPersona.replace(/_/g, ' '), onPress: go('/setup/persona') },
+        { kind: 'toggle', label: t('settings.pushNotifications'), value: s.notificationsEnabled, onChange: bind(s.notificationsEnabled, s.setNotificationsEnabled) },
+        { kind: 'toggle', label: t('settings.morningBriefing'), value: s.morningBriefingEnabled, onChange: bind(s.morningBriefingEnabled, s.setMorningBriefing) },
+        { kind: 'toggle', label: t('settings.dailyRoast'), value: s.dailyRoastEnabled, onChange: bind(s.dailyRoastEnabled, s.setDailyRoast) },
+        { kind: 'toggle', label: t('settings.sleepReminder'), value: s.sleepReminderEnabled, onChange: bind(s.sleepReminderEnabled, s.setSleepReminder) },
+        ...(isMuslim ? [{ kind: 'toggle' as const, label: t('settings.prayerTimes'), value: s.prayerNotificationsEnabled, onChange: bind(s.prayerNotificationsEnabled, s.setPrayerNotifications) }] : []),
       ],
     },
     ...(isMuslim ? [{
-      title: 'Religion',
+      title: t('settings.religion'),
       items: [
-        { kind: 'toggle', label: 'Islamic Features', value: s.religionEnabled, onChange: bind(s.religionEnabled, s.setReligionEnabled) },
-        { kind: 'nav', label: 'Prayer Calculation Method', onPress: go('/setup/religion') },
-        { kind: 'nav', label: 'Quran Daily Goal', hint: `${quranGoal} page${quranGoal === 1 ? '' : 's'}`, onPress: cycleQuranGoal },
+        { kind: 'toggle', label: t('settings.islamicFeatures'), value: s.religionEnabled, onChange: bind(s.religionEnabled, s.setReligionEnabled) },
+        { kind: 'nav', label: t('settings.prayerCalcMethod'), onPress: go('/setup/religion') },
+        { kind: 'nav', label: t('settings.quranDailyGoal'), hint: quranGoal === 1 ? t('settings.quranPages', { count: quranGoal }) : t('settings.quranPagesPlural', { count: quranGoal }), onPress: cycleQuranGoal },
       ],
     } as SettingsSection] : []),
     {
-      title: 'Privacy & Safety',
+      title: t('settings.privacySafety'),
       items: [
-        { kind: 'toggle', label: 'The Mirror (Camera)', value: s.mirrorFeatureEnabled, onChange: bind(s.mirrorFeatureEnabled, s.setMirrorFeature) },
-        { kind: 'toggle', label: 'Voice Promise', value: s.voicePromiseEnabled, onChange: bind(s.voicePromiseEnabled, s.setVoicePromise) },
-        { kind: 'toggle', label: 'Driving Detection', value: s.drivingDetectionEnabled, onChange: bind(s.drivingDetectionEnabled, s.setDrivingDetection) },
-        { kind: 'toggle', label: '3AM Guardian', value: s.guardianEnabled, onChange: bind(s.guardianEnabled, s.setGuardian) },
+        { kind: 'toggle', label: t('settings.theMirror'), value: s.mirrorFeatureEnabled, onChange: bind(s.mirrorFeatureEnabled, s.setMirrorFeature) },
+        { kind: 'toggle', label: t('settings.voicePromise'), value: s.voicePromiseEnabled, onChange: bind(s.voicePromiseEnabled, s.setVoicePromise) },
+        { kind: 'toggle', label: t('settings.drivingDetection'), value: s.drivingDetectionEnabled, onChange: bind(s.drivingDetectionEnabled, s.setDrivingDetection) },
+        { kind: 'toggle', label: t('settings.guardian3am'), value: s.guardianEnabled, onChange: bind(s.guardianEnabled, s.setGuardian) },
       ],
     },
     {
-      title: 'Appearance',
+      title: t('settings.appearance'),
       items: [
-        { kind: 'toggle', label: 'Dark Mode', value: local.darkMode, onChange: setLocalKey('darkMode') },
-        { kind: 'nav', label: 'Language', hint: s.language === 'ar' ? 'العربية' : 'English', onPress: () => { Haptics.selectionAsync(); s.setLanguage(s.language === 'en' ? 'ar' : 'en'); } },
+        { kind: 'nav', label: t('settings.languageLabel'), hint: s.language === 'ar' ? 'العربية' : 'English', onPress: () => { Haptics.selectionAsync(); s.setLanguage(s.language === 'en' ? 'ar' : 'en'); } },
       ],
     },
     {
-      title: 'Account',
+      title: t('settings.account'),
       items: [
-        { kind: 'nav', label: 'Subscription', onPress: go('/screens/subscription') },
-        { kind: 'nav', label: 'Export Data', onPress: exportData },
-        { kind: 'nav', label: 'Delete Account', onPress: confirmDelete, danger: true },
-        { kind: 'nav', label: 'Sign Out', onPress: () => { logout(); router.replace('/(auth)/welcome'); } },
+        { kind: 'nav', label: t('settings.subscription'), onPress: go('/screens/subscription') },
+        { kind: 'nav', label: t('settings.report'), onPress: go('/screens/report') },
+        { kind: 'nav', label: t('settings.exportData'), onPress: exportData },
+        { kind: 'nav', label: t('settings.deleteAccount'), onPress: confirmDelete, danger: true },
+        { kind: 'nav', label: t('settings.signOut'), onPress: () => { logout(); router.replace('/(auth)/welcome'); } },
       ],
     },
   ];
@@ -139,7 +120,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeScreen>
-      <ScreenHeader title="Settings" onBack={() => router.back()} />
+      <ScreenHeader title={t('settings.title')} onBack={() => router.back()} />
       <PullToRefresh onRefresh={refreshAll} contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}>
         {sections.map((section) => (
           <View key={section.title} style={styles.section}>

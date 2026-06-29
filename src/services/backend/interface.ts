@@ -15,7 +15,6 @@ export interface User {
   xp: number;
   level: string;
   streakDays: number;
-  roastPersona: string;
   language: 'en' | 'ar';
   religion: 'muslim' | 'christian';
   religionEnabled: boolean;
@@ -327,6 +326,10 @@ export interface IBackendService {
   // Notifications
   getNotificationSettings(userId: string): Promise<NotificationSettings | null>;
   updateNotificationSettings(userId: string, data: Partial<NotificationSettings>): Promise<NotificationSettings>;
+
+  // Reports
+  submitReport(userId: string, data: { type: 'bug' | 'feature'; title: string; description: string }): Promise<void>;
+  getMyReports(userId: string): Promise<{ id: string; type: string; title: string; description: string; status: string; createdAt: string }[]>;
 
   // Admin
   getAdminOverview(): Promise<AdminOverview>;

@@ -100,11 +100,11 @@ const userSchema = z.object({
   name: z.string(),
   email: z.string().email(),
   avatar: z.string().optional(),
+  pushToken: z.string().optional(),
   brainScore: z.number().default(0),
   xp: z.number().default(0),
   level: z.string().default('Zombie'),
   streakDays: z.number().default(0),
-  roastPersona: z.string().default('drill_sergeant'),
   language: z.enum(['en', 'ar']).default('en'),
   religion: z.enum(['muslim', 'christian']).default('muslim'),
   religionEnabled: z.boolean().default(false),
@@ -130,6 +130,44 @@ function objectId(value: string | string[]): ObjectId {
 function withoutCreatedAt<T extends Record<string, unknown>>(value: T) {
   const { createdAt: _createdAt, ...rest } = value;
   return rest;
+}
+
+// ──────────────────── Expo Push Notifications ────────────────────
+const EXPO_ACCESS_TOKEN = process.env.EXPO_ACCESS_TOKEN;
+
+const EXPO_PUSH_TOKEN_RE = /^ExponentPushToken\[.+\]$/;
+
+function isValidExpoPushToken(token: string): boolean {
+  return EXPO_PUSH_TOKEN_RE.test(token);
+}
+
+async function sendExpoPushNotification(pushToken: string, title: string, body: string, data: Record<string, unknown> = {}): Promise<boolean> {
+  if (!pushToken || !EXPO_ACCESS_TOKEN) return false;
+  if (!isValidExpoPushToken(pushToken)) return false;
+  try {
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${EXPO_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify({
+        to: pushToken,
+        title,
+        body,
+        data,
+        sound: 'default',
+        priority: 'high',
+      }),
+    });
+    const result = await response.json();
+    if (result.data?.status === 'ok') return true;
+    console.warn('Expo push notification failed:', result);
+    return false;
+  } catch (err) {
+    console.warn('Failed to send push notification:', err);
+    return false;
+  }
 }
 
 function requireAdmin(req: AuthedRequest, res: Response, next: NextFunction) {
@@ -261,7 +299,7 @@ app.get('/api/users/:userId', async (req, res) => {
 
 app.patch('/api/users/:userId', requireAuthUser, async (req: AuthedRequest, res) => {
   if (req.params.userId !== req.userId) return res.status(403).send('Forbidden');
-  const allowed = ['name', 'avatar', 'language', 'roastPersona', 'religion', 'religionEnabled'];
+  const allowed = ['name', 'avatar', 'language', 'religion', 'religionEnabled', 'pushToken'];
   const filtered: Record<string, unknown> = {};
   for (const key of allowed) {
     if (key in req.body) filtered[key] = req.body[key];
@@ -579,18 +617,29 @@ app.post('/api/challenges/:id/join', requireAuth, async (req: AuthedRequest, res
 
 // ──────────────────── Admin ────────────────────
 app.get('/api/admin/dashboard', requireAdmin, async (_req, res) => {
-  const [users, subscriptions, traffic, aiRequests, challenges, manualRoasts] = await Promise.all([
+  const [users, subscriptions, traffic, aiRequests, challenges, manualRoasts, reports, roastLogs, focusSessions, prayerLogs, streaks] = await Promise.all([
     db.collection('users').find().sort({ updatedAt: -1 }).limit(500).toArray(),
     db.collection('subscriptions').find().sort({ updatedAt: -1 }).limit(500).toArray(),
     db.collection('screen_time_logs').find().sort({ date: -1 }).limit(1000).toArray(),
     db.collection('ai_requests').find().sort({ createdAt: -1 }).limit(500).toArray(),
     db.collection('challenges').find().sort({ createdAt: -1 }).limit(500).toArray(),
     db.collection('manual_roasts').find().sort({ createdAt: -1 }).limit(500).toArray(),
+    db.collection('reports').find().sort({ createdAt: -1 }).limit(500).toArray(),
+    db.collection('roast_logs').find().sort({ createdAt: -1 }).limit(200).toArray(),
+    db.collection('focus_sessions').find().sort({ startedAt: -1 }).limit(200).toArray(),
+    db.collection('prayer_logs').find().sort({ date: -1 }).limit(200).toArray(),
+    db.collection('streaks').find().sort({ updatedAt: -1 }).limit(200).toArray(),
   ]);
   const totalScreenTimeMinutes = traffic.reduce((sum, item) => sum + Number(item.minutesUsed || 0), 0);
   const blockedAttempts = traffic.reduce((sum, item) => sum + Number(item.blockedAttempts || 0), 0);
   const averageBrainScore = users.length ? Math.round(users.reduce((sum, user) => sum + Number(user.brainScore || 0), 0) / users.length) : 0;
   const activeSubscriptions = subscriptions.filter((sub) => sub.isActive).length;
+  const totalFocusMinutes = focusSessions.reduce((sum, s) => sum + Number(s.actualMinutes || 0), 0);
+  const today = new Date().toISOString().split('T')[0];
+  const recentRoasts = roastLogs.filter((r) => String(r.createdAt || '').startsWith(today)).length;
+  const prayersToday = prayerLogs.filter((p) => p.date === today).length;
+  const activeStreaks = streaks.filter((s) => Number(s.currentDays || 0) > 0).length;
+
   res.json({
     overview: {
       totalUsers: users.length,
@@ -599,9 +648,12 @@ app.get('/api/admin/dashboard', requireAdmin, async (_req, res) => {
       totalScreenTimeMinutes,
       blockedAttempts,
       averageBrainScore,
-      focusMinutes: 0,
+      focusMinutes: totalFocusMinutes,
       aiRequests: aiRequests.length,
       activeChallenges: challenges.filter((challenge) => challenge.isActive).length,
+      recentRoasts,
+      prayersToday,
+      activeStreaks,
       generatedAt: new Date().toISOString(),
     },
     users: users.map((doc) => publicId(doc as WithId<Record<string, unknown>>)),
@@ -610,8 +662,9 @@ app.get('/api/admin/dashboard', requireAdmin, async (_req, res) => {
     aiRequests: aiRequests.map((doc) => publicId(doc as WithId<Record<string, unknown>>)),
     challenges: challenges.map((doc) => publicId(doc as WithId<Record<string, unknown>>)),
     manualRoasts: manualRoasts.map((doc) => publicId(doc as WithId<Record<string, unknown>>)),
+    reports: reports.map((doc) => publicId(doc as WithId<Record<string, unknown>>)),
     analytics: {
-      dau: new Set(traffic.filter((item) => item.date === new Date().toISOString().split('T')[0]).map((item) => item.userId)).size,
+      dau: new Set(traffic.filter((item) => item.date === today).map((item) => item.userId)).size,
       wau: new Set(traffic.map((item) => item.userId)).size,
       conversionRate: users.length ? Math.round((activeSubscriptions / users.length) * 100) : 0,
       churnRiskUsers: users.filter((user) => Number(user.brainScore || 0) < 40).length,
@@ -623,6 +676,12 @@ app.get('/api/admin/dashboard', requireAdmin, async (_req, res) => {
         acc[key].minutesUsed += Number(item.minutesUsed || 0);
         return acc;
       }, {})).sort((a, b) => b.blockedAttempts - a.blockedAttempts).slice(0, 8),
+      roastDistribution: Object.values(roastLogs.reduce<Record<string, { count: number }>>((acc, r) => {
+        const persona = String(r.persona || 'unknown');
+        acc[persona] ||= { count: 0 };
+        acc[persona].count++;
+        return acc;
+      }, {})).sort((a, b) => b.count - a.count),
     },
   });
 });
@@ -721,6 +780,131 @@ app.delete('/api/admin/roasts/:id', requireAdmin, async (req, res) => {
   res.status(204).end();
 });
 
+// ──────────────────── Admin Notification Broadcast ────────────────────
+app.post('/api/admin/broadcast', requireAdmin, async (req: AuthedRequest, res) => {
+  const parsed = z.object({ title: z.string().min(1), body: z.string().min(1), targetTier: z.enum(['all', 'free', 'healed', 'ascended', 'family', 'lifetime']).default('all') }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).send('Invalid broadcast payload');
+  const now = new Date().toISOString();
+  const doc = { ...parsed.data, sentAt: now, sentBy: req.admin?.email };
+  const result = await db.collection('broadcasts').insertOne(doc);
+
+  // Send push notifications to matching users (fire-and-forget)
+  const { title, body, targetTier } = parsed.data;
+  const userFilter: Record<string, unknown> = {};
+  if (targetTier !== 'all') userFilter.subscriptionTier = targetTier;
+  const users = await db.collection('users').find(userFilter).toArray();
+  const pushTokens = users.map((u) => u.pushToken).filter((t): t is string => typeof t === 'string' && isValidExpoPushToken(t));
+
+  if (pushTokens.length > 0) {
+    // Expo batch API supports up to 100 messages per request
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < pushTokens.length; i += BATCH_SIZE) {
+      const batch = pushTokens.slice(i, i + BATCH_SIZE);
+      try {
+        await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(EXPO_ACCESS_TOKEN ? { Authorization: `Bearer ${EXPO_ACCESS_TOKEN}` } : {}),
+          },
+          body: JSON.stringify(
+            batch.map((token) => ({
+              to: token,
+              title,
+              body,
+              data: { type: 'broadcast', broadcastId: String(result.insertedId) },
+              sound: 'default',
+              priority: 'high',
+            }))
+          ),
+        });
+      } catch (err) {
+        console.warn('Failed to send broadcast batch:', err);
+      }
+    }
+  }
+
+  res.json({ ...doc, id: String(result.insertedId), recipientCount: pushTokens.length });
+});
+
+app.get('/api/admin/broadcasts', requireAdmin, async (_req, res) => {
+  const broadcasts = await db.collection('broadcasts').find().sort({ sentAt: -1 }).limit(100).toArray();
+  res.json(broadcasts.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+// ──────────────────── User Reports (Bug / Feature Request) ────────────────────
+app.post('/api/reports', requireAuthUser, async (req: AuthedRequest, res) => {
+  const parsed = z.object({
+    type: z.enum(['bug', 'feature']),
+    title: z.string().min(1).max(200),
+    description: z.string().min(1).max(2000),
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).send('Invalid report payload');
+  const now = new Date().toISOString();
+  const doc = { ...parsed.data, userId: req.userId, status: 'open' as const, createdAt: now, updatedAt: now };
+  const result = await db.collection('reports').insertOne(doc);
+  res.json({ ...doc, id: String(result.insertedId) });
+});
+
+app.get('/api/reports/mine', requireAuthUser, async (req: AuthedRequest, res) => {
+  const reports = await db.collection('reports').find({ userId: req.userId }).sort({ createdAt: -1 }).limit(50).toArray();
+  res.json(reports.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+app.get('/api/admin/reports', requireAdmin, async (_req, res) => {
+  const reports = await db.collection('reports').find().sort({ createdAt: -1 }).limit(500).toArray();
+  res.json(reports.map((doc) => publicId(doc as WithId<Record<string, unknown>>)));
+});
+
+app.patch('/api/admin/reports/:id', requireAdmin, async (req, res) => {
+  const allowed = ['status'];
+  const filtered: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in req.body) filtered[key] = req.body[key];
+  }
+  const now = new Date().toISOString();
+  await db.collection('reports').updateOne({ _id: objectId(req.params.id) }, { $set: { ...sanitize(filtered), updatedAt: now } });
+  const report = await db.collection('reports').findOne({ _id: objectId(req.params.id) });
+
+  // Send push notification to user when report status changes (skip 'open' — it's the default)
+  if (req.body.status && report && req.body.status !== 'open') {
+    const reportDoc = report as WithId<Record<string, unknown>>;
+    const userId = reportDoc.userId as string;
+    const user = await db.collection('users').findOne({ id: userId });
+    if (user && user.pushToken) {
+      const lang = (user.language as string) || 'en';
+      const titles: Record<string, { en: string; ar: string }> = {
+        bug: { en: 'Bug Report Updated', ar: 'تم تحديث بلاغ الخلل' },
+        feature: { en: 'Feature Request Updated', ar: 'تم تحديث طلب الميزة' },
+      };
+      const statusLabels: Record<string, { en: string; ar: string }> = {
+        open: { en: 'Open', ar: 'مفتوح' },
+        acknowledged: { en: 'Acknowledged', ar: 'تم الاستلام' },
+        fixed: { en: 'Fixed', ar: 'تم الإصلاح' },
+        closed: { en: 'Closed', ar: 'مغلق' },
+      };
+      const notifTitle = titles[reportDoc.type as string]?.[lang as 'en' | 'ar'] || titles.bug.en;
+      const statusLabel = statusLabels[req.body.status]?.[lang as 'en' | 'ar'] || req.body.status;
+      const notifBody = lang === 'ar'
+        ? `بلاغك "${reportDoc.title}" أصبح الآن ${statusLabel}.`
+        : `Your report "${reportDoc.title}" is now ${statusLabel}.`;
+      await sendExpoPushNotification(
+        user.pushToken as string,
+        notifTitle,
+        notifBody,
+        { type: 'report_status', reportId: req.params.id, status: req.body.status }
+      );
+    }
+  }
+
+  res.json(publicId(report as WithId<Record<string, unknown>>));
+});
+
+app.delete('/api/admin/reports/:id', requireAdmin, async (req, res) => {
+  await db.collection('reports').deleteOne({ _id: objectId(req.params.id) });
+  res.status(204).end();
+});
+
 // ──────────────────── Global Error Handler ────────────────────
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (err.message === 'Invalid ObjectId') return res.status(400).send('Invalid ID format');
@@ -731,4 +915,5 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 // ──────────────────── Start ────────────────────
 await client.connect();
 await seedAdmin();
+if (!EXPO_ACCESS_TOKEN) console.warn('⚠️  EXPO_ACCESS_TOKEN is not set — push notifications will not be sent. Set it in your .env to enable push notifications.');
 app.listen(PORT, () => console.log(`BrainRot API running on http://localhost:${PORT}/api`));

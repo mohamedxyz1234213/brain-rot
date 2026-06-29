@@ -303,6 +303,18 @@ export class MongoBackendService implements IBackendService {
     });
   }
 
+  // Reports
+  async submitReport(userId: string, data: { type: 'bug' | 'feature'; title: string; description: string }): Promise<void> {
+    await request('/reports', {
+      method: 'POST',
+      body: JSON.stringify({ userId, ...data }),
+    });
+  }
+
+  async getMyReports(userId: string): Promise<{ id: string; type: string; title: string; description: string; status: string; createdAt: string }[]> {
+    return request(`/reports/mine`);
+  }
+
   // Admin
   async getAdminOverview(): Promise<AdminOverview> {
     return request<AdminOverview>('/admin/overview');

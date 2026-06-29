@@ -9,11 +9,13 @@ import {
   EyeOff,
   Flame,
   Lock,
+  MessageSquare,
   Moon,
   PenTool,
   Plus,
   RefreshCw,
   Search,
+  Send,
   ShieldCheck,
   Smartphone,
   Sparkles,
@@ -30,19 +32,24 @@ import {
   createManualRoast,
   deleteChallenge,
   deleteManualRoast,
+  deleteReport,
   deleteUser,
   fetchAdminPayload,
+  fetchBroadcasts,
+  fetchReports,
   getStoredSession,
+  sendBroadcast,
   signInAdmin,
   updateChallenge,
   updateManualRoast,
+  updateReport,
   updateSubscription,
   updateUser,
 } from './api';
-import type { AdminChallenge, AdminManualRoast, AdminPayload, AdminTrafficMetric, AdminUserSummary, ChallengeConfig, ChallengeType, SubscriptionTier } from './types';
+import type { AdminBroadcast, AdminChallenge, AdminManualRoast, AdminPayload, AdminReport, AdminTrafficMetric, AdminUserSummary, ChallengeConfig, ChallengeType, SubscriptionTier } from './types';
 import './styles.css';
 
-type Section = 'overview' | 'users' | 'subscriptions' | 'traffic' | 'ai' | 'challenges' | 'roasts';
+type Section = 'overview' | 'users' | 'subscriptions' | 'traffic' | 'ai' | 'challenges' | 'roasts' | 'broadcasts' | 'reports';
 
 const tiers: SubscriptionTier[] = ['free', 'healed', 'ascended', 'family', 'lifetime'];
 const ICON_OPTIONS = ['flame-outline', 'musical-notes-outline', 'hardware-chip-outline', 'moon-outline', 'book-outline', 'leaf-outline', 'fitness-outline', 'bed-outline', 'cafe-outline', 'code-outline', 'game-controller-outline', 'heart-outline', 'notifications-off-outline', 'phone-portrait-outline', 'skull-outline', 'flash-outline', 'rocket-outline', 'star-outline', 'trophy-outline', 'wand-outline'];
@@ -172,6 +179,8 @@ function App() {
           <NavButton active={section === 'ai'} onClick={() => setSection('ai')} icon={<Sparkles />} label="AI Requests" />
           <NavButton active={section === 'challenges'} onClick={() => setSection('challenges')} icon={<Trophy />} label="Challenges" />
           <NavButton active={section === 'roasts'} onClick={() => setSection('roasts')} icon={<Flame />} label="Manual Roasts" />
+          <NavButton active={section === 'broadcasts'} onClick={() => setSection('broadcasts')} icon={<MessageSquare />} label="Broadcasts" />
+          <NavButton active={section === 'reports'} onClick={() => setSection('reports')} icon={<PenTool />} label="Reports" />
         </nav>
         <button className="ghostButton" onClick={logout}>Sign out</button>
       </aside>
@@ -189,6 +198,8 @@ function App() {
         {payload && section === 'ai' && <AIRequestsPanel payload={payload} />}
         {payload && section === 'challenges' && <ChallengesPanel challenges={payload.challenges} refreshAfter={refreshAfter} />}
         {payload && section === 'roasts' && <RoastsPanel roasts={payload.manualRoasts} refreshAfter={refreshAfter} />}
+        {payload && section === 'broadcasts' && <BroadcastsPanel refreshAfter={refreshAfter} />}
+        {payload && section === 'reports' && <ReportsPanel refreshAfter={refreshAfter} />}
       </section>
     </main>
   );
@@ -226,19 +237,23 @@ function Overview({ payload }: { payload: AdminPayload }) {
     <>
       <section className="hero reveal">
         <div className="hero__top"><div className="brand"><ShieldCheck size={18} /> Production Backend</div><span>{new Date(overview.generatedAt).toLocaleString()}</span></div>
-        <div><p className="eyebrow">Operational Control</p><h2>Users, subscriptions, traffic, AI, challenges, and roasts.</h2><p className="hero__copy">All records are loaded from authenticated admin endpoints backed by the application database.</p></div>
+        <div><p className="eyebrow">Operational Control</p><h2>Users, subscriptions, traffic, AI, challenges, roasts, and broadcasts.</h2><p className="hero__copy">All records are loaded from authenticated admin endpoints backed by the application database.</p></div>
       </section>
       <section className="metrics">
         <Metric icon={<Users />} label="Users" value={String(overview.totalUsers)} delay="80ms" />
         <Metric icon={<CreditCard />} label="Subscriptions" value={String(overview.activeSubscriptions)} delay="140ms" />
-        <Metric icon={<Smartphone />} label="Traffic" value={formatMinutes(overview.totalScreenTimeMinutes)} delay="200ms" />
+        <Metric icon={<Smartphone />} label="Screen Time" value={formatMinutes(overview.totalScreenTimeMinutes)} delay="200ms" />
         <Metric icon={<Lock />} label="Blocks" value={String(overview.blockedAttempts)} delay="260ms" />
-        <Metric icon={<Brain />} label="Brain score" value={String(overview.averageBrainScore)} delay="320ms" />
-        <Metric icon={<Sparkles />} label="AI requests" value={String(overview.aiRequests)} delay="380ms" />
+        <Metric icon={<Brain />} label="Brain Score" value={String(overview.averageBrainScore)} delay="320ms" />
+        <Metric icon={<Sparkles />} label="AI Requests" value={String(overview.aiRequests)} delay="380ms" />
+        <Metric icon={<Flame />} label="Roasts Today" value={String(overview.recentRoasts || 0)} delay="440ms" />
+        <Metric icon={<Moon />} label="Prayers Today" value={String(overview.prayersToday || 0)} delay="500ms" />
+        <Metric icon={<Zap />} label="Active Streaks" value={String(overview.activeStreaks || 0)} delay="560ms" />
       </section>
       <section className="grid">
         <Card title="Conversion" meta={`${conversion}% paid`} icon={<BarChart3 />}><div className="progress"><span style={{ width: `${conversion}%` }} /></div></Card>
         <Card title="Real Analytics" meta="Operational snapshot" icon={<Activity />}><AnalyticsRows payload={payload} /></Card>
+        <Card title="Roast Distribution" meta="Persona usage breakdown" icon={<Flame />}><RoastDistributionRows payload={payload} /></Card>
       </section>
     </>
   );
@@ -586,18 +601,190 @@ function ChallengesPanel({ challenges, refreshAfter }: { challenges: AdminChalle
 function RoastsPanel({ roasts, refreshAfter }: { roasts: AdminManualRoast[]; refreshAfter: (a: () => Promise<unknown>) => Promise<void> }) {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  return <section className="panel reveal"><div className="panel__head"><div><p className="eyebrow">Manual Roasting</p><h2>Add and manage roasts</h2></div></div><div className="createBar"><input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} /><input placeholder="Roast body" value={body} onChange={(e) => setBody(e.target.value)} /><button onClick={() => refreshAfter(() => createManualRoast({ title, body, persona: 'drill_sergeant', language: 'en', isActive: true })).then(() => { setTitle(''); setBody(''); })}><Plus size={15} /> Add</button></div><div className="rows">{roasts.map((r) => <div className="row" key={r.id}><span><b>{r.title}</b><small>{r.body}</small></span><label className="switch"><input type="checkbox" checked={r.isActive} onChange={(e) => refreshAfter(() => updateManualRoast(r.id, { isActive: e.target.checked }))} /> active</label><button className="dangerButton" onClick={() => refreshAfter(() => deleteManualRoast(r.id))}><Trash2 size={14} /></button></div>)}</div></section>;
+  return <section className="panel reveal"><div className="panel__head"><div><p className="eyebrow">Manual Roasting</p><h2>Add and manage roasts</h2></div></div><div className="createBar"><input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} /><input placeholder="Roast body" value={body} onChange={(e) => setBody(e.target.value)} /><button onClick={() => refreshAfter(() => createManualRoast({ title, body, persona: 'random', language: 'en', isActive: true })).then(() => { setTitle(''); setBody(''); })}><Plus size={15} /> Add</button></div><div className="rows">{roasts.map((r) => <div className="row" key={r.id}><span><b>{r.title}</b><small>{r.body}</small></span><label className="switch"><input type="checkbox" checked={r.isActive} onChange={(e) => refreshAfter(() => updateManualRoast(r.id, { isActive: e.target.checked }))} /> active</label><button className="dangerButton" onClick={() => refreshAfter(() => deleteManualRoast(r.id))}><Trash2 size={14} /></button></div>)}</div></section>;
+}
+
+function BroadcastsPanel({ refreshAfter }: { refreshAfter: (a: () => Promise<unknown>) => Promise<void> }) {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [targetTier, setTargetTier] = useState<'all' | SubscriptionTier>('all');
+  const [broadcasts, setBroadcasts] = useState<AdminBroadcast[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadBroadcasts = async () => {
+    setLoading(true);
+    try { setBroadcasts(await fetchBroadcasts()); } catch { /* ignore */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadBroadcasts(); }, []);
+
+  const handleSend = () => {
+    if (!title.trim() || !body.trim()) return;
+    refreshAfter(() => sendBroadcast({ title, body, targetTier })).then(() => {
+      setTitle(''); setBody(''); setTargetTier('all');
+      loadBroadcasts();
+    });
+  };
+
+  return (
+    <section className="panel reveal">
+      <div className="panel__head">
+        <div><p className="eyebrow">Notification Broadcasts</p><h2>Send push notifications to users</h2></div>
+      </div>
+      <div className="createForm">
+        <div className="formGrid">
+          <div className="formRow2">
+            <div className="formGroup"><label className="formLabel">Title</label><input placeholder="e.g. New Challenge Available!" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+            <div className="formGroup"><label className="formLabel">Message</label><input placeholder="Notification body text..." value={body} onChange={(e) => setBody(e.target.value)} /></div>
+          </div>
+          <div className="formRow2">
+            <div className="formGroup"><label className="formLabel">Target</label><select value={targetTier} onChange={(e) => setTargetTier(e.target.value as 'all' | SubscriptionTier)}><option value="all">All Users</option>{tiers.map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}</select></div>
+            <div className="formGroup" style={{ display: 'flex', alignItems: 'flex-end' }}><button className="primaryButton" onClick={handleSend} style={{ marginTop: 0, width: '100%' }}><Send size={15} /> Send Broadcast</button></div>
+          </div>
+        </div>
+      </div>
+      {broadcasts.length > 0 && (
+        <div className="challengeList">
+          <p className="sectionSubhead">Recent Broadcasts ({broadcasts.length})</p>
+          {broadcasts.map((b) => (
+            <div className="challengeCard" key={b.id}>
+              <div className="challengeCardLeft">
+                <h4 className="challengeCardTitle">{b.title}</h4>
+                <p className="challengeCardDesc">{b.body}</p>
+                <div className="challengeCardMeta">
+                  <span className="metaTag">Target: {b.targetTier}</span>
+                  <span className="metaDot">·</span>
+                  <span>Sent by {b.sentBy}</span>
+                  <span className="metaDot">·</span>
+                  <span>{new Date(b.sentAt).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
 
 function AnalyticsRows({ payload }: { payload: AdminPayload }) {
   const a = payload.analytics;
-  return <div className="rows"><div className="row"><span>DAU</span><b>{a.dau}</b></div><div className="row"><span>WAU</span><b>{a.wau}</b></div><div className="row"><span>Conversion</span><b>{a.conversionRate}%</b></div><div className="row"><span>Churn risk</span><b>{a.churnRiskUsers}</b></div></div>;
+  return <div className="rows"><div className="row"><span>DAU</span><b>{a.dau}</b></div><div className="row"><span>WAU</span><b>{a.wau}</b></div><div className="row"><span>Conversion</span><b>{a.conversionRate}%</b></div><div className="row"><span>Churn risk</span><b>{a.churnRiskUsers}</b></div><div className="row"><span>Avg session</span><b>{formatMinutes(a.averageSessionMinutes)}</b></div></div>;
+}
+
+function RoastDistributionRows({ payload }: { payload: AdminPayload }) {
+  const dist = payload.analytics.roastDistribution || {};
+  const entries = Object.entries(dist).sort(([, a], [, b]) => b.count - a.count);
+  if (entries.length === 0) return <div className="rows"><div className="row"><span>No roast data yet</span></div></div>;
+  return <div className="rows">{entries.map(([persona, data]) => <div className="row" key={persona}><span>{persona.replace(/_/g, ' ')}</span><b>{data.count}</b></div>)}</div>;
 }
 
 function SearchBox({ value, onChange }: { value: string; onChange: (v: string) => void }) { return <label className="search"><Search size={17} /><input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Search users" /></label>; }
 function NavButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) { return <button className={active ? 'navButton navButton--active' : 'navButton'} onClick={onClick}>{icon}{label}</button>; }
 function Metric({ icon, label, value, delay }: { icon: React.ReactNode; label: string; value: string; delay: string }) { return <article className="metric reveal" style={{ animationDelay: delay }}><div className="metric__icon">{icon}</div><strong>{value}</strong><span>{label}</span></article>; }
 function Card({ title, meta, icon, children }: { title: string; meta: string; icon: React.ReactNode; children: React.ReactNode }) { return <article className="card reveal reveal--late"><div className="card__head"><div className="card__icon">{icon}</div><div><h2>{title}</h2><p>{meta}</p></div></div>{children}</article>; }
-function sectionTitle(section: Section) { return ({ overview: 'Overview', users: 'Users', subscriptions: 'Subscriptions', traffic: 'Traffic', ai: 'AI Requests', challenges: 'Challenges', roasts: 'Manual Roasts' } as const)[section]; }
+function ReportsPanel({ refreshAfter }: { refreshAfter: (a: () => Promise<unknown>) => Promise<void> }) {
+  const [reports, setReports] = useState<AdminReport[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadReports = async () => {
+    setLoading(true);
+    try { setReports(await fetchReports()); } catch { /* ignore */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadReports(); }, []);
+
+  const handleStatusChange = (id: string, status: AdminReport['status']) => {
+    refreshAfter(() => updateReport(id, { status })).then(() => loadReports());
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Delete this report?')) {
+      refreshAfter(() => deleteReport(id)).then(() => loadReports());
+    }
+  };
+
+  const openReports = reports.filter((r) => r.status === 'open');
+  const otherReports = reports.filter((r) => r.status !== 'open');
+
+  return (
+    <section className="panel reveal">
+      <div className="panel__head">
+        <div><p className="eyebrow">User Feedback</p><h2>Bug reports and feature requests</h2></div>
+      </div>
+
+      {openReports.length > 0 && (
+        <div className="challengeList">
+          <p className="sectionSubhead">Open ({openReports.length})</p>
+          {openReports.map((report) => (
+            <div className="challengeCard" key={report.id}>
+              <div className="challengeCardLeft">
+                <div className="challengeTypeBadge" style={{ background: report.type === 'bug' ? '#b85c5c18' : '#27AE6018', color: report.type === 'bug' ? '#b85c5c' : '#27AE60' }}>{report.type === 'bug' ? 'Bug' : 'Feature'}</div>
+                <h4 className="challengeCardTitle">{report.title}</h4>
+                <p className="challengeCardDesc">{report.description}</p>
+                <div className="challengeCardMeta">
+                  <span>User: {report.userId}</span>
+                  <span className="metaDot">·</span>
+                  <span>{new Date(report.createdAt).toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="challengeCardActions">
+                <select value={report.status} onChange={(e) => handleStatusChange(report.id, e.target.value as AdminReport['status'])}>
+                  <option value="open">Open</option>
+                  <option value="acknowledged">Acknowledged</option>
+                  <option value="fixed">Fixed</option>
+                  <option value="closed">Closed</option>
+                </select>
+                <button className="dangerButton" onClick={() => handleDelete(report.id)}><Trash2 size={14} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {otherReports.length > 0 && (
+        <div className="challengeList">
+          <p className="sectionSubhead">Processed ({otherReports.length})</p>
+          {otherReports.map((report) => (
+            <div className="challengeCard challengeCard--inactive" key={report.id}>
+              <div className="challengeCardLeft">
+                <div className="challengeTypeBadge" style={{ background: report.type === 'bug' ? '#b85c5c18' : '#27AE6018', color: report.type === 'bug' ? '#b85c5c' : '#27AE60' }}>{report.type === 'bug' ? 'Bug' : 'Feature'}</div>
+                <h4 className="challengeCardTitle">{report.title}</h4>
+                <p className="challengeCardDesc">{report.description}</p>
+                <div className="challengeCardMeta">
+                  <span className="pill">{report.status}</span>
+                  <span className="metaDot">·</span>
+                  <span>User: {report.userId}</span>
+                  <span className="metaDot">·</span>
+                  <span>{new Date(report.createdAt).toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="challengeCardActions">
+                <select value={report.status} onChange={(e) => handleStatusChange(report.id, e.target.value as AdminReport['status'])}>
+                  <option value="open">Open</option>
+                  <option value="acknowledged">Acknowledged</option>
+                  <option value="fixed">Fixed</option>
+                  <option value="closed">Closed</option>
+                </select>
+                <button className="dangerButton" onClick={() => handleDelete(report.id)}><Trash2 size={14} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {reports.length === 0 && (
+        <div className="emptyState">
+          <PenTool size={48} style={{ color: 'var(--muted)' }} />
+          <p>No reports yet. User submissions will appear here.</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function sectionTitle(section: Section) { return ({ overview: 'Overview', users: 'Users', subscriptions: 'Subscriptions', traffic: 'Traffic', ai: 'AI Requests', challenges: 'Challenges', roasts: 'Manual Roasts', broadcasts: 'Broadcasts', reports: 'User Reports' } as const)[section]; }
 
 createRoot(document.getElementById('root')!).render(<App />);

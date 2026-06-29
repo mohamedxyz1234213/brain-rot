@@ -10,6 +10,9 @@ export interface AdminOverview {
   focusMinutes: number;
   aiRequests: number;
   activeChallenges: number;
+  recentRoasts: number;
+  prayersToday: number;
+  activeStreaks: number;
   generatedAt: string;
 }
 
@@ -103,6 +106,19 @@ export interface AdminManualRoast {
   createdAt: string;
 }
 
+export interface AdminBroadcast {
+  id: string;
+  title: string;
+  body: string;
+  targetTier: 'all' | SubscriptionTier;
+  sentAt: string;
+  sentBy: string;
+}
+
+export interface RoastDistribution {
+  count: number;
+}
+
 export interface AdminAnalytics {
   dau: number;
   wau: number;
@@ -110,6 +126,7 @@ export interface AdminAnalytics {
   churnRiskUsers: number;
   averageSessionMinutes: number;
   topBlockedApps: { appName: string; blockedAttempts: number; minutesUsed: number }[];
+  roastDistribution: { [persona: string]: RoastDistribution };
 }
 
 export interface AdminPayload {
@@ -120,6 +137,7 @@ export interface AdminPayload {
   aiRequests: AdminAIRequest[];
   challenges: AdminChallenge[];
   manualRoasts: AdminManualRoast[];
+  reports: AdminReport[];
   analytics: AdminAnalytics;
 }
 
@@ -132,3 +150,15 @@ export type UserUpdateInput = Partial<Pick<AdminUserSummary, 'name' | 'email' | 
 export type SubscriptionUpdateInput = Partial<Pick<AdminSubscriptionSummary, 'tier' | 'isActive' | 'expiresAt' | 'revenueCatId'>>;
 export type ChallengeInput = Omit<AdminChallenge, 'id' | 'createdAt' | 'joinedUserIds' | 'participantCount'>;
 export type ManualRoastInput = Omit<AdminManualRoast, 'id' | 'createdAt'>;
+export type BroadcastInput = Pick<AdminBroadcast, 'title' | 'body' | 'targetTier'>;
+
+export interface AdminReport {
+  id: string;
+  userId: string;
+  type: 'bug' | 'feature';
+  title: string;
+  description: string;
+  status: 'open' | 'acknowledged' | 'fixed' | 'closed';
+  createdAt: string;
+  updatedAt: string;
+}

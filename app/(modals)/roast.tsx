@@ -25,8 +25,8 @@ export default function RoastModal() {
   const [fullText, setFullText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
   const activeRoast = useRoastStore((s) => s.activeRoast);
-  const selectedPersona = useRoastStore((s) => s.selectedPersona);
   const dismissRoast = useRoastStore((s) => s.dismissRoast);
+  const getRandomPersona = useRoastStore((s) => s.getRandomPersona);
   const brainScore = useBrainScoreStore((s) => s.currentScore);
   const totalMinutes = useScreenTimeStore((s) => s.totalMinutesToday);
   const tasksCompleted = useTaskStore((s) => s.tasks.filter((t) => t.status === 'completed').length);
@@ -35,7 +35,7 @@ export default function RoastModal() {
   useEffect(() => {
     if (activeRoast) return;
     let cancelled = false;
-    const persona = (selectedPersona || 'drill_sergeant') as RoastPersona;
+    const persona = getRandomPersona();
     const st = useScreenTimeStore.getState();
     const taskState = useTaskStore.getState();
     const topApp = st.getOverageApps()[0] ?? st.limits[0];
@@ -94,15 +94,15 @@ export default function RoastModal() {
     router.replace('/(tabs)/tasks');
   };
 
-  const personaConfig = roastPersonas.find((p) => p.id === (activeRoast?.persona || selectedPersona));
-  const icon = PERSONA_ICONS[activeRoast?.persona || selectedPersona] || 'shield-outline';
+  const personaConfig = roastPersonas.find((p) => p.id === activeRoast?.persona);
+  const icon = PERSONA_ICONS[activeRoast?.persona ?? ''] || 'shield-outline';
 
   return (
     <SafeScreen>
       <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
         <View style={styles.personaHeader}>
           <Ionicons name={icon} size={48} color={Colors.DANGER} />
-          <Text style={styles.personaName}>{personaConfig?.name ?? 'Drill Sergeant'}</Text>
+          <Text style={styles.personaName}>{personaConfig?.name ?? 'Random Roast'}</Text>
           {activeRoast?.isOffline && <Text style={styles.offlineBadge}>offline mode</Text>}
         </View>
 

@@ -202,7 +202,7 @@ export default function RootLayout() {
       if (lastBlockedOverageKey === overageKey || isAlreadyBlocking) return;
 
       lastBlockedOverageKey = overageKey;
-      const persona = useRoastStore.getState().selectedPersona;
+      const persona = useRoastStore.getState().getRandomPersona();
       const taskState = useTaskStore.getState();
       const result = await generateRoast(persona, 'app_limit', {
         userName: userName ?? 'there',
@@ -238,10 +238,28 @@ export default function RootLayout() {
     return () => clearInterval(t);
   }, [language, dailyRoastEnabled, userName, pathname, loaded, navigationReady]);
 
+  // Register push token on auth and sync to backend
   useEffect(() => {
-    if (!authToken) return;
+    if (!authToken || !userId) return;
     useAuthStore.getState().setAuthToken(authToken);
-  }, [authToken]);
+
+    (async () => {
+      try {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== 'granted') return;
+        const tokenData = await Notifications.getExpoPushTokenAsync();
+        if (tokenData?.data) {
+          // Save push token to backend for push notifications
+          const API_URL = process.env.EXPO_PUBLIC_MONGO_API_URL || 'http://localhost:3001/api';
+          await fetch(`${API_URL}/users/${userId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+            body: JSON.stringify({ pushToken: tokenData.data }),
+          }).catch(() => {}); // silent fail — not critical
+        }
+      } catch {}
+    })();
+  }, [authToken, userId]);
 
   useEffect(() => {
     if (!userId) return;
@@ -261,6 +279,17 @@ export default function RootLayout() {
   useEffect(() => {
     if (error) throw error;
   }, [error]);
+
+  // Handle notification taps (deep-linking)
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data;
+      if (data?.type === 'report_status' && data?.reportId) {
+        router.push('/screens/report');
+      }
+    });
+    return () => { sub.remove(); };
+  }, []);
 
   useEffect(() => {
     if (loaded) {

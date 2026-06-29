@@ -394,6 +394,21 @@ export class SupabaseBackendService implements IBackendService {
     });
   }
 
+  // Reports
+  async submitReport(userId: string, data: { type: 'bug' | 'feature'; title: string; description: string }): Promise<void> {
+    await supabaseRequest('/reports', {
+      method: 'POST',
+      body: JSON.stringify(this.toSnakeCase({ userId, ...data, status: 'open' })),
+    });
+  }
+
+  async getMyReports(userId: string): Promise<{ id: string; type: string; title: string; description: string; status: string; createdAt: string }[]> {
+    return supabaseRequest('/reports', {
+      method: 'GET',
+      query: { user_id: `eq.${userId}`, select: '*', order: 'created_at.desc' },
+    });
+  }
+
   // Admin
   async getAdminOverview(): Promise<AdminOverview> {
     return supabaseRequest<AdminOverview>('/rpc/admin_overview', { method: 'POST' });
